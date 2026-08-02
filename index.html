@@ -78,20 +78,22 @@
     .help { display: flex; align-items: center; gap: 8px; margin: 14px 2px 0; color: #83796b; font-size: .79rem; line-height: 1.45; }
     .help::before { width: 5px; height: 5px; flex: 0 0 auto; border-radius: 50%; background: #a48358; content: ""; }
     .sr-only { position: fixed; top: 0; left: -9999px; width: 1px; height: 1px; padding: 0; margin: 0; overflow: hidden; opacity: 0; clip: auto; white-space: nowrap; border: 0; }
+    .fullscreen-overlay { position: fixed; inset: 0; z-index: 1400; display: none; align-items: stretch; justify-content: stretch; padding: 0; background: #000; }
+    .fullscreen-overlay.is-active { display: flex; }
     body.fullscreen-mode { overflow: hidden; background: #000; }
     body.fullscreen-mode .app { padding: 0; }
     body.fullscreen-mode header { display: none; }
     body.fullscreen-mode .layout { display: block; padding: 0; }
     body.fullscreen-mode .notes { display: none; }
-    body.fullscreen-mode .image-panel { position: fixed; inset: 0; z-index: 1000; border: 0; border-radius: 0; padding: 0; background: #000; box-shadow: none; }
-    body.fullscreen-mode .image-panel .section-label, body.fullscreen-mode .image-panel .help { display: none; }
-    body.fullscreen-mode .canvas-shell { min-height: 100vh; height: 100vh; width: 100vw; border: 0; border-radius: 0; background: #000; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 0; }
-    body.fullscreen-mode .image-stage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; max-width: none; width: 100%; height: 100%; margin: 0; }
-    body.fullscreen-mode .image-stage #photo { max-height: none; width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+    body.fullscreen-mode .image-panel.fullscreen-panel { position: relative; width: 100%; height: 100%; z-index: 1; border: 0; border-radius: 0; padding: 0; background: #000; box-shadow: none; }
+    body.fullscreen-mode .image-panel.fullscreen-panel .section-label, body.fullscreen-mode .image-panel.fullscreen-panel .help { display: none; }
+    body.fullscreen-mode .image-panel.fullscreen-panel .canvas-shell { min-height: 100vh; height: 100vh; width: 100vw; border: 0; border-radius: 0; background: #000; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 0; }
+    body.fullscreen-mode .image-panel.fullscreen-panel .image-stage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; max-width: none; width: 100%; height: 100%; margin: 0; }
+    body.fullscreen-mode .image-panel.fullscreen-panel .image-stage #photo { max-height: none; width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
     body.fullscreen-mode .mode-switcher { display: none; }
-    body.fullscreen-mode .toolbar { position: fixed; left: 50%; transform: translateX(-50%); z-index: 1100; width: min(420px, calc(100vw - 32px)); bottom: 16px; margin: 0; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    body.fullscreen-mode .toolbar { position: fixed; left: 50%; transform: translateX(-50%); z-index: 1500; width: min(420px, calc(100vw - 32px)); bottom: 16px; margin: 0; grid-template-columns: repeat(4, minmax(0, 1fr)); }
     body.fullscreen-mode .toolbar button { backdrop-filter: blur(10px); background: rgba(253, 252, 249, .9); box-shadow: 0 10px 25px rgba(0, 0, 0, .18); }
-    body.fullscreen-mode .fullscreen-inline { position: fixed; left: 16px; top: 16px; z-index: 1100; width: auto; }
+    body.fullscreen-mode .fullscreen-inline { position: fixed; left: 16px; top: 16px; z-index: 1500; width: auto; }
     body.fullscreen-mode .fullscreen-inline button { min-width: 132px; }
     body.fullscreen-mode #exitFullscreenBtn { display: inline-flex; }
     body.fullscreen-mode #fullscreenBtn { display: none; }
@@ -111,6 +113,7 @@
   </style>
 </head>
 <body>
+  <div id="fullscreenOverlay" class="fullscreen-overlay" hidden></div>
   <main class="app">
     <header>
       <h1>Notițe interactive pe imagine</h1>
@@ -206,6 +209,10 @@
       const handwritingPanel = document.getElementById('handwritingPanel');
       const noteCanvas = document.getElementById('noteCanvas');
       const clearPencilInputButton = document.getElementById('clearPencilInput');
+      const fullscreenOverlay = document.getElementById('fullscreenOverlay');
+      const overlay = fullscreenOverlay;
+      const layout = document.querySelector('.layout');
+      const imagePanel = document.querySelector('.image-panel');
       const noteCanvasCtx = noteCanvas.getContext('2d');
       const ctx = canvas.getContext('2d');
       let strokes = [];
@@ -227,9 +234,12 @@
       let panOrigin = null;
       let fullscreenMode = false;
       let fullscreenFrame = { width: 0, height: 0 };
-      let fullscreenInputHandlersAttached = false;
+      let fullscreenAbortController = null;
       let activeDrawingPointerId = null;
       let activeWritingPointerId = null;
+      let isDrawing = false;
+      let isDraggingNote = false;
+      let isPanning = false;
       let activeTouches = new Map();
       let pinchStartDistance = 0;
       let pinchStartZoom = 1;
@@ -474,6 +484,7 @@
         event.preventDefault();
         canvas.setPointerCapture(event.pointerId);
         activeDrawingPointerId = event.pointerId;
+        isDrawing = true;
         activeStroke = { points: [pointFromEvent(event)] };
         redraw();
       }
@@ -490,6 +501,7 @@
         event.preventDefault();
         releasePointerCapture(canvas, event.pointerId ?? activeDrawingPointerId);
         activeDrawingPointerId = null;
+        isDrawing = false;
         strokes.push(activeStroke);
         activeStroke = null;
         redraw();
@@ -661,6 +673,7 @@
             event.stopPropagation();
             selectNote(note.id);
             draggingNoteId = note.id;
+            isDraggingNote = true;
             window.addEventListener('pointermove', handleNoteDrag);
             window.addEventListener('pointerup', stopNoteDrag, { once: true });
           });
@@ -717,6 +730,7 @@
 
       function stopNoteDrag() {
         draggingNoteId = null;
+        isDraggingNote = false;
         window.removeEventListener('pointermove', handleNoteDrag);
       }
 
@@ -731,10 +745,13 @@
         }
       }
 
-      function resetFullscreenInteractionState() {
+      function resetInteractionState() {
         activeStroke = null;
         activePencilStroke = null;
         draggingNoteId = null;
+        isDrawing = false;
+        isDraggingNote = false;
+        isPanning = false;
         panning = false;
         panStart = null;
         panOrigin = null;
@@ -746,31 +763,37 @@
         releasePointerCapture(noteCanvas, activeWritingPointerId);
         activeDrawingPointerId = null;
         activeWritingPointerId = null;
+        window.removeEventListener('pointermove', handleNoteDrag);
+        window.removeEventListener('pointerup', stopNoteDrag);
         redraw();
         renderHandwritingCanvas();
         updateImageTransform();
       }
 
       function attachFullscreenInputHandlers() {
-        if (fullscreenInputHandlersAttached) return;
-        stage.addEventListener('pointerdown', handleStagePointerDown, { passive: false });
-        stage.addEventListener('wheel', handleImageWheel, { passive: false });
-        window.addEventListener('pointermove', handleStagePointerMove);
-        window.addEventListener('pointerup', handleStagePointerUp);
-        window.addEventListener('pointercancel', handleStagePointerUp);
-        window.addEventListener('blur', resetFullscreenInteractionState);
-        fullscreenInputHandlersAttached = true;
+        detachFullscreenInputHandlers();
+        fullscreenAbortController = new AbortController();
+        const { signal } = fullscreenAbortController;
+        stage.addEventListener('pointerdown', handleStagePointerDown, { passive: false, signal });
+        stage.addEventListener('wheel', handleImageWheel, { passive: false, signal });
+        window.addEventListener('pointermove', handleStagePointerMove, { signal });
+        window.addEventListener('pointerup', handleStagePointerUp, { signal });
+        window.addEventListener('pointercancel', handleStagePointerUp, { signal });
+        window.addEventListener('blur', () => resetInteractionState(), { signal });
+        window.addEventListener('resize', () => {
+          if (fullscreenMode) {
+            updateFullscreenFrame();
+          }
+          configureCanvas();
+          configureNoteCanvas();
+        }, { signal });
       }
 
       function detachFullscreenInputHandlers() {
-        if (!fullscreenInputHandlersAttached) return;
-        stage.removeEventListener('pointerdown', handleStagePointerDown);
-        stage.removeEventListener('wheel', handleImageWheel);
-        window.removeEventListener('pointermove', handleStagePointerMove);
-        window.removeEventListener('pointerup', handleStagePointerUp);
-        window.removeEventListener('pointercancel', handleStagePointerUp);
-        window.removeEventListener('blur', resetFullscreenInteractionState);
-        fullscreenInputHandlersAttached = false;
+        if (fullscreenAbortController) {
+          fullscreenAbortController.abort();
+          fullscreenAbortController = null;
+        }
       }
 
       function setFullscreenMode(enabled) {
@@ -779,19 +802,35 @@
         fullscreenButton.hidden = enabled;
         exitFullscreenButton.hidden = !enabled;
         if (enabled) {
-          resetFullscreenInteractionState();
+          resetInteractionState();
+          if (overlay && !overlay.contains(imagePanel)) {
+            overlay.appendChild(imagePanel);
+          }
+          overlay.hidden = false;
+          overlay.classList.add('is-active');
+          imagePanel.classList.add('fullscreen-panel');
           updateFullscreenFrame();
           zoomLevel = 1;
           panOffset = { x: 0, y: 0 };
           attachFullscreenInputHandlers();
         } else {
-          resetFullscreenInteractionState();
+          resetInteractionState();
           detachFullscreenInputHandlers();
-          document.querySelectorAll('.fullscreen-overlay, #fullscreenOverlay').forEach((overlay) => overlay.remove());
+          if (overlay && overlay.contains(imagePanel)) {
+            overlay.removeChild(imagePanel);
+          }
+          if (layout && !layout.contains(imagePanel)) {
+            layout.insertBefore(imagePanel, layout.firstChild);
+          }
+          overlay.classList.remove('is-active');
+          overlay.hidden = true;
+          imagePanel.classList.remove('fullscreen-panel');
         }
-        updateImageTransform();
-        configureCanvas();
-        configureNoteCanvas();
+        requestAnimationFrame(() => {
+          configureCanvas();
+          configureNoteCanvas();
+          updateImageTransform();
+        });
         setControls();
       }
 
@@ -800,8 +839,9 @@
         if (event.target === canvas) return;
         if (event.pointerType === 'touch') {
           activeTouches.set(event.pointerId, { x: event.clientX, y: event.clientY });
-          if (activeTouches.size === 1 && (fullscreenMode || event.altKey)) {
+          if (activeTouches.size === 1 && fullscreenMode) {
             event.preventDefault();
+            isPanning = true;
             panning = true;
             panStart = { x: event.clientX, y: event.clientY };
             panOrigin = { ...panOffset };
@@ -810,12 +850,14 @@
             pinchStartDistance = getPointerDistance(points[0], points[1]);
             pinchStartZoom = zoomLevel;
             pinchCenter = getPointerMidpoint(points[0], points[1]);
+            isPanning = false;
             panning = false;
           }
           return;
         }
         if (!fullscreenMode && !event.altKey) return;
         event.preventDefault();
+        isPanning = true;
         panning = true;
         panStart = { x: event.clientX, y: event.clientY };
         panOrigin = { ...panOffset };
@@ -841,7 +883,7 @@
             }
             return;
           }
-          if (!panning) return;
+          if (!isPanning && !panning) return;
           event.preventDefault();
           panOffset.x = panOrigin.x + (event.clientX - panStart.x);
           panOffset.y = panOrigin.y + (event.clientY - panStart.y);
@@ -849,7 +891,7 @@
           scheduleSave();
           return;
         }
-        if (!panning) return;
+        if (!isPanning && !panning) return;
         event.preventDefault();
         panOffset.x = panOrigin.x + (event.clientX - panStart.x);
         panOffset.y = panOrigin.y + (event.clientY - panStart.y);
@@ -866,7 +908,8 @@
             pinchCenter = null;
           }
         }
-        if (!panning) return;
+        if (!isPanning && !panning) return;
+        isPanning = false;
         panning = false;
         panStart = null;
         panOrigin = null;
@@ -913,6 +956,11 @@
         interactiveNotes = [];
         selectedNoteId = null;
         draggingNoteId = null;
+        isDrawing = false;
+        isDraggingNote = false;
+        isPanning = false;
+        activeDrawingPointerId = null;
+        activeWritingPointerId = null;
         activeTool = 'draw';
         selectedNoteMode = 'text';
         zoomLevel = 1;
@@ -920,6 +968,7 @@
         panning = false;
         panStart = null;
         panOrigin = null;
+        activeTouches.clear();
         noteTitleInput.value = '';
         noteContentTextarea.value = '';
         noteTitleInput.hidden = false;
@@ -1088,13 +1137,6 @@
       canvas.addEventListener('pointerup', finishDrawing, { passive: false });
       canvas.addEventListener('pointercancel', finishDrawing, { passive: false });
       canvas.addEventListener('gesturestart', (event) => event.preventDefault(), { passive: false });
-      window.addEventListener('resize', () => {
-        if (fullscreenMode) {
-          updateFullscreenFrame();
-        }
-        configureCanvas();
-        configureNoteCanvas();
-      });
       setActiveTool('draw');
       updateImageTransform();
       restoreLastWork();
