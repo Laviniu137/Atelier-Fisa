@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Fișă atelier">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="apple-touch-startup-image" href="startup-ipad-portrait.png" media="(device-width: 820px) and (device-height: 1180px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="startup-ipad-landscape.png" media="(device-width: 1180px) and (device-height: 820px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+  <title>Notițe pe imagini</title>
+  <style>
+    :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #29261f; background: #edeae4; }
+    * { box-sizing: border-box; }
+    body { min-width: 320px; margin: 0; background: radial-gradient(circle at 0% 0%, #f8f5ee 0, transparent 38%), linear-gradient(135deg, #ebe8e1 0%, #f5f2ec 55%, #e9e4db 100%); }
+    button, textarea { font: inherit; }
+    button { min-height: 52px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; border: 1px solid #d8d1c6; border-radius: 13px; background: #fdfcf9; color: #423d33; padding: 11px 17px; font-size: .92rem; font-weight: 650; letter-spacing: -.01em; box-shadow: 0 1px 2px rgba(55, 46, 34, .05); transition: transform .16s ease, box-shadow .16s ease, background .16s ease, border-color .16s ease; -webkit-tap-highlight-color: transparent; }
+    button svg { width: 19px; height: 19px; flex: 0 0 auto; stroke: currentColor; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    button:hover:not(:disabled) { transform: translateY(-1px); border-color: #afa18f; box-shadow: 0 8px 18px rgba(65, 52, 34, .10); }
+    button:active:not(:disabled) { transform: translateY(1px) scale(.985); box-shadow: none; }
+    button:focus-visible, #notes:focus { outline: 3px solid rgba(107, 86, 59, .36); outline-offset: 3px; }
+    button:disabled { cursor: not-allowed; border-color: #e6e1d9; background: #f5f2ed; color: #afa89e; box-shadow: none; }
+    .app { max-width: 1380px; margin: 0 auto; padding: clamp(18px, 3vw, 42px); }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 20px 18px 24px; border: 1px solid rgba(136, 119, 91, .16); border-radius: 20px; background: rgba(255, 254, 251, .76); box-shadow: 0 12px 32px rgba(63, 51, 35, .08); backdrop-filter: blur(10px); }
+    h1 { position: relative; margin: 0; padding-left: 16px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.38rem, 2.8vw, 2rem); font-weight: 600; letter-spacing: -.035em; color: #332d23; }
+    h1::before { position: absolute; left: 0; top: .16em; bottom: .16em; width: 4px; border-radius: 4px; background: #876c47; content: ""; }
+    #addImage, #save { border-color: #4b4133; background: #4b4133; color: #fffdfa; box-shadow: 0 7px 16px rgba(50, 41, 29, .18); }
+    #addImage:hover:not(:disabled), #save:hover:not(:disabled) { border-color: #342c22; background: #342c22; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(360px, .8fr); gap: clamp(20px, 2.5vw, 34px); padding-top: clamp(20px, 3vw, 32px); align-items: stretch; }
+    .image-panel, .notes { min-width: 0; border: 1px solid rgba(136, 119, 91, .17); border-radius: 22px; background: rgba(255, 254, 251, .87); box-shadow: 0 15px 38px rgba(62, 49, 31, .09); }
+    .image-panel { padding: clamp(15px, 2vw, 22px); }
+    .section-label { display: flex; align-items: center; margin: 0 0 14px; color: #655947; font-size: .7rem; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; }
+    .section-label::after { height: 1px; flex: 1; margin-left: 12px; background: #e8e2d9; content: ""; }
+    .canvas-shell { min-height: clamp(390px, 59vh, 700px); display: grid; place-items: center; overflow: hidden; border: 1px solid #e3ddd3; border-radius: 16px; background: repeating-linear-gradient(45deg, #f5f1eb 0, #f5f1eb 8px, #f8f6f1 8px, #f8f6f1 16px); box-shadow: inset 0 1px 1px rgba(71, 56, 35, .04); overscroll-behavior: contain; }
+    .image-stage { position: relative; display: inline-block; max-width: 100%; line-height: 0; box-shadow: 0 7px 20px rgba(56, 43, 26, .16); }
+    #photo { display: block; max-width: 100%; max-height: min(66vh, 760px); width: auto; height: auto; }
+    #drawingCanvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+    .empty { max-width: 290px; padding: 28px; color: #7c7265; text-align: center; font-size: .95rem; line-height: 1.6; }
+    .toolbar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
+    .toolbar button { width: 100%; padding-inline: 12px; }
+    #clear { background: #f5f0e8; }
+    .notes { display: flex; flex-direction: column; min-height: 0; padding: clamp(18px, 2.3vw, 25px); }
+    #notes { width: 100%; min-height: 390px; height: 100%; flex: 1; resize: vertical; border: 1px solid #e2dbd1; border-radius: 14px; padding: 18px; color: #322c23; background: linear-gradient(#fffefa, #fbf8f2); box-shadow: inset 0 1px 2px rgba(60, 47, 28, .03); font-size: 16px; line-height: 1.65; }
+    #notes::placeholder { color: #a39a8e; }
+    .help { display: flex; align-items: center; gap: 8px; margin: 14px 2px 0; color: #83796b; font-size: .79rem; line-height: 1.45; }
+    .help::before { width: 5px; height: 5px; flex: 0 0 auto; border-radius: 50%; background: #a48358; content: ""; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    @media (orientation: portrait), (max-width: 800px) {
+      .app { padding: 16px; }
+      header { align-items: stretch; flex-direction: column; padding: 18px; }
+      #addImage { width: 100%; }
+      .layout { grid-template-columns: 1fr; gap: 20px; padding-top: 20px; }
+      .canvas-shell { min-height: min(58vh, 580px); }
+      #notes { min-height: 300px; }
+    }
+    @media (max-width: 520px) {
+      .toolbar { grid-template-columns: 1fr; }
+      .canvas-shell { min-height: 310px; }
+      h1 { font-size: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <h1>Notițe pe imagini</h1>
+      <button type="button" id="addImage"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="M7 8l5-5 5 5"></path><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"></path></svg><span>Adaugă imagine</span></button>
+      <input class="sr-only" id="imageInput" type="file" accept="image/*" capture="environment">
+    </header>
+
+    <div class="layout">
+      <section class="image-panel" aria-labelledby="imageLabel">
+        <span class="section-label" id="imageLabel">Imagine</span>
+        <div class="canvas-shell" id="canvasShell">
+          <div class="empty" id="emptyState">Adaugă o fotografie pentru a putea desena pe ea.</div>
+          <div class="image-stage" id="imageStage" hidden>
+            <img id="photo" alt="Fotografia încărcată">
+            <canvas id="drawingCanvas" aria-label="Zonă de desen pe imagine"></canvas>
+          </div>
+        </div>
+        <div class="toolbar" aria-label="Instrumente desen">
+          <button type="button" id="undo" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10a6 6 0 0 1 6 6v1"></path></svg><span>Înapoi</span></button>
+          <button type="button" id="clear" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg><span>Șterge tot</span></button>
+          <button type="button" id="save" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg><span>Salvează</span></button>
+        </div>
+        <p class="help">Desenează cu mouse-ul, degetul sau Apple Pencil. La salvare, imaginea și notițele rămân împreună.</p>
+      </section>
+
+      <section class="notes" aria-labelledby="notesLabel">
+        <label class="section-label" id="notesLabel" for="notes">Fișă de lucru</label>
+        <textarea id="notes" placeholder="Adaugă detalii, măsurători sau observații pentru lucrare…"></textarea>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    (() => {
+      const addImage = document.getElementById('addImage');
+      const imageInput = document.getElementById('imageInput');
+      const photo = document.getElementById('photo');
+      const canvas = document.getElementById('drawingCanvas');
+      const stage = document.getElementById('imageStage');
+      const emptyState = document.getElementById('emptyState');
+      const undo = document.getElementById('undo');
+      const clear = document.getElementById('clear');
+      const save = document.getElementById('save');
+      const notes = document.getElementById('notes');
+      const ctx = canvas.getContext('2d');
+      let strokes = [];
+      let activeStroke = null;
+      let sourceImage = null;
+      let currentObjectUrl = null;
+      let imageBlob = null;
+      let saveTimer = null;
+      const databaseName = 'fisa-atelier-offline';
+      const databaseStore = 'lucrari';
+
+      function openDatabase() {
+        return new Promise((resolve, reject) => {
+          const request = indexedDB.open(databaseName, 1);
+          request.onupgradeneeded = () => request.result.createObjectStore(databaseStore);
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      async function saveLastWork() {
+        try {
+          const database = await openDatabase();
+          const transaction = database.transaction(databaseStore, 'readwrite');
+          transaction.objectStore(databaseStore).put({ image: imageBlob, strokes, notes: notes.value }, 'ultima-lucrare');
+          transaction.oncomplete = () => database.close();
+        } catch (error) {
+          console.warn('Lucrarea nu a putut fi salvată local.', error);
+        }
+      }
+
+      function scheduleSave() {
+        window.clearTimeout(saveTimer);
+        saveTimer = window.setTimeout(saveLastWork, 350);
+      }
+
+      async function restoreLastWork() {
+        try {
+          const database = await openDatabase();
+          const transaction = database.transaction(databaseStore, 'readonly');
+          const request = transaction.objectStore(databaseStore).get('ultima-lucrare');
+          request.onsuccess = () => {
+            const work = request.result;
+            database.close();
+            if (!work) return;
+            notes.value = work.notes || '';
+            if (work.image) loadImage(work.image, { storedStrokes: work.strokes || [], shouldPersist: false });
+          };
+          request.onerror = () => database.close();
+        } catch (error) {
+          console.warn('Lucrarea anterioară nu a putut fi restaurată.', error);
+        }
+      }
+
+      function setControls() {
+        const ready = Boolean(sourceImage);
+        undo.disabled = !ready || strokes.length === 0;
+        clear.disabled = !ready || strokes.length === 0;
+        save.disabled = !ready;
+      }
+
+      function configureCanvas() {
+        const rect = photo.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        const ratio = window.devicePixelRatio || 1;
+        canvas.width = Math.round(rect.width * ratio);
+        canvas.height = Math.round(rect.height * ratio);
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        redraw();
+      }
+
+      function drawStroke(stroke) {
+        if (!stroke || stroke.points.length === 0) return;
+        const rect = photo.getBoundingClientRect();
+        ctx.save();
+        ctx.strokeStyle = '#000';
+        ctx.fillStyle = '#000';
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        const first = stroke.points[0];
+        ctx.moveTo(first.x * rect.width, first.y * rect.height);
+        if (stroke.points.length === 1) {
+          ctx.arc(first.x * rect.width, first.y * rect.height, 2, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          for (let index = 1; index < stroke.points.length; index += 1) {
+            const point = stroke.points[index];
+            ctx.lineTo(point.x * rect.width, point.y * rect.height);
+          }
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function redraw() {
+        const rect = photo.getBoundingClientRect();
+        ctx.clearRect(0, 0, rect.width, rect.height);
+        strokes.forEach(drawStroke);
+        if (activeStroke) drawStroke(activeStroke);
+      }
+
+      function pointFromEvent(event) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width)),
+          y: Math.min(1, Math.max(0, (event.clientY - rect.top) / rect.height))
+        };
+      }
+
+      function beginDrawing(event) {
+        if (!sourceImage || event.button !== undefined && event.button !== 0) return;
+        event.preventDefault();
+        canvas.setPointerCapture(event.pointerId);
+        activeStroke = { points: [pointFromEvent(event)] };
+        redraw();
+      }
+
+      function continueDrawing(event) {
+        if (!activeStroke) return;
+        event.preventDefault();
+        activeStroke.points.push(pointFromEvent(event));
+        redraw();
+      }
+
+      function finishDrawing(event) {
+        if (!activeStroke) return;
+        event.preventDefault();
+        if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+        strokes.push(activeStroke);
+        activeStroke = null;
+        redraw();
+        setControls();
+        saveLastWork();
+      }
+
+      function loadImage(file, { storedStrokes = [], shouldPersist = true } = {}) {
+        if (!file || !file.type.startsWith('image/')) return;
+        if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+        currentObjectUrl = URL.createObjectURL(file);
+        photo.onload = () => {
+          sourceImage = photo;
+          imageBlob = file;
+          strokes = storedStrokes;
+          emptyState.hidden = true;
+          stage.hidden = false;
+          configureCanvas();
+          setControls();
+          if (shouldPersist) saveLastWork();
+        };
+        photo.src = currentObjectUrl;
+        imageInput.value = '';
+      }
+
+      function clearDrawings() {
+        activeStroke = null;
+        strokes = [];
+        redraw();
+        setControls();
+        saveLastWork();
+      }
+
+      function undoLastLine() {
+        strokes.pop();
+        redraw();
+        setControls();
+        saveLastWork();
+      }
+
+      function canvasToBlob(source) {
+        return new Promise((resolve) => source.toBlob(resolve, 'image/png'));
+      }
+
+      function wrapText(context, value, maxWidth) {
+        const lines = [];
+        value.split(/\r?\n/).forEach((paragraph) => {
+          if (!paragraph) {
+            lines.push('');
+            return;
+          }
+          let line = '';
+          paragraph.trim().split(/\s+/).forEach((word) => {
+            const candidate = line ? `${line} ${word}` : word;
+            if (line && context.measureText(candidate).width > maxWidth) {
+              lines.push(line);
+              line = word;
+            } else {
+              line = candidate;
+            }
+          });
+          if (line) lines.push(line);
+        });
+        return lines;
+      }
+
+      async function saveImage() {
+        if (!sourceImage) return;
+        const noteText = notes.value.trim();
+        const noteWidth = noteText ? Math.max(420, Math.round(photo.naturalWidth * 0.55)) : 0;
+        const padding = noteText ? Math.max(36, Math.round(noteWidth * 0.08)) : 0;
+        const fontSize = noteText ? Math.max(24, Math.round(noteWidth * 0.055)) : 0;
+        const lineHeight = Math.round(fontSize * 1.45);
+        const exported = document.createElement('canvas');
+        const measureContext = exported.getContext('2d');
+        measureContext.font = `${fontSize}px Arial`;
+        const noteLines = noteText ? wrapText(measureContext, noteText, noteWidth - padding * 2) : [];
+        const noteHeight = noteText ? padding * 2 + fontSize + 18 + noteLines.length * lineHeight : 0;
+        exported.width = photo.naturalWidth + noteWidth;
+        exported.height = Math.max(photo.naturalHeight, noteHeight);
+        const exportCtx = exported.getContext('2d');
+        exportCtx.fillStyle = '#fff';
+        exportCtx.fillRect(0, 0, exported.width, exported.height);
+        exportCtx.drawImage(photo, 0, 0, photo.naturalWidth, photo.naturalHeight);
+        exportCtx.strokeStyle = '#000';
+        exportCtx.fillStyle = '#000';
+        exportCtx.lineWidth = 4 * (exported.width / photo.getBoundingClientRect().width);
+        exportCtx.lineCap = 'round';
+        exportCtx.lineJoin = 'round';
+        strokes.forEach((stroke) => {
+          const first = stroke.points[0];
+          if (!first) return;
+          exportCtx.beginPath();
+          exportCtx.moveTo(first.x * exported.width, first.y * exported.height);
+          if (stroke.points.length === 1) {
+            exportCtx.arc(first.x * exported.width, first.y * exported.height, exportCtx.lineWidth / 2, 0, Math.PI * 2);
+            exportCtx.fill();
+          } else {
+            stroke.points.slice(1).forEach((point) => exportCtx.lineTo(point.x * exported.width, point.y * exported.height));
+            exportCtx.stroke();
+          }
+        });
+        if (noteText) {
+          const textX = photo.naturalWidth + padding;
+          let textY = padding + fontSize;
+          exportCtx.fillStyle = '#000';
+          exportCtx.font = `600 ${fontSize}px Arial`;
+          exportCtx.fillText('Notițe', textX, textY);
+          exportCtx.font = `${fontSize}px Arial`;
+          textY += fontSize + 18;
+          noteLines.forEach((line) => {
+            exportCtx.fillText(line, textX, textY);
+            textY += lineHeight;
+          });
+        }
+        const blob = await canvasToBlob(exported);
+        if (!blob) return;
+        const imageFile = new File([blob], 'imagine-cu-notite.png', { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [imageFile] })) {
+          try {
+            await navigator.share({ files: [imageFile], title: 'Imagine cu notițe' });
+            return;
+          } catch (error) {
+            if (error.name === 'AbortError') return;
+          }
+        }
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.download = imageFile.name;
+        link.href = url;
+        link.click();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+
+      addImage.addEventListener('click', () => imageInput.click());
+      imageInput.addEventListener('change', (event) => loadImage(event.target.files[0]));
+      undo.addEventListener('click', undoLastLine);
+      clear.addEventListener('click', clearDrawings);
+      save.addEventListener('click', saveImage);
+      notes.addEventListener('input', scheduleSave);
+      canvas.addEventListener('pointerdown', beginDrawing, { passive: false });
+      canvas.addEventListener('pointermove', continueDrawing, { passive: false });
+      canvas.addEventListener('pointerup', finishDrawing, { passive: false });
+      canvas.addEventListener('pointercancel', finishDrawing, { passive: false });
+      canvas.addEventListener('gesturestart', (event) => event.preventDefault(), { passive: false });
+      window.addEventListener('resize', configureCanvas);
+      restoreLastWork();
+      if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+    })();
+  </script>
+</body>
+</html>
