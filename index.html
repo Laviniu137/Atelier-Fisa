@@ -1800,7 +1800,8 @@
         closePencilEditor({ saveChanges: false });
       }
 
-      function setSelectedNoteMode(mode) {
+      function setSelectedNoteMode(mode, options = {}) {
+        const { openEditor = false } = options;
         selectedNoteMode = mode === 'pencil' ? 'pencil' : 'text';
         textModeButton.classList.toggle('active', selectedNoteMode === 'text');
         pencilModeButton.classList.toggle('active', selectedNoteMode === 'pencil');
@@ -1811,7 +1812,9 @@
           dismissKeyboardAndSelection();
           setPencilInteractionLock(true);
           renderHandwritingPreview();
-          openPencilEditor();
+          if (openEditor) {
+            openPencilEditor();
+          }
         } else {
           if (pencilEditorOpen) {
             closePencilEditor({ saveChanges: true });
@@ -2654,7 +2657,7 @@
         const note = interactiveNotes.find((item) => item.id === selectedNoteId);
         if (!note) return;
         note.inputMode = 'pencil';
-        setSelectedNoteMode('pencil');
+        setSelectedNoteMode('pencil', { openEditor: true });
         scheduleSave();
       });
       clearPencilInputButton.addEventListener('click', clearSelectedNoteHandwriting);
@@ -2662,7 +2665,7 @@
         const note = interactiveNotes.find((item) => item.id === selectedNoteId);
         if (!note) return;
         note.inputMode = 'pencil';
-        setSelectedNoteMode('pencil');
+        setSelectedNoteMode('pencil', { openEditor: true });
         scheduleSave();
       });
       pencilEditorPenButton.addEventListener('click', () => {
