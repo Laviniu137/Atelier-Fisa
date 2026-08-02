@@ -137,7 +137,11 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding:
+        max(24px, calc(env(safe-area-inset-top, 0px) + 12px))
+        max(24px, calc(env(safe-area-inset-right, 0px) + 12px))
+        max(24px, calc(env(safe-area-inset-bottom, 0px) + 12px))
+        max(24px, calc(env(safe-area-inset-left, 0px) + 12px));
       background: rgba(20, 16, 12, .42);
       -webkit-user-select: none;
       user-select: none;
@@ -145,12 +149,14 @@
     }
     .pencil-editor-overlay[hidden] { display: none; }
     .pencil-editor-dialog {
-      width: min(980px, calc(100vw - 32px));
-      height: min(760px, calc(100vh - 34px));
+      width: min(85vw, calc(100vw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px) - 48px));
+      height: min(80dvh, calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 48px));
+      max-width: 96vw;
+      max-height: 92dvh;
       display: grid;
       grid-template-rows: auto 1fr;
       border: 1px solid rgba(255, 255, 255, .5);
-      border-radius: 22px;
+      border-radius: clamp(20px, 2.3vw, 24px);
       background: rgba(255, 255, 255, .94);
       box-shadow: 0 26px 54px rgba(22, 16, 9, .3);
       backdrop-filter: blur(16px) saturate(140%);
@@ -159,18 +165,20 @@
     .pencil-editor-toolbar {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 12px;
+      gap: clamp(6px, .9vw, 10px);
+      padding: clamp(10px, 1.4vh, 14px) clamp(10px, 1.4vw, 14px);
       border-bottom: 1px solid #e4ded2;
       background: rgba(255, 255, 255, .86);
       backdrop-filter: blur(10px);
-      overflow-x: auto;
+      overflow: hidden;
+      flex-wrap: nowrap;
+      flex: 0 0 auto;
     }
     .pencil-editor-tool {
-      width: 44px;
-      height: 44px;
-      min-width: 44px;
-      min-height: 44px;
+      width: clamp(38px, 4.4vw, 44px);
+      height: clamp(38px, 4.4vw, 44px);
+      min-width: clamp(38px, 4.4vw, 44px);
+      min-height: clamp(38px, 4.4vw, 44px);
       padding: 0;
       border: 1px solid #d8d1c6;
       border-radius: 12px;
@@ -190,10 +198,10 @@
       margin: 0 2px;
     }
     .pencil-editor-color {
-      width: 44px;
-      height: 44px;
-      min-width: 44px;
-      min-height: 44px;
+      width: clamp(38px, 4.4vw, 44px);
+      height: clamp(38px, 4.4vw, 44px);
+      min-width: clamp(38px, 4.4vw, 44px);
+      min-height: clamp(38px, 4.4vw, 44px);
       padding: 0;
       border: 1px solid #d8d1c6;
       border-radius: 12px;
@@ -203,8 +211,8 @@
     .pencil-editor-color::-webkit-color-swatch-wrapper { padding: 0; }
     .pencil-editor-color::-webkit-color-swatch { border: 0; }
     .pencil-editor-size {
-      width: 124px;
-      min-width: 124px;
+      width: clamp(88px, 12vw, 132px);
+      min-width: clamp(88px, 12vw, 132px);
       accent-color: #2f6f51;
     }
     .pencil-editor-size-value {
@@ -216,19 +224,22 @@
     }
     .pencil-editor-save {
       margin-left: auto;
-      min-width: 100px;
+      min-width: clamp(84px, 9.5vw, 116px);
       border-color: #2f6f51;
       background: #2f6f51;
       color: #fff;
     }
     .pencil-editor-cancel {
-      min-width: 100px;
+      min-width: clamp(84px, 9.5vw, 116px);
       background: #f6f1ea;
     }
     .pencil-editor-canvas-wrap {
       position: relative;
       min-height: 0;
+      width: 100%;
+      height: 100%;
       background: #fff;
+      overflow: hidden;
     }
     #pencilEditorCanvas {
       width: 100%;
@@ -240,16 +251,34 @@
       -webkit-touch-callout: none;
       -webkit-tap-highlight-color: transparent;
     }
-    @media (max-width: 900px) {
-      .pencil-editor-overlay { padding: 12px; }
+    @media (orientation: landscape) and (min-width: 900px) {
       .pencil-editor-dialog {
-        width: calc(100vw - 20px);
-        height: min(680px, calc(100vh - 24px));
-        border-radius: 18px;
+        width: min(84vw, calc(100vw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px) - 48px));
+        height: min(78dvh, calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 48px));
+      }
+    }
+    @media (orientation: portrait) and (min-width: 700px) {
+      .pencil-editor-dialog {
+        width: min(90vw, calc(100vw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px) - 24px));
+        height: min(75dvh, calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 24px));
+      }
+    }
+    @media (max-width: 900px) {
+      .pencil-editor-overlay {
+        padding:
+          max(16px, calc(env(safe-area-inset-top, 0px) + 8px))
+          max(16px, calc(env(safe-area-inset-right, 0px) + 8px))
+          max(16px, calc(env(safe-area-inset-bottom, 0px) + 8px))
+          max(16px, calc(env(safe-area-inset-left, 0px) + 8px));
+      }
+      .pencil-editor-dialog {
+        width: min(94vw, calc(100vw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px) - 16px));
+        height: min(80dvh, calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 16px));
+        border-radius: clamp(16px, 2.5vw, 20px);
       }
       .pencil-editor-save,
-      .pencil-editor-cancel { min-width: 86px; }
-      .pencil-editor-size { width: 104px; min-width: 104px; }
+      .pencil-editor-cancel { min-width: clamp(72px, 14vw, 96px); }
+      .pencil-editor-size { width: clamp(72px, 18vw, 112px); min-width: clamp(72px, 18vw, 112px); }
     }
     .help { display: flex; align-items: center; gap: 8px; margin: 14px 2px 0; color: #83796b; font-size: .79rem; line-height: 1.45; }
     .help::before { width: 5px; height: 5px; flex: 0 0 auto; border-radius: 50%; background: #a48358; content: ""; }
