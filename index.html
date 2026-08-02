@@ -227,6 +227,9 @@
       let panOrigin = null;
       let fullscreenMode = false;
       let fullscreenFrame = { width: 0, height: 0 };
+      let fullscreenInputHandlersAttached = false;
+      let activeDrawingPointerId = null;
+      let activeWritingPointerId = null;
       let activeTouches = new Map();
       let pinchStartDistance = 0;
       let pinchStartZoom = 1;
@@ -470,6 +473,7 @@
         if (event.pointerType === 'mouse' && event.button !== undefined && event.button !== 0) return;
         event.preventDefault();
         canvas.setPointerCapture(event.pointerId);
+        activeDrawingPointerId = event.pointerId;
         activeStroke = { points: [pointFromEvent(event)] };
         redraw();
       }
@@ -484,7 +488,8 @@
       function finishDrawing(event) {
         if (!activeStroke) return;
         event.preventDefault();
-        if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+        releasePointerCapture(canvas, event.pointerId ?? activeDrawingPointerId);
+        activeDrawingPointerId = null;
         strokes.push(activeStroke);
         activeStroke = null;
         redraw();
@@ -591,6 +596,7 @@
         if (event.pointerType === 'mouse' && event.button !== undefined && event.button !== 0) return;
         event.preventDefault();
         noteCanvas.setPointerCapture(event.pointerId);
+        activeWritingPointerId = event.pointerId;
         activePencilStroke = { points: [pointFromNoteEvent(event)] };
         renderHandwritingCanvas();
       }
@@ -606,7 +612,8 @@
         const note = interactiveNotes.find((item) => item.id === selectedNoteId);
         if (!note || !activePencilStroke) return;
         event.preventDefault();
-        if (noteCanvas.hasPointerCapture(event.pointerId)) noteCanvas.releasePointerCapture(event.pointerId);
+        releasePointerCapture(noteCanvas, event.pointerId ?? activeWritingPointerId);
+        activeWritingPointerId = null;
         if (!Array.isArray(note.handwriting)) note.handwriting = [];
         note.handwriting.push(activePencilStroke);
         activePencilStroke = null;
@@ -713,15 +720,74 @@
         window.removeEventListener('pointermove', handleNoteDrag);
       }
 
+      function releasePointerCapture(target, pointerId) {
+        if (!target || pointerId === null || pointerId === undefined) return;
+        try {
+          if (target.hasPointerCapture(pointerId)) {
+            target.releasePointerCapture(pointerId);
+          }
+        } catch (error) {
+          console.warn('Pointer capture could not be released.', error);
+        }
+      }
+
+      function resetFullscreenInteractionState() {
+        activeStroke = null;
+        activePencilStroke = null;
+        draggingNoteId = null;
+        panning = false;
+        panStart = null;
+        panOrigin = null;
+        activeTouches.clear();
+        pinchStartDistance = 0;
+        pinchStartZoom = zoomLevel;
+        pinchCenter = null;
+        releasePointerCapture(canvas, activeDrawingPointerId);
+        releasePointerCapture(noteCanvas, activeWritingPointerId);
+        activeDrawingPointerId = null;
+        activeWritingPointerId = null;
+        redraw();
+        renderHandwritingCanvas();
+        updateImageTransform();
+      }
+
+      function attachFullscreenInputHandlers() {
+        if (fullscreenInputHandlersAttached) return;
+        stage.addEventListener('pointerdown', handleStagePointerDown, { passive: false });
+        stage.addEventListener('wheel', handleImageWheel, { passive: false });
+        window.addEventListener('pointermove', handleStagePointerMove);
+        window.addEventListener('pointerup', handleStagePointerUp);
+        window.addEventListener('pointercancel', handleStagePointerUp);
+        window.addEventListener('blur', resetFullscreenInteractionState);
+        fullscreenInputHandlersAttached = true;
+      }
+
+      function detachFullscreenInputHandlers() {
+        if (!fullscreenInputHandlersAttached) return;
+        stage.removeEventListener('pointerdown', handleStagePointerDown);
+        stage.removeEventListener('wheel', handleImageWheel);
+        window.removeEventListener('pointermove', handleStagePointerMove);
+        window.removeEventListener('pointerup', handleStagePointerUp);
+        window.removeEventListener('pointercancel', handleStagePointerUp);
+        window.removeEventListener('blur', resetFullscreenInteractionState);
+        fullscreenInputHandlersAttached = false;
+      }
+
       function setFullscreenMode(enabled) {
         fullscreenMode = enabled;
         document.body.classList.toggle('fullscreen-mode', enabled);
         fullscreenButton.hidden = enabled;
         exitFullscreenButton.hidden = !enabled;
         if (enabled) {
+          resetFullscreenInteractionState();
           updateFullscreenFrame();
           zoomLevel = 1;
           panOffset = { x: 0, y: 0 };
+          attachFullscreenInputHandlers();
+        } else {
+          resetFullscreenInteractionState();
+          detachFullscreenInputHandlers();
+          document.querySelectorAll('.fullscreen-overlay, #fullscreenOverlay').forEach((overlay) => overlay.remove());
         }
         updateImageTransform();
         configureCanvas();
@@ -1021,12 +1087,7 @@
       canvas.addEventListener('pointermove', continueDrawing, { passive: false });
       canvas.addEventListener('pointerup', finishDrawing, { passive: false });
       canvas.addEventListener('pointercancel', finishDrawing, { passive: false });
-      stage.addEventListener('pointerdown', handleStagePointerDown, { passive: false });
-      stage.addEventListener('wheel', handleImageWheel, { passive: false });
       canvas.addEventListener('gesturestart', (event) => event.preventDefault(), { passive: false });
-      window.addEventListener('pointermove', handleStagePointerMove);
-      window.addEventListener('pointerup', handleStagePointerUp);
-      window.addEventListener('pointercancel', handleStagePointerUp);
       window.addEventListener('resize', () => {
         if (fullscreenMode) {
           updateFullscreenFrame();
