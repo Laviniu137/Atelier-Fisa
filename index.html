@@ -224,6 +224,7 @@
       let selectedNoteId = null;
       let draggingNoteId = null;
       let activeTool = 'draw';
+      let previousFullscreenTool = 'draw';
       let selectedNoteMode = 'text';
       let activePencilStroke = null;
       let zoomLevel = 1;
@@ -844,6 +845,8 @@
         fullscreenButton.hidden = enabled;
         exitFullscreenButton.hidden = !enabled;
         if (enabled) {
+          previousFullscreenTool = activeTool;
+          setActiveTool('draw');
           resetInteractionState();
           resetFullscreenLayoutStyles();
           if (overlay && !overlay.contains(imagePanel)) {
@@ -869,6 +872,7 @@
           overlay.classList.remove('is-active');
           overlay.hidden = true;
           imagePanel.classList.remove('fullscreen-panel');
+          setActiveTool(previousFullscreenTool);
         }
         requestAnimationFrame(() => {
           configureCanvas();
