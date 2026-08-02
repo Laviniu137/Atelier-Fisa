@@ -21,7 +21,7 @@
     * { box-sizing: border-box; }
     body { min-width: 320px; margin: 0; background: radial-gradient(circle at 0% 0%, #f8f5ee 0, transparent 38%), linear-gradient(135deg, #ebe8e1 0%, #f5f2ec 55%, #e9e4db 100%); }
     button, textarea { font: inherit; }
-    button { min-height: 52px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; border: 1px solid #d8d1c6; border-radius: 13px; background: #fdfcf9; color: #423d33; padding: 11px 17px; font-size: .92rem; font-weight: 650; letter-spacing: -.01em; box-shadow: 0 1px 2px rgba(55, 46, 34, .05); transition: transform .16s ease, box-shadow .16s ease, background .16s ease, border-color .16s ease; -webkit-tap-highlight-color: transparent; }
+    button { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; border: 1px solid #d8d1c6; border-radius: 13px; background: #fdfcf9; color: #423d33; padding: 11px 17px; font-size: .92rem; font-weight: 650; letter-spacing: -.01em; box-shadow: 0 1px 2px rgba(55, 46, 34, .05); transition: transform .16s ease, box-shadow .16s ease, background .16s ease, border-color .16s ease; -webkit-tap-highlight-color: transparent; }
     button svg { width: 19px; height: 19px; flex: 0 0 auto; stroke: currentColor; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
     button:hover:not(:disabled) { transform: translateY(-1px); border-color: #afa18f; box-shadow: 0 8px 18px rgba(65, 52, 34, .10); }
     button:active:not(:disabled) { transform: translateY(1px) scale(.985); box-shadow: none; }
@@ -44,6 +44,7 @@
     #photo { display: block; max-width: 100%; max-height: min(66vh, 760px); width: auto; height: auto; }
     #drawingCanvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
     .note-layer { position: absolute; inset: 0; pointer-events: none; }
+    .image-stage { touch-action: none; }
     .note-marker { position: absolute; display: grid; place-items: center; width: 42px; height: 42px; transform: translate(-50%, -50%); border: 0; border-radius: 999px; background: linear-gradient(140deg, #8b5e3c, #6a3d22); color: #fffdfa; font-weight: 800; font-size: .95rem; box-shadow: 0 10px 20px rgba(61, 39, 23, .24); cursor: grab; pointer-events: auto; -webkit-tap-highlight-color: transparent; }
     .note-marker:active { cursor: grabbing; }
     .note-marker.selected { background: linear-gradient(140deg, #2f6f51, #1f4e3d); transform: translate(-50%, -50%) scale(1.06); }
@@ -130,6 +131,12 @@
     .drawing-tool-button.active { border-color: rgba(245,193,111,.8); background: rgba(245,193,111,.18); }
     .drawing-tool-button.danger { background: rgba(220,78,68,.15); border-color: rgba(220,78,68,.45); }
     .drawing-tool-button:disabled { opacity: .45; }
+    @media (min-width: 820px) and (max-width: 1366px) {
+      .app { padding: clamp(16px, 1.8vw, 26px); }
+      .layout { grid-template-columns: minmax(0, 1.6fr) minmax(320px, .9fr); gap: 18px; }
+      .canvas-shell { min-height: min(68vh, 760px); }
+      .notes { padding: 18px; }
+    }
     @media (orientation: portrait), (max-width: 800px) {
       .app { padding: 16px; }
       header { align-items: stretch; flex-direction: column; padding: 18px; }
@@ -137,11 +144,14 @@
       .layout { grid-template-columns: 1fr; gap: 20px; padding-top: 20px; }
       .canvas-shell { min-height: min(58vh, 580px); }
       #notes { min-height: 300px; }
+      .toolbar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     }
     @media (max-width: 520px) {
       .toolbar { grid-template-columns: 1fr; }
       .canvas-shell { min-height: 310px; }
       h1 { font-size: 1.4rem; }
+      .header-actions { width: 100%; }
+      .header-actions button { flex: 1 1 auto; }
     }
   </style>
 </head>
@@ -336,6 +346,8 @@
       let pinchStartDistance = 0;
       let pinchStartZoom = 1;
       let pinchCenter = null;
+      let lastTapTime = 0;
+      let lastTapPoint = null;
       const databaseName = 'fisa-atelier-offline';
       const databaseStore = 'lucrari';
       const projectVersion = 2;
@@ -746,7 +758,7 @@
       function configureCanvas() {
         const rect = photo.getBoundingClientRect();
         if (!rect.width || !rect.height) return;
-        const ratio = window.devicePixelRatio || 1;
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
         canvas.width = Math.round(rect.width * ratio);
         canvas.height = Math.round(rect.height * ratio);
         ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
@@ -935,7 +947,7 @@
       function configureNoteCanvas() {
         const rect = noteCanvas.getBoundingClientRect();
         if (!rect.width || !rect.height) return;
-        const ratio = window.devicePixelRatio || 1;
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
         noteCanvas.width = Math.round(rect.width * ratio);
         noteCanvas.height = Math.round(rect.height * ratio);
         noteCanvasCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
@@ -1231,12 +1243,30 @@
         setControls();
       }
 
+      function resetZoomAndPan() {
+        zoomLevel = 1;
+        panOffset = { x: 0, y: 0 };
+        updateImageTransform();
+        scheduleSave();
+      }
+
       function handleStagePointerDown(event) {
         if (!sourceImage) return;
         if (event.target === canvas) return;
         if (event.pointerType === 'touch') {
-          activeTouches.set(event.pointerId, { x: event.clientX, y: event.clientY });
+          const touchPoint = { x: event.clientX, y: event.clientY };
+          activeTouches.set(event.pointerId, touchPoint);
           if (activeTouches.size === 1 && fullscreenMode) {
+            const now = Date.now();
+            const isDoubleTap = lastTapPoint && now - lastTapTime < 280 && Math.hypot(touchPoint.x - lastTapPoint.x, touchPoint.y - lastTapPoint.y) < 28;
+            if (isDoubleTap) {
+              lastTapTime = 0;
+              lastTapPoint = null;
+              resetZoomAndPan();
+              return;
+            }
+            lastTapTime = now;
+            lastTapPoint = touchPoint;
             event.preventDefault();
             isPanning = true;
             panning = true;
