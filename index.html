@@ -60,10 +60,12 @@
     .notes-toolbar { display: flex; gap: 10px; margin-bottom: 12px; }
     .notes-toolbar button { flex: 1; min-height: 44px; }
     .note-list { display: grid; gap: 10px; margin-bottom: 14px; }
-    .note-list-item { width: 100%; border: 1px solid #e3ddd3; border-radius: 14px; padding: 12px 13px; background: #fdfcf9; text-align: left; color: #322c23; box-shadow: inset 0 1px 0 rgba(255,255,255,.4); }
+    .note-list-item { width: 100%; border: 1px solid #e3ddd3; border-radius: 14px; padding: 12px 13px; background: #fdfcf9; text-align: left; color: #322c23; box-shadow: inset 0 1px 0 rgba(255,255,255,.4); cursor: pointer; }
     .note-list-item.selected { border-color: #8b5e3c; background: #fbf2e8; }
-    .note-list-item strong { display: block; font-size: .95rem; }
-    .note-list-item small { display: block; margin-top: 4px; color: #7a7267; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .note-list-name { display: block; min-height: 24px; font-size: .95rem; font-weight: 700; color: #2f2922; border-radius: 8px; outline: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .note-list-name[contenteditable="true"] { padding: 4px 8px; border: 1px solid #d5c8b1; background: #fffdf9; }
+    .note-list-name:focus { outline: none; border-color: #8b5e3c; }
+    .note-list-item.selected .note-list-name { color: #5b3a22; }
     .note-form { display: grid; gap: 10px; }
     .note-form label { color: #655947; font-size: .72rem; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
     .note-form input, .note-form textarea { width: 100%; border: 1px solid #e2dbd1; border-radius: 12px; padding: 12px 13px; color: #322c23; background: linear-gradient(#fffefa, #fbf8f2); font-size: 15px; }
@@ -546,22 +548,43 @@
           return;
         }
         interactiveNotes.forEach((note) => {
-          const item = document.createElement('button');
-          item.type = 'button';
+          const item = document.createElement('div');
           item.className = `note-list-item${selectedNoteId === note.id ? ' selected' : ''}`;
-          const displayName = getNoteDisplayName(note);
-          const preview = note?.content ? note.content.split(/\n/)[0] : 'Fără conținut';
-          item.innerHTML = `<strong>${escapeHtml(displayName)}</strong><small>${escapeHtml(preview)}</small>`;
           item.addEventListener('click', () => selectNote(note.id));
+
+          const nameField = document.createElement('div');
+          nameField.className = 'note-list-name';
+          nameField.textContent = getNoteDisplayName(note);
+          nameField.contentEditable = selectedNoteId === note.id;
+          nameField.setAttribute('spellcheck', 'false');
+          nameField.addEventListener('click', (event) => {
+            event.stopPropagation();
+            selectNote(note.id);
+            if (selectedNoteId === note.id) {
+              window.setTimeout(() => nameField.focus(), 0);
+            }
+          });
+          nameField.addEventListener('input', () => {
+            const value = nameField.textContent.replace(/\s+/g, ' ').trim();
+            note.name = value || 'Notă nouă';
+            scheduleSave();
+          });
+          nameField.addEventListener('blur', () => {
+            const value = nameField.textContent.replace(/\s+/g, ' ').trim();
+            note.name = value || 'Notă nouă';
+            renderNoteList();
+            scheduleSave();
+          });
+
+          item.appendChild(nameField);
           noteList.appendChild(item);
         });
       }
 
       function getNoteDisplayName(note) {
-        const content = typeof note?.content === 'string' ? note.content.trim() : '';
-        if (!content) return 'Notă nouă';
-        const compact = content.replace(/\s+/g, ' ').trim();
-        return compact.length > 30 ? `${compact.slice(0, 30)}…` : compact;
+        const name = typeof note?.name === 'string' ? note.name.trim() : '';
+        if (name) return name;
+        return 'Notă nouă';
       }
 
       function syncSelectedNoteForm() {
@@ -711,6 +734,7 @@
       function addNote() {
         const newNote = {
           id: createNoteId(),
+          name: '',
           content: '',
           handwriting: [],
           inputMode: 'text',
@@ -1121,7 +1145,6 @@
         if (!note) return;
         note.content = noteContentTextarea.value;
         renderNoteList();
-        renderNotes();
         scheduleSave();
       });
       textModeButton.addEventListener('click', () => {
