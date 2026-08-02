@@ -374,8 +374,41 @@
     body.fullscreen-mode .image-panel.fullscreen-panel { position: relative; width: 100%; height: 100%; z-index: 1; border: 0; border-radius: 0; padding: 0; background: #000; box-shadow: none; }
     body.fullscreen-mode .image-panel.fullscreen-panel .section-label, body.fullscreen-mode .image-panel.fullscreen-panel .help { display: none; }
     body.fullscreen-mode .image-panel.fullscreen-panel .canvas-shell { min-height: 100vh; height: 100vh; width: 100vw; border: 0; border-radius: 0; background: #000; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 0; }
-    body.fullscreen-mode .image-panel.fullscreen-panel .image-stage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; max-width: none; width: 100%; height: 100%; margin: 0; }
-    body.fullscreen-mode .image-panel.fullscreen-panel .image-stage #photo { max-height: none; width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+    body.fullscreen-mode .image-panel.fullscreen-panel .image-stage {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      max-width: none;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-user-drag: none;
+    }
+    body.fullscreen-mode .image-panel.fullscreen-panel .image-stage #photo {
+      max-height: none;
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: block;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-user-drag: none;
+      pointer-events: none;
+    }
+    body.fullscreen-mode .image-panel.fullscreen-panel .image-stage #drawingCanvas {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-user-drag: none;
+    }
     body.fullscreen-mode .mode-switcher { display: none; }
     body.fullscreen-mode .toolbar { display: none; }
     body.fullscreen-mode .fullscreen-inline { position: fixed; left: 16px; top: 16px; z-index: 1500; width: auto; }
@@ -1777,6 +1810,43 @@
         event.preventDefault();
       }
 
+      function isEventInsideImageStage(event) {
+        return Boolean(stage && event?.target instanceof Node && stage.contains(event.target));
+      }
+
+      function blockFullscreenImageNativeActions(event) {
+        if (!fullscreenMode) return;
+        if (!isEventInsideImageStage(event)) return;
+        event.preventDefault();
+      }
+
+      function blockFullscreenImageClipboard(event) {
+        if (!fullscreenMode || !stage) return;
+        if (isEventInsideImageStage(event)) {
+          event.preventDefault();
+          return;
+        }
+        const selection = window.getSelection ? window.getSelection() : null;
+        const anchorNode = selection ? selection.anchorNode : null;
+        const focusNode = selection ? selection.focusNode : null;
+        if ((anchorNode && stage.contains(anchorNode)) || (focusNode && stage.contains(focusNode))) {
+          event.preventDefault();
+        }
+      }
+
+      function setFullscreenImageInteractionLock(enabled) {
+        if (!photo || !canvas || !stage) return;
+        if (enabled) {
+          photo.setAttribute('draggable', 'false');
+          canvas.setAttribute('draggable', 'false');
+          stage.setAttribute('draggable', 'false');
+          return;
+        }
+        photo.removeAttribute('draggable');
+        canvas.removeAttribute('draggable');
+        stage.removeAttribute('draggable');
+      }
+
       function setPencilInteractionLock(isLocked) {
         suppressPencilContextMenu = Boolean(isLocked);
         document.body.classList.toggle('pencil-writing-mode', suppressPencilContextMenu);
@@ -2148,6 +2218,7 @@
       function setFullscreenMode(enabled) {
         fullscreenMode = enabled;
         document.body.classList.toggle('fullscreen-mode', enabled);
+        setFullscreenImageInteractionLock(enabled);
         fullscreenButton.hidden = enabled;
         if (fullscreenCloseButton) {
           fullscreenCloseButton.hidden = !enabled;
@@ -2935,6 +3006,18 @@
       pencilEditorCanvas.addEventListener('touchstart', (event) => event.preventDefault(), { passive: false });
       pencilEditorOverlay.addEventListener('contextmenu', (event) => event.preventDefault());
       pencilEditorOverlay.addEventListener('pointerdown', handlePencilEditorBackdropPointerDown);
+      stage.addEventListener('contextmenu', blockFullscreenImageNativeActions);
+      stage.addEventListener('dragstart', blockFullscreenImageNativeActions);
+      stage.addEventListener('selectstart', blockFullscreenImageNativeActions);
+      stage.addEventListener('touchstart', blockFullscreenImageNativeActions, { passive: false });
+      photo.addEventListener('contextmenu', blockFullscreenImageNativeActions);
+      photo.addEventListener('dragstart', blockFullscreenImageNativeActions);
+      photo.addEventListener('selectstart', blockFullscreenImageNativeActions);
+      canvas.addEventListener('contextmenu', blockFullscreenImageNativeActions);
+      canvas.addEventListener('dragstart', blockFullscreenImageNativeActions);
+      canvas.addEventListener('selectstart', blockFullscreenImageNativeActions);
+      document.addEventListener('copy', blockFullscreenImageClipboard);
+      document.addEventListener('cut', blockFullscreenImageClipboard);
       canvas.addEventListener('pointerdown', beginDrawing, { passive: false });
       canvas.addEventListener('pointermove', continueDrawing, { passive: false });
       canvas.addEventListener('pointerup', finishDrawing, { passive: false });
