@@ -367,6 +367,19 @@
       }
 
       async function saveCurrentImageState() {
+        const beforeSave = cloneProjectImageState(projectImages[activeImageIndex] || {});
+        console.log('[debug] saveCurrentImageState: before save', {
+          activeImageIndex,
+          projectImagesLength: projectImages.length,
+          currentState: beforeSave,
+          strokesCount: strokes.length,
+          notesCount: interactiveNotes.length,
+          zoomLevel,
+          panOffset,
+          activeTool,
+          selectedNoteId
+        });
+
         const currentState = projectImages[activeImageIndex] || {};
         const activeImage = cloneProjectImageState({
           ...currentState,
@@ -396,6 +409,19 @@
 
         activeImage.name = activeImage.name || getProjectImageName(activeImageIndex);
         projectImages[activeImageIndex] = activeImage;
+
+        console.log('[debug] saveCurrentImageState: after save', {
+          activeImageIndex,
+          savedImage: cloneProjectImageState(projectImages[activeImageIndex] || {}),
+          projectImagesPreview: projectImages.map((image, index) => ({
+            index,
+            name: image?.name,
+            strokesCount: Array.isArray(image?.strokes) ? image.strokes.length : 0,
+            notesCount: Array.isArray(image?.notes) ? image.notes.length : 0,
+            zoom: image?.zoom,
+            pan: image?.pan
+          }))
+        });
       }
 
       async function buildProjectPayload() {
@@ -431,6 +457,20 @@
             };
           }))
         };
+
+        console.log('[debug] buildProjectPayload: payload before export', {
+          projectName: payload.projectName,
+          imagesCount: payload.images.length,
+          firstImage: payload.images[0],
+          allImages: payload.images.map((image, index) => ({
+            index,
+            name: image?.name,
+            strokesCount: Array.isArray(image?.strokes) ? image.strokes.length : 0,
+            notesCount: Array.isArray(image?.notes) ? image.notes.length : 0,
+            zoom: image?.zoom,
+            pan: image?.pan
+          }))
+        });
 
         return payload;
       }
@@ -519,6 +559,8 @@
               selectedNoteMode: project.ui?.selectedNoteMode === 'pencil' ? 'pencil' : 'text'
             }] : []);
 
+        console.log('[debug] applyProjectState: source images', sourceImages);
+
         projectImages = sourceImages.map((image, index) => cloneProjectImageState({
           id: image.id || createNoteId(),
           name: image.name || getProjectImageName(index),
@@ -532,6 +574,15 @@
           selectedNoteId: image.selectedNoteId || null,
           selectedNoteMode: image.selectedNoteMode === 'pencil' ? 'pencil' : 'text'
         }));
+
+        console.log('[debug] applyProjectState: projectImages after map', projectImages.map((image, index) => ({
+          index,
+          name: image?.name,
+          strokesCount: Array.isArray(image?.strokes) ? image.strokes.length : 0,
+          notesCount: Array.isArray(image?.notes) ? image.notes.length : 0,
+          zoom: image?.zoom,
+          pan: image?.pan
+        })));
 
         if (!projectImages.length) {
           resetCurrentProject({ persist: false });
@@ -1239,9 +1290,32 @@
           resetCurrentProject({ persist });
           return;
         }
-        await saveCurrentImageState();
-        activeImageIndex = ((index % projectImages.length) + projectImages.length) % projectImages.length;
+
+        const previousIndex = activeImageIndex;
+        const targetIndex = ((index % projectImages.length) + projectImages.length) % projectImages.length;
+
+        if (sourceImage && projectImages[previousIndex] && previousIndex !== targetIndex) {
+          console.log('[debug] activateImageAt: saving previous image before switch', {
+            previousIndex,
+            targetIndex,
+            strokesCount: strokes.length,
+            notesCount: interactiveNotes.length
+          });
+          await saveCurrentImageState();
+        }
+
+        activeImageIndex = targetIndex;
         const currentImage = projectImages[activeImageIndex];
+        console.log('[debug] activateImageAt: selected image', {
+          activeImageIndex,
+          currentImage: currentImage ? {
+            name: currentImage.name,
+            strokesCount: Array.isArray(currentImage.strokes) ? currentImage.strokes.length : 0,
+            notesCount: Array.isArray(currentImage.notes) ? currentImage.notes.length : 0,
+            zoom: currentImage.zoom,
+            pan: currentImage.pan
+          } : null
+        });
         if (!currentImage || !currentImage.dataUrl) {
           resetCurrentProject({ persist });
           return;
@@ -1275,6 +1349,14 @@
           setSelectedNoteMode(selectedNoteMode);
           updateImageTransform();
           setControls();
+          console.log('[debug] activateImageAt: after load image state', {
+            activeImageIndex,
+            strokesCount: strokes.length,
+            notesCount: interactiveNotes.length,
+            zoomLevel,
+            panOffset,
+            selectedNoteId
+          });
           if (persist) {
             saveLastWork();
           }
@@ -1304,8 +1386,19 @@
             selectedNoteId: null,
             selectedNoteMode: 'text'
           };
+          console.log('[debug] loadImage: pushing new image entry', {
+            imageEntry,
+            projectImagesBefore: projectImages.length,
+            activeImageIndexBefore: activeImageIndex
+          });
           projectImages.push(imageEntry);
           activeImageIndex = projectImages.length - 1;
+          console.log('[debug] loadImage: projectImages after push', projectImages.map((image, index) => ({
+            index,
+            name: image?.name,
+            strokesCount: Array.isArray(image?.strokes) ? image.strokes.length : 0,
+            notesCount: Array.isArray(image?.notes) ? image.notes.length : 0
+          })));
           await activateImageAt(activeImageIndex, { persist: shouldPersist });
           resolve();
         });
@@ -1344,6 +1437,8 @@
         const chosenName = normalizeProjectName(name);
         setProjectName(chosenName);
         const project = await buildProjectPayload();
+        console.log('[debug] saveProjectWithName: project.images[0]', project.images[0]);
+        console.log('[debug] saveProjectWithName: project.images', project.images);
         const blob = new Blob([JSON.stringify(project, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
