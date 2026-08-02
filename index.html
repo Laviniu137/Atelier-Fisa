@@ -161,8 +161,6 @@
         </div>
         <div class="note-list" id="noteList" aria-live="polite"></div>
         <div class="note-form">
-          <label for="noteTitle">Titlu</label>
-          <input id="noteTitle" type="text" placeholder="Ex.: Detaliu important">
           <label for="noteContent">Conținut</label>
           <div class="note-input-toolbar" role="toolbar" aria-label="Mod conținut notă">
             <button type="button" id="textModeBtn" class="active">Text</button>
@@ -202,7 +200,6 @@
       const addNoteButton = document.getElementById('addNote');
       const deleteSelectedNoteButton = document.getElementById('deleteSelectedNote');
       const noteList = document.getElementById('noteList');
-      const noteTitleInput = document.getElementById('noteTitle');
       const noteContentTextarea = document.getElementById('noteContent');
       const textModeButton = document.getElementById('textModeBtn');
       const pencilModeButton = document.getElementById('pencilModeBtn');
@@ -552,15 +549,23 @@
           const item = document.createElement('button');
           item.type = 'button';
           item.className = `note-list-item${selectedNoteId === note.id ? ' selected' : ''}`;
-          item.innerHTML = `<strong>${escapeHtml(note.title || 'Notă')}</strong><small>${escapeHtml(note.content ? note.content.split(/\n/)[0] : 'Fără conținut')}</small>`;
+          const displayName = getNoteDisplayName(note);
+          const preview = note?.content ? note.content.split(/\n/)[0] : 'Fără conținut';
+          item.innerHTML = `<strong>${escapeHtml(displayName)}</strong><small>${escapeHtml(preview)}</small>`;
           item.addEventListener('click', () => selectNote(note.id));
           noteList.appendChild(item);
         });
       }
 
+      function getNoteDisplayName(note) {
+        const content = typeof note?.content === 'string' ? note.content.trim() : '';
+        if (!content) return 'Notă nouă';
+        const compact = content.replace(/\s+/g, ' ').trim();
+        return compact.length > 30 ? `${compact.slice(0, 30)}…` : compact;
+      }
+
       function syncSelectedNoteForm() {
         const note = interactiveNotes.find((item) => item.id === selectedNoteId);
-        noteTitleInput.value = note ? note.title : '';
         noteContentTextarea.value = note ? note.content : '';
         setSelectedNoteMode(note && note.inputMode === 'pencil' ? 'pencil' : 'text');
         renderHandwritingCanvas();
@@ -706,7 +711,6 @@
       function addNote() {
         const newNote = {
           id: createNoteId(),
-          title: `Notă ${interactiveNotes.length + 1}`,
           content: '',
           handwriting: [],
           inputMode: 'text',
@@ -985,9 +989,7 @@
         panStart = null;
         panOrigin = null;
         activeTouches.clear();
-        noteTitleInput.value = '';
         noteContentTextarea.value = '';
-        noteTitleInput.hidden = false;
         noteContentTextarea.hidden = false;
         handwritingPanel.hidden = true;
         textModeButton.classList.add('active');
@@ -1114,19 +1116,12 @@
       save.addEventListener('click', saveProject);
       addNoteButton.addEventListener('click', addNote);
       deleteSelectedNoteButton.addEventListener('click', deleteSelectedNote);
-      noteTitleInput.addEventListener('input', () => {
-        const note = interactiveNotes.find((item) => item.id === selectedNoteId);
-        if (!note) return;
-        note.title = noteTitleInput.value;
-        renderNoteList();
-        renderNotes();
-        scheduleSave();
-      });
       noteContentTextarea.addEventListener('input', () => {
         const note = interactiveNotes.find((item) => item.id === selectedNoteId);
         if (!note) return;
         note.content = noteContentTextarea.value;
         renderNoteList();
+        renderNotes();
         scheduleSave();
       });
       textModeButton.addEventListener('click', () => {
