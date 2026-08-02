@@ -98,6 +98,7 @@
       <div class="header-actions">
         <button type="button" id="loadProject"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg><span>Încarcă proiect</span></button>
         <button type="button" id="addImage"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="M7 8l5-5 5 5"></path><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"></path></svg><span>Adaugă imagine</span></button>
+        <button type="button" id="removeImage" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg><span>Șterge imaginea</span></button>
         <input class="sr-only" id="imageInput" type="file" accept="image/*" capture="environment" multiple>
         <input class="sr-only" id="projectInput" type="file" accept="application/json,.json">
       </div>
@@ -156,6 +157,7 @@
   <script>
     (() => {
       const addImage = document.getElementById('addImage');
+      const removeImageButton = document.getElementById('removeImage');
       const imageInput = document.getElementById('imageInput');
       const loadProjectButton = document.getElementById('loadProject');
       const projectInput = document.getElementById('projectInput');
@@ -342,6 +344,7 @@
         undo.disabled = !ready || strokes.length === 0 || activeTool !== 'draw';
         clear.disabled = !ready || strokes.length === 0 || activeTool !== 'draw';
         save.disabled = !ready;
+        removeImageButton.disabled = !ready;
         addNoteButton.disabled = !ready || activeTool !== 'notes';
         deleteSelectedNoteButton.disabled = !ready || !selectedNoteId || activeTool !== 'notes';
       }
@@ -692,6 +695,61 @@
         scheduleSave();
       }
 
+      function resetCurrentProject({ persist = true } = {}) {
+        if (currentObjectUrl) {
+          URL.revokeObjectURL(currentObjectUrl);
+        }
+        if (photo.src && photo.src.startsWith('blob:')) {
+          photo.removeAttribute('src');
+        }
+        sourceImage = null;
+        imageBlob = null;
+        currentObjectUrl = null;
+        activeStroke = null;
+        activePencilStroke = null;
+        strokes = [];
+        interactiveNotes = [];
+        selectedNoteId = null;
+        draggingNoteId = null;
+        activeTool = 'draw';
+        selectedNoteMode = 'text';
+        zoomLevel = 1;
+        panOffset = { x: 0, y: 0 };
+        panning = false;
+        panStart = null;
+        panOrigin = null;
+        noteTitleInput.value = '';
+        noteContentTextarea.value = '';
+        noteTitleInput.hidden = false;
+        noteContentTextarea.hidden = false;
+        handwritingPanel.hidden = true;
+        textModeButton.classList.add('active');
+        pencilModeButton.classList.remove('active');
+        noteList.innerHTML = '';
+        noteLayer.innerHTML = '';
+        noteLayer.hidden = true;
+        emptyState.hidden = false;
+        stage.hidden = true;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        noteCanvasCtx.clearRect(0, 0, noteCanvas.width, noteCanvas.height);
+        updateImageTransform();
+        setActiveTool('draw');
+        setSelectedNoteMode('text');
+        setControls();
+        imageInput.value = '';
+        projectInput.value = '';
+        if (persist) {
+          saveLastWork();
+        }
+      }
+
+      function confirmRemoveImage() {
+        if (!sourceImage) return;
+        const confirmed = window.confirm('Sigur dorești să ștergi imaginea? Toate notițele, marcatorii și desenele asociate vor fi șterse.');
+        if (!confirmed) return;
+        resetCurrentProject();
+      }
+
       function loadImage(file, { storedStrokes = [], storedNotes = [], shouldPersist = true } = {}) {
         return new Promise((resolve) => {
           if (!file || !file.type.startsWith('image/')) {
@@ -765,6 +823,7 @@
       }
 
       addImage.addEventListener('click', () => imageInput.click());
+      removeImageButton.addEventListener('click', confirmRemoveImage);
       loadProjectButton.addEventListener('click', () => projectInput.click());
       imageInput.addEventListener('change', (event) => loadImage(event.target.files[0]));
       projectInput.addEventListener('change', async (event) => {
