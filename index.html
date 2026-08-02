@@ -85,9 +85,9 @@
     body.fullscreen-mode .notes { display: none; }
     body.fullscreen-mode .image-panel { position: fixed; inset: 0; z-index: 1000; border: 0; border-radius: 0; padding: 0; background: #000; box-shadow: none; }
     body.fullscreen-mode .image-panel .section-label, body.fullscreen-mode .image-panel .help { display: none; }
-    body.fullscreen-mode .canvas-shell { min-height: 100vh; height: 100vh; width: 100vw; border: 0; border-radius: 0; background: #000; overflow: hidden; }
-    body.fullscreen-mode .image-stage { max-width: none; height: 100%; width: 100%; }
-    body.fullscreen-mode .image-stage #photo { max-height: none; width: 100%; height: 100%; object-fit: contain; }
+    body.fullscreen-mode .canvas-shell { min-height: 100vh; height: 100vh; width: 100vw; border: 0; border-radius: 0; background: #000; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 0; }
+    body.fullscreen-mode .image-stage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; max-width: none; width: 100%; height: 100%; margin: 0; }
+    body.fullscreen-mode .image-stage #photo { max-height: none; width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
     body.fullscreen-mode .mode-switcher, body.fullscreen-mode .toolbar { position: fixed; left: 50%; transform: translateX(-50%); z-index: 1100; width: min(420px, calc(100vw - 32px)); }
     body.fullscreen-mode .mode-switcher { top: 16px; margin: 0; }
     body.fullscreen-mode .toolbar { bottom: 16px; margin: 0; grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -227,6 +227,7 @@
       let panStart = null;
       let panOrigin = null;
       let fullscreenMode = false;
+      let fullscreenFrame = { width: 0, height: 0 };
       let activeTouches = new Map();
       let pinchStartDistance = 0;
       let pinchStartZoom = 1;
@@ -303,8 +304,29 @@
         saveTimer = window.setTimeout(() => saveLastWork(), 350);
       }
 
+      function updateFullscreenFrame() {
+        if (!fullscreenMode) return;
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        fullscreenFrame = { width: viewportWidth, height: viewportHeight };
+        const shell = document.getElementById('canvasShell');
+        if (shell) {
+          shell.style.width = `${viewportWidth}px`;
+          shell.style.height = `${viewportHeight}px`;
+        }
+        if (stage) {
+          stage.style.width = `${viewportWidth}px`;
+          stage.style.height = `${viewportHeight}px`;
+        }
+      }
+
       function updateImageTransform() {
-        if (!sourceImage || !fullscreenMode) {
+        if (!sourceImage) {
+          stage.style.transform = '';
+          stage.style.transformOrigin = '0 0';
+          return;
+        }
+        if (!fullscreenMode) {
           stage.style.transform = '';
           stage.style.transformOrigin = '0 0';
           return;
@@ -697,6 +719,11 @@
         document.body.classList.toggle('fullscreen-mode', enabled);
         fullscreenButton.hidden = enabled;
         exitFullscreenButton.hidden = !enabled;
+        if (enabled) {
+          updateFullscreenFrame();
+          zoomLevel = 1;
+          panOffset = { x: 0, y: 0 };
+        }
         updateImageTransform();
         configureCanvas();
         configureNoteCanvas();
@@ -1002,6 +1029,9 @@
       window.addEventListener('pointerup', handleStagePointerUp);
       window.addEventListener('pointercancel', handleStagePointerUp);
       window.addEventListener('resize', () => {
+        if (fullscreenMode) {
+          updateFullscreenFrame();
+        }
         configureCanvas();
         configureNoteCanvas();
       });
