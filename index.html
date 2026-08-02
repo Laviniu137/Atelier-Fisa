@@ -316,6 +316,20 @@
         saveTimer = window.setTimeout(() => saveLastWork(), 350);
       }
 
+      function resetFullscreenLayoutStyles() {
+        const shell = document.getElementById('canvasShell');
+        if (shell) {
+          shell.style.width = '';
+          shell.style.height = '';
+        }
+        if (stage) {
+          stage.style.width = '';
+          stage.style.height = '';
+          stage.style.transform = '';
+          stage.style.transformOrigin = '';
+        }
+      }
+
       function updateFullscreenFrame() {
         if (!fullscreenMode) return;
         const viewportWidth = window.innerWidth;
@@ -803,6 +817,7 @@
         exitFullscreenButton.hidden = !enabled;
         if (enabled) {
           resetInteractionState();
+          resetFullscreenLayoutStyles();
           if (overlay && !overlay.contains(imagePanel)) {
             overlay.appendChild(imagePanel);
           }
@@ -816,6 +831,7 @@
         } else {
           resetInteractionState();
           detachFullscreenInputHandlers();
+          resetFullscreenLayoutStyles();
           if (overlay && overlay.contains(imagePanel)) {
             overlay.removeChild(imagePanel);
           }
