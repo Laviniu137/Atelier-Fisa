@@ -83,10 +83,44 @@
     .note-input-toolbar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 6px; }
     .note-input-toolbar button { min-height: 42px; padding-inline: 10px; }
     .note-input-toolbar button.active { border-color: #8b5e3c; background: #fbf2e8; color: #5a3a22; }
-    .handwriting-panel { display: grid; gap: 8px; padding: 10px; border: 1px solid #e2dbd1; border-radius: 12px; background: linear-gradient(#fffefa, #fbf8f2); -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+    .handwriting-panel { display: none; }
     .handwriting-panel canvas { width: 100%; min-height: 220px; border: 1px solid #e3ddd3; border-radius: 10px; background: #fffdf9; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
     .handwriting-actions { display: flex; gap: 8px; }
     .handwriting-actions button { flex: 1; min-height: 40px; }
+    .handwriting-preview {
+      display: grid;
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid #e2dbd1;
+      border-radius: 12px;
+      background: linear-gradient(#fffefa, #fbf8f2);
+    }
+    .handwriting-preview[hidden] { display: none; }
+    .handwriting-preview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: #675a48;
+      font-size: .78rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    #noteHandwritingPreview {
+      width: 100%;
+      min-height: 140px;
+      border: 1px solid #e3ddd3;
+      border-radius: 10px;
+      background: #fffdf9;
+      touch-action: none;
+    }
+    .handwriting-preview-empty {
+      color: #8d8274;
+      font-size: .82rem;
+      line-height: 1.45;
+      margin: 0;
+    }
     body.pencil-writing-mode,
     body.pencil-writing-mode .notes,
     body.pencil-writing-mode .note-form,
@@ -95,6 +129,127 @@
       -webkit-user-select: none;
       user-select: none;
       -webkit-touch-callout: none;
+    }
+    .pencil-editor-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(20, 16, 12, .42);
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+    .pencil-editor-overlay[hidden] { display: none; }
+    .pencil-editor-dialog {
+      width: min(980px, calc(100vw - 32px));
+      height: min(760px, calc(100vh - 34px));
+      display: grid;
+      grid-template-rows: auto 1fr;
+      border: 1px solid rgba(255, 255, 255, .5);
+      border-radius: 22px;
+      background: rgba(255, 255, 255, .94);
+      box-shadow: 0 26px 54px rgba(22, 16, 9, .3);
+      backdrop-filter: blur(16px) saturate(140%);
+      overflow: hidden;
+    }
+    .pencil-editor-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      border-bottom: 1px solid #e4ded2;
+      background: rgba(255, 255, 255, .86);
+      backdrop-filter: blur(10px);
+      overflow-x: auto;
+    }
+    .pencil-editor-tool {
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      min-height: 44px;
+      padding: 0;
+      border: 1px solid #d8d1c6;
+      border-radius: 12px;
+      background: #fff;
+      color: #3a3328;
+    }
+    .pencil-editor-tool.active {
+      border-color: #2f6f51;
+      background: #ebf8f1;
+      color: #1f4e3d;
+    }
+    .pencil-editor-tool svg { width: 20px; height: 20px; stroke-width: 2; }
+    .pencil-editor-divider {
+      width: 1px;
+      align-self: stretch;
+      background: #e6e0d6;
+      margin: 0 2px;
+    }
+    .pencil-editor-color {
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      min-height: 44px;
+      padding: 0;
+      border: 1px solid #d8d1c6;
+      border-radius: 12px;
+      background: #fff;
+      overflow: hidden;
+    }
+    .pencil-editor-color::-webkit-color-swatch-wrapper { padding: 0; }
+    .pencil-editor-color::-webkit-color-swatch { border: 0; }
+    .pencil-editor-size {
+      width: 124px;
+      min-width: 124px;
+      accent-color: #2f6f51;
+    }
+    .pencil-editor-size-value {
+      min-width: 52px;
+      color: #5e5446;
+      font-size: .8rem;
+      font-weight: 700;
+      text-align: left;
+    }
+    .pencil-editor-save {
+      margin-left: auto;
+      min-width: 100px;
+      border-color: #2f6f51;
+      background: #2f6f51;
+      color: #fff;
+    }
+    .pencil-editor-cancel {
+      min-width: 100px;
+      background: #f6f1ea;
+    }
+    .pencil-editor-canvas-wrap {
+      position: relative;
+      min-height: 0;
+      background: #fff;
+    }
+    #pencilEditorCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    @media (max-width: 900px) {
+      .pencil-editor-overlay { padding: 12px; }
+      .pencil-editor-dialog {
+        width: calc(100vw - 20px);
+        height: min(680px, calc(100vh - 24px));
+        border-radius: 18px;
+      }
+      .pencil-editor-save,
+      .pencil-editor-cancel { min-width: 86px; }
+      .pencil-editor-size { width: 104px; min-width: 104px; }
     }
     .help { display: flex; align-items: center; gap: 8px; margin: 14px 2px 0; color: #83796b; font-size: .79rem; line-height: 1.45; }
     .help::before { width: 5px; height: 5px; flex: 0 0 auto; border-radius: 50%; background: #a48358; content: ""; }
@@ -514,6 +669,14 @@
             <button type="button" id="pencilModeBtn">✏️ Scrie cu Apple Pencil</button>
           </div>
           <textarea id="noteContent" placeholder="Scrie observații, măsurători sau idei pentru această zonă…"></textarea>
+          <div class="handwriting-preview" id="handwritingPreview" hidden>
+            <div class="handwriting-preview-header">
+              <span>Scris de mână</span>
+              <button type="button" id="openPencilEditor">Editează</button>
+            </div>
+            <canvas id="noteHandwritingPreview" aria-label="Previzualizare scris de mână"></canvas>
+            <p id="handwritingPreviewEmpty" class="handwriting-preview-empty">Nu există încă scris de mână. Apasă Editează pentru a începe.</p>
+          </div>
           <div class="handwriting-panel" id="handwritingPanel" hidden>
             <canvas id="noteCanvas" aria-label="Zonă de scriere cu Apple Pencil"></canvas>
             <div class="handwriting-actions">
@@ -524,6 +687,37 @@
       </section>
     </div>
   </main>
+
+  <div id="pencilEditorOverlay" class="pencil-editor-overlay" hidden>
+    <div class="pencil-editor-dialog" role="dialog" aria-modal="true" aria-label="Editor Apple Pencil">
+      <div class="pencil-editor-toolbar" role="toolbar" aria-label="Editor Apple Pencil">
+      <button type="button" id="pencilEditorPen" class="pencil-editor-tool active" aria-label="Creion" title="Creion">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-1 10-10a2.2 2.2 0 0 0 0-3.1l-.1-.1a2.2 2.2 0 0 0-3.1 0L5 15.7 4 20z"></path><path d="m13.4 7.4 3.2 3.2"></path></svg>
+      </button>
+      <button type="button" id="pencilEditorEraser" class="pencil-editor-tool" aria-label="Radieră" title="Radieră">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.2 15.4 11 7.2a2.2 2.2 0 0 0-3.1 0L3.8 11.3a2.2 2.2 0 0 0 0 3.1l3.3 3.3a2.2 2.2 0 0 0 1.5.6H17"></path><path d="M13 20h8"></path></svg>
+      </button>
+      <input id="pencilEditorColor" class="pencil-editor-color" type="color" value="#2f2a24" aria-label="Selector culoare">
+      <input id="pencilEditorSize" class="pencil-editor-size" type="range" min="1" max="14" step="1" value="3" aria-label="Grosime creion">
+      <span id="pencilEditorSizeValue" class="pencil-editor-size-value">3 px</span>
+      <span class="pencil-editor-divider" aria-hidden="true"></span>
+      <button type="button" id="pencilEditorUndo" class="pencil-editor-tool" aria-label="Undo" title="Undo">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10a6 6 0 0 1 6 6v1"></path></svg>
+      </button>
+      <button type="button" id="pencilEditorRedo" class="pencil-editor-tool" aria-label="Redo" title="Redo">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5"></path><path d="M20 9H10a6 6 0 0 0-6 6v1"></path></svg>
+      </button>
+      <button type="button" id="pencilEditorClear" class="pencil-editor-tool" aria-label="Șterge tot" title="Șterge tot">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg>
+      </button>
+        <button type="button" id="pencilEditorSave" class="pencil-editor-save">Salvează</button>
+        <button type="button" id="pencilEditorCancel" class="pencil-editor-cancel">Anulează</button>
+      </div>
+      <div class="pencil-editor-canvas-wrap">
+        <canvas id="pencilEditorCanvas" aria-label="Editor scris de mână"></canvas>
+      </div>
+    </div>
+  </div>
 
   <script>
     (() => {
@@ -569,11 +763,28 @@
       const handwritingPanel = document.getElementById('handwritingPanel');
       const noteCanvas = document.getElementById('noteCanvas');
       const clearPencilInputButton = document.getElementById('clearPencilInput');
+      const handwritingPreview = document.getElementById('handwritingPreview');
+      const noteHandwritingPreview = document.getElementById('noteHandwritingPreview');
+      const handwritingPreviewEmpty = document.getElementById('handwritingPreviewEmpty');
+      const openPencilEditorButton = document.getElementById('openPencilEditor');
+      const pencilEditorOverlay = document.getElementById('pencilEditorOverlay');
+      const pencilEditorCanvas = document.getElementById('pencilEditorCanvas');
+      const pencilEditorPenButton = document.getElementById('pencilEditorPen');
+      const pencilEditorEraserButton = document.getElementById('pencilEditorEraser');
+      const pencilEditorColorInput = document.getElementById('pencilEditorColor');
+      const pencilEditorSizeInput = document.getElementById('pencilEditorSize');
+      const pencilEditorSizeValue = document.getElementById('pencilEditorSizeValue');
+      const pencilEditorUndoButton = document.getElementById('pencilEditorUndo');
+      const pencilEditorRedoButton = document.getElementById('pencilEditorRedo');
+      const pencilEditorClearButton = document.getElementById('pencilEditorClear');
+      const pencilEditorSaveButton = document.getElementById('pencilEditorSave');
+      const pencilEditorCancelButton = document.getElementById('pencilEditorCancel');
       const fullscreenOverlay = document.getElementById('fullscreenOverlay');
       const overlay = fullscreenOverlay;
       const layout = document.querySelector('.layout');
       const imagePanel = document.querySelector('.image-panel');
       const noteCanvasCtx = noteCanvas.getContext('2d');
+      const pencilEditorCtx = pencilEditorCanvas.getContext('2d');
       const ctx = canvas.getContext('2d');
       let strokes = [];
       let activeStroke = null;
@@ -614,6 +825,15 @@
       let pinchCenter = null;
       let lastTapTime = 0;
       let lastTapPoint = null;
+      let pencilEditorOpen = false;
+      let pencilEditorTargetNoteId = null;
+      let pencilEditorStrokes = [];
+      let pencilEditorRedoStack = [];
+      let activePencilEditorStroke = null;
+      let activePencilEditorPointerId = null;
+      let pencilEditorColor = '#2f2a24';
+      let pencilEditorSize = 3;
+      let pencilEditorEraser = false;
       let floatingToolbarOpen = false;
       let floatingToolbarPosition = { x: 22, y: 112 };
       let floatingToolbarDragging = false;
@@ -1354,6 +1574,7 @@
         const note = interactiveNotes.find((item) => item.id === selectedNoteId);
         noteContentTextarea.value = note ? note.content : '';
         setSelectedNoteMode(note && note.inputMode === 'pencil' ? 'pencil' : 'text');
+        renderHandwritingPreview();
         renderHandwritingCanvas();
       }
 
@@ -1398,26 +1619,37 @@
         document.body.classList.toggle('pencil-writing-mode', suppressPencilContextMenu);
       }
 
-      function drawNoteStroke(stroke) {
-        if (!stroke || stroke.points.length === 0) return;
-        const rect = noteCanvas.getBoundingClientRect();
-        noteCanvasCtx.save();
-        noteCanvasCtx.strokeStyle = '#2f2a24';
-        noteCanvasCtx.lineWidth = 2.4;
-        noteCanvasCtx.lineCap = 'round';
-        noteCanvasCtx.lineJoin = 'round';
-        noteCanvasCtx.beginPath();
+      function cloneHandwritingStrokes(strokes = []) {
+        return cloneProjectData(Array.isArray(strokes) ? strokes : []);
+      }
+
+      function drawNormalizedStroke(targetContext, width, height, stroke) {
+        if (!targetContext || !stroke || !Array.isArray(stroke.points) || stroke.points.length === 0) return;
+        const strokeColor = typeof stroke.color === 'string' ? stroke.color : '#2f2a24';
+        const strokeSize = Number.isFinite(Number(stroke.size)) ? Math.max(1, Number(stroke.size)) : 2.4;
+        const isErasingStroke = Boolean(stroke.eraser);
+
+        targetContext.save();
+        targetContext.strokeStyle = isErasingStroke ? 'rgba(0,0,0,1)' : strokeColor;
+        targetContext.fillStyle = isErasingStroke ? 'rgba(0,0,0,1)' : strokeColor;
+        targetContext.lineWidth = strokeSize;
+        targetContext.lineCap = 'round';
+        targetContext.lineJoin = 'round';
+        targetContext.globalCompositeOperation = isErasingStroke ? 'destination-out' : 'source-over';
+        targetContext.beginPath();
         const first = stroke.points[0];
-        noteCanvasCtx.moveTo(first.x * rect.width, first.y * rect.height);
+        targetContext.moveTo(first.x * width, first.y * height);
         if (stroke.points.length === 1) {
-          noteCanvasCtx.arc(first.x * rect.width, first.y * rect.height, 1.2, 0, Math.PI * 2);
-          noteCanvasCtx.fillStyle = '#2f2a24';
-          noteCanvasCtx.fill();
+          targetContext.arc(first.x * width, first.y * height, Math.max(1, strokeSize / 2), 0, Math.PI * 2);
+          targetContext.fill();
         } else {
-          stroke.points.slice(1).forEach((point) => noteCanvasCtx.lineTo(point.x * rect.width, point.y * rect.height));
-          noteCanvasCtx.stroke();
+          for (let index = 1; index < stroke.points.length; index += 1) {
+            const point = stroke.points[index];
+            targetContext.lineTo(point.x * width, point.y * height);
+          }
+          targetContext.stroke();
         }
-        noteCanvasCtx.restore();
+        targetContext.restore();
       }
 
       function renderHandwritingCanvas() {
@@ -1426,48 +1658,146 @@
         noteCanvasCtx.clearRect(0, 0, rect.width, rect.height);
         const note = interactiveNotes.find((item) => item.id === selectedNoteId);
         if (!note || !Array.isArray(note.handwriting)) return;
-        note.handwriting.forEach(drawNoteStroke);
-        if (activePencilStroke) drawNoteStroke(activePencilStroke);
+        note.handwriting.forEach((stroke) => drawNormalizedStroke(noteCanvasCtx, rect.width, rect.height, stroke));
       }
 
-      function pointFromNoteEvent(event) {
-        const rect = noteCanvas.getBoundingClientRect();
+      function renderHandwritingPreview() {
+        const note = interactiveNotes.find((item) => item.id === selectedNoteId);
+        if (!noteHandwritingPreview || !handwritingPreviewEmpty) return;
+        const rect = noteHandwritingPreview.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        const previewCtx = noteHandwritingPreview.getContext('2d');
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        noteHandwritingPreview.width = Math.round(rect.width * ratio);
+        noteHandwritingPreview.height = Math.round(rect.height * ratio);
+        previewCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        previewCtx.clearRect(0, 0, rect.width, rect.height);
+
+        const hasStrokes = Boolean(note && Array.isArray(note.handwriting) && note.handwriting.length);
+        handwritingPreviewEmpty.hidden = hasStrokes;
+        if (!hasStrokes) return;
+
+        note.handwriting.forEach((stroke) => drawNormalizedStroke(previewCtx, rect.width, rect.height, stroke));
+      }
+
+      function updatePencilEditorToolState() {
+        pencilEditorPenButton.classList.toggle('active', !pencilEditorEraser);
+        pencilEditorEraserButton.classList.toggle('active', pencilEditorEraser);
+        pencilEditorSizeValue.textContent = `${pencilEditorSize} px`;
+        pencilEditorUndoButton.disabled = pencilEditorStrokes.length === 0;
+        pencilEditorRedoButton.disabled = pencilEditorRedoStack.length === 0;
+      }
+
+      function configurePencilEditorCanvas() {
+        if (!pencilEditorOverlay || pencilEditorOverlay.hidden) return;
+        const rect = pencilEditorCanvas.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        pencilEditorCanvas.width = Math.round(rect.width * ratio);
+        pencilEditorCanvas.height = Math.round(rect.height * ratio);
+        pencilEditorCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        renderPencilEditorCanvas();
+      }
+
+      function renderPencilEditorCanvas() {
+        const rect = pencilEditorCanvas.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        pencilEditorCtx.clearRect(0, 0, rect.width, rect.height);
+        pencilEditorStrokes.forEach((stroke) => drawNormalizedStroke(pencilEditorCtx, rect.width, rect.height, stroke));
+        if (activePencilEditorStroke) {
+          drawNormalizedStroke(pencilEditorCtx, rect.width, rect.height, activePencilEditorStroke);
+        }
+      }
+
+      function pointFromPencilEditorEvent(event) {
+        const rect = pencilEditorCanvas.getBoundingClientRect();
         return {
           x: Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width)),
           y: Math.min(1, Math.max(0, (event.clientY - rect.top) / rect.height))
         };
       }
 
-      function beginPencilWriting(event) {
-        const note = interactiveNotes.find((item) => item.id === selectedNoteId);
-        if (!note || selectedNoteMode !== 'pencil') return;
+      function beginPencilEditorStroke(event) {
+        if (!pencilEditorOpen) return;
         if (event.pointerType === 'mouse' && event.button !== undefined && event.button !== 0) return;
         event.preventDefault();
         dismissKeyboardAndSelection();
-        noteCanvas.setPointerCapture(event.pointerId);
-        activeWritingPointerId = event.pointerId;
-        activePencilStroke = { points: [pointFromNoteEvent(event)] };
-        renderHandwritingCanvas();
+        pencilEditorCanvas.setPointerCapture(event.pointerId);
+        activePencilEditorPointerId = event.pointerId;
+        activePencilEditorStroke = {
+          points: [pointFromPencilEditorEvent(event)],
+          color: pencilEditorColor,
+          size: pencilEditorSize,
+          eraser: pencilEditorEraser
+        };
+        renderPencilEditorCanvas();
       }
 
-      function continuePencilWriting(event) {
-        if (!activePencilStroke) return;
+      function continuePencilEditorStroke(event) {
+        if (!activePencilEditorStroke) return;
         event.preventDefault();
-        activePencilStroke.points.push(pointFromNoteEvent(event));
-        renderHandwritingCanvas();
+        activePencilEditorStroke.points.push(pointFromPencilEditorEvent(event));
+        renderPencilEditorCanvas();
       }
 
-      function finishPencilWriting(event) {
+      function finishPencilEditorStroke(event) {
+        if (!activePencilEditorStroke) return;
+        event.preventDefault();
+        releasePointerCapture(pencilEditorCanvas, event.pointerId ?? activePencilEditorPointerId);
+        activePencilEditorPointerId = null;
+        pencilEditorStrokes.push(activePencilEditorStroke);
+        activePencilEditorStroke = null;
+        pencilEditorRedoStack = [];
+        renderPencilEditorCanvas();
+        updatePencilEditorToolState();
+      }
+
+      function openPencilEditor() {
         const note = interactiveNotes.find((item) => item.id === selectedNoteId);
-        if (!note || !activePencilStroke) return;
-        event.preventDefault();
-        releasePointerCapture(noteCanvas, event.pointerId ?? activeWritingPointerId);
-        activeWritingPointerId = null;
-        if (!Array.isArray(note.handwriting)) note.handwriting = [];
-        note.handwriting.push(activePencilStroke);
-        activePencilStroke = null;
-        renderHandwritingCanvas();
-        scheduleSave();
+        if (!note) return;
+        if (pencilEditorOpen && pencilEditorTargetNoteId === note.id) return;
+        note.inputMode = 'pencil';
+        selectedNoteMode = 'pencil';
+        setPencilInteractionLock(true);
+        dismissKeyboardAndSelection();
+        pencilEditorTargetNoteId = note.id;
+        pencilEditorStrokes = cloneHandwritingStrokes(note.handwriting || []);
+        pencilEditorRedoStack = [];
+        activePencilEditorStroke = null;
+        activePencilEditorPointerId = null;
+        pencilEditorOpen = true;
+        pencilEditorOverlay.hidden = false;
+        pencilEditorColorInput.value = pencilEditorColor;
+        pencilEditorSizeInput.value = String(pencilEditorSize);
+        updatePencilEditorToolState();
+        requestAnimationFrame(() => {
+          configurePencilEditorCanvas();
+          pencilEditorCanvas.focus();
+        });
+      }
+
+      function closePencilEditor({ saveChanges }) {
+        if (!pencilEditorOpen) return;
+        const note = interactiveNotes.find((item) => item.id === pencilEditorTargetNoteId);
+        if (saveChanges && note) {
+          note.handwriting = cloneHandwritingStrokes(pencilEditorStrokes);
+          scheduleSave();
+        }
+        pencilEditorOpen = false;
+        pencilEditorOverlay.hidden = true;
+        activePencilEditorStroke = null;
+        activePencilEditorPointerId = null;
+        pencilEditorTargetNoteId = null;
+        setPencilInteractionLock(selectedNoteMode === 'pencil');
+        renderHandwritingPreview();
+        syncBrushControls();
+        renderNoteList();
+      }
+
+      function handlePencilEditorBackdropPointerDown(event) {
+        if (!pencilEditorOpen) return;
+        if (event.target !== pencilEditorOverlay) return;
+        closePencilEditor({ saveChanges: false });
       }
 
       function setSelectedNoteMode(mode) {
@@ -1475,12 +1805,17 @@
         textModeButton.classList.toggle('active', selectedNoteMode === 'text');
         pencilModeButton.classList.toggle('active', selectedNoteMode === 'pencil');
         noteContentTextarea.hidden = selectedNoteMode === 'pencil';
-        handwritingPanel.hidden = selectedNoteMode !== 'pencil';
+        handwritingPanel.hidden = true;
+        handwritingPreview.hidden = !selectedNoteId;
         if (selectedNoteMode === 'pencil') {
           dismissKeyboardAndSelection();
           setPencilInteractionLock(true);
-          setTimeout(configureNoteCanvas, 0);
+          renderHandwritingPreview();
+          openPencilEditor();
         } else {
+          if (pencilEditorOpen) {
+            closePencilEditor({ saveChanges: true });
+          }
           setPencilInteractionLock(false);
         }
       }
@@ -1490,6 +1825,7 @@
         if (!note) return;
         note.handwriting = [];
         renderHandwritingCanvas();
+        renderHandwritingPreview();
         scheduleSave();
       }
 
@@ -1870,7 +2206,9 @@
         noteContentTextarea.value = '';
         noteContentTextarea.hidden = false;
         handwritingPanel.hidden = true;
+        handwritingPreview.hidden = true;
         setPencilInteractionLock(false);
+        closePencilEditor({ saveChanges: false });
         textModeButton.classList.add('active');
         pencilModeButton.classList.remove('active');
         noteList.innerHTML = '';
@@ -2239,10 +2577,21 @@
         });
       });
       window.addEventListener('keydown', (event) => {
+        if (pencilEditorOpen && event.key === 'Escape') {
+          event.preventDefault();
+          closePencilEditor({ saveChanges: false });
+          return;
+        }
         if (!fullscreenMode) return;
         if (event.key === 'Escape') {
           event.preventDefault();
           setFullscreenMode(false);
+        }
+      });
+      window.addEventListener('resize', () => {
+        renderHandwritingPreview();
+        if (pencilEditorOpen) {
+          configurePencilEditorCanvas();
         }
       });
       removeImageButton.addEventListener('click', confirmRemoveImage);
@@ -2309,15 +2658,62 @@
         scheduleSave();
       });
       clearPencilInputButton.addEventListener('click', clearSelectedNoteHandwriting);
-      noteCanvas.addEventListener('pointerdown', beginPencilWriting, { passive: false });
-      noteCanvas.addEventListener('pointermove', continuePencilWriting, { passive: false });
-      noteCanvas.addEventListener('pointerup', finishPencilWriting, { passive: false });
-      noteCanvas.addEventListener('pointercancel', finishPencilWriting, { passive: false });
-      noteCanvas.addEventListener('contextmenu', handlePencilContextMenu);
-      noteCanvas.addEventListener('selectstart', handlePencilSelectStart);
-      noteCanvas.addEventListener('touchstart', handlePencilTouchStart, { passive: false });
-      handwritingPanel.addEventListener('contextmenu', handlePencilContextMenu);
-      handwritingPanel.addEventListener('selectstart', handlePencilSelectStart);
+      openPencilEditorButton.addEventListener('click', () => {
+        const note = interactiveNotes.find((item) => item.id === selectedNoteId);
+        if (!note) return;
+        note.inputMode = 'pencil';
+        setSelectedNoteMode('pencil');
+        scheduleSave();
+      });
+      pencilEditorPenButton.addEventListener('click', () => {
+        pencilEditorEraser = false;
+        updatePencilEditorToolState();
+      });
+      pencilEditorEraserButton.addEventListener('click', () => {
+        pencilEditorEraser = !pencilEditorEraser;
+        updatePencilEditorToolState();
+      });
+      pencilEditorColorInput.addEventListener('input', (event) => {
+        pencilEditorColor = event.target.value || '#2f2a24';
+        if (pencilEditorEraser) {
+          pencilEditorEraser = false;
+          updatePencilEditorToolState();
+        }
+      });
+      pencilEditorSizeInput.addEventListener('input', (event) => {
+        pencilEditorSize = Number(event.target.value) || 3;
+        updatePencilEditorToolState();
+      });
+      pencilEditorUndoButton.addEventListener('click', () => {
+        if (!pencilEditorStrokes.length) return;
+        pencilEditorRedoStack.push(pencilEditorStrokes.pop());
+        renderPencilEditorCanvas();
+        updatePencilEditorToolState();
+      });
+      pencilEditorRedoButton.addEventListener('click', () => {
+        if (!pencilEditorRedoStack.length) return;
+        pencilEditorStrokes.push(pencilEditorRedoStack.pop());
+        renderPencilEditorCanvas();
+        updatePencilEditorToolState();
+      });
+      pencilEditorClearButton.addEventListener('click', () => {
+        pencilEditorStrokes = [];
+        pencilEditorRedoStack = [];
+        activePencilEditorStroke = null;
+        renderPencilEditorCanvas();
+        updatePencilEditorToolState();
+      });
+      pencilEditorSaveButton.addEventListener('click', () => closePencilEditor({ saveChanges: true }));
+      pencilEditorCancelButton.addEventListener('click', () => closePencilEditor({ saveChanges: false }));
+      pencilEditorCanvas.addEventListener('pointerdown', beginPencilEditorStroke, { passive: false });
+      pencilEditorCanvas.addEventListener('pointermove', continuePencilEditorStroke, { passive: false });
+      pencilEditorCanvas.addEventListener('pointerup', finishPencilEditorStroke, { passive: false });
+      pencilEditorCanvas.addEventListener('pointercancel', finishPencilEditorStroke, { passive: false });
+      pencilEditorCanvas.addEventListener('contextmenu', (event) => event.preventDefault());
+      pencilEditorCanvas.addEventListener('selectstart', (event) => event.preventDefault());
+      pencilEditorCanvas.addEventListener('touchstart', (event) => event.preventDefault(), { passive: false });
+      pencilEditorOverlay.addEventListener('contextmenu', (event) => event.preventDefault());
+      pencilEditorOverlay.addEventListener('pointerdown', handlePencilEditorBackdropPointerDown);
       canvas.addEventListener('pointerdown', beginDrawing, { passive: false });
       canvas.addEventListener('pointermove', continueDrawing, { passive: false });
       canvas.addEventListener('pointerup', finishDrawing, { passive: false });
