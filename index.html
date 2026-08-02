@@ -351,6 +351,12 @@
         return text || 'Proiect nou';
       }
 
+      function isIPadOSDevice() {
+        const userAgent = navigator.userAgent || '';
+        const isIOS = /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        return isIOS && /Safari/.test(userAgent) && !/CriOS|FxiOS|OPiOS/.test(userAgent);
+      }
+
       function getProjectFileName(value = currentProjectName) {
         const baseName = normalizeProjectName(value);
         return `${baseName}.json`;
@@ -1439,10 +1445,60 @@
         const project = await buildProjectPayload();
         console.log('[debug] saveProjectWithName: project.images[0]', project.images[0]);
         console.log('[debug] saveProjectWithName: project.images', project.images);
-        const blob = new Blob([JSON.stringify(project, null, 2)], { type: 'application/json' });
+
+        const fileName = getProjectFileName();
+        const fileContent = JSON.stringify(project, null, 2);
+        const file = new File([fileContent], fileName, { type: 'application/json' });
+
+        if (isIPadOSDevice()) {
+          try {
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+              await navigator.share({
+                title: fileName,
+                text: `Salvează proiectul ${chosenName}`,
+                files: [file]
+              });
+              await saveLastWork(project);
+              return;
+            }
+
+            if (navigator.share) {
+              await navigator.share({
+                title: fileName,
+                text: `Salvează proiectul ${chosenName}`,
+                files: [file]
+              });
+              await saveLastWork(project);
+              return;
+            }
+          } catch (error) {
+            if (error && error.name !== 'AbortError') {
+              console.warn('Web Share API a eșuat pentru salvarea proiectului.', error);
+            }
+          }
+
+          const fallbackUrl = URL.createObjectURL(file);
+          const popup = window.open(fallbackUrl, '_blank', 'noopener,noreferrer');
+          if (popup) {
+            popup.focus();
+          } else {
+            const link = document.createElement('a');
+            link.href = fallbackUrl;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          }
+          window.setTimeout(() => URL.revokeObjectURL(fallbackUrl), 15000);
+          await saveLastWork(project);
+          return;
+        }
+
+        const blob = new Blob([fileContent], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
-        link.download = getProjectFileName();
+        link.download = fileName;
         link.href = url;
         link.click();
         window.setTimeout(() => URL.revokeObjectURL(url), 1000);
