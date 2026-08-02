@@ -1012,7 +1012,7 @@
           dataUrl: source.dataUrl || '',
           type: source.type || 'image/png',
           strokes: cloneProjectData(Array.isArray(source.strokes) ? source.strokes : []),
-          notes: cloneProjectData(Array.isArray(source.notes) ? source.notes : []),
+          notes: normalizeNotesCollection(cloneProjectData(Array.isArray(source.notes) ? source.notes : [])),
           zoom: typeof source.zoom === 'number' ? source.zoom : 1,
           pan: source.pan && typeof source.pan.x === 'number' && typeof source.pan.y === 'number'
             ? { x: source.pan.x, y: source.pan.y }
@@ -1026,6 +1026,47 @@
             eraser: Boolean(drawSettings.eraser)
           }
         };
+      }
+
+      function normalizeHandwritingStroke(stroke, fallbackColor = '#2f2a24', fallbackSize = 3) {
+        if (!stroke || !Array.isArray(stroke.points) || stroke.points.length === 0) return null;
+        const strokeTool = stroke.tool === 'eraser' ? 'eraser' : (stroke.eraser ? 'eraser' : 'pen');
+        const colorValue = typeof stroke.color === 'string' && stroke.color ? stroke.color : fallbackColor;
+        const numericSize = Number(stroke.size);
+        const sizeValue = Number.isFinite(numericSize) ? clamp(numericSize, 1, 40) : fallbackSize;
+        const normalizedPoints = stroke.points
+          .map((point) => {
+            if (!point || typeof point !== 'object') return null;
+            const x = Number(point.x);
+            const y = Number(point.y);
+            if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+            return { x: clamp(x, 0, 1), y: clamp(y, 0, 1) };
+          })
+          .filter(Boolean);
+        if (!normalizedPoints.length) return null;
+        return {
+          points: normalizedPoints,
+          color: colorValue,
+          size: sizeValue,
+          tool: strokeTool,
+          eraser: strokeTool === 'eraser'
+        };
+      }
+
+      function normalizeHandwritingStrokes(strokes = [], fallbackColor = '#2f2a24', fallbackSize = 3) {
+        if (!Array.isArray(strokes)) return [];
+        return strokes
+          .map((stroke) => normalizeHandwritingStroke(stroke, fallbackColor, fallbackSize))
+          .filter(Boolean);
+      }
+
+      function normalizeNotesCollection(notes = []) {
+        if (!Array.isArray(notes)) return [];
+        return notes.map((note) => {
+          const normalizedNote = note && typeof note === 'object' ? { ...note } : {};
+          normalizedNote.handwriting = normalizeHandwritingStrokes(normalizedNote.handwriting || []);
+          return normalizedNote;
+        });
       }
 
       function dataUrlToFile(dataUrl, name = 'imagine.png') {
@@ -1081,7 +1122,7 @@
           dataUrl: currentState.dataUrl || '',
           type: currentState.type || imageBlob?.type || 'image/png',
           strokes: cloneProjectData(Array.isArray(strokes) ? strokes : []),
-          notes: cloneProjectData(Array.isArray(interactiveNotes) ? interactiveNotes : []),
+          notes: normalizeNotesCollection(cloneProjectData(Array.isArray(interactiveNotes) ? interactiveNotes : [])),
           zoom: typeof zoomLevel === 'number' ? zoomLevel : 1,
           pan: panOffset && typeof panOffset.x === 'number' && typeof panOffset.y === 'number'
             ? { x: panOffset.x, y: panOffset.y }
@@ -1742,14 +1783,15 @@
       }
 
       function cloneHandwritingStrokes(strokes = []) {
-        return cloneProjectData(Array.isArray(strokes) ? strokes : []);
+        return normalizeHandwritingStrokes(cloneProjectData(Array.isArray(strokes) ? strokes : []));
       }
 
       function drawNormalizedStroke(targetContext, width, height, stroke) {
         if (!targetContext || !stroke || !Array.isArray(stroke.points) || stroke.points.length === 0) return;
-        const strokeColor = typeof stroke.color === 'string' ? stroke.color : '#2f2a24';
+        const strokeTool = stroke.tool === 'eraser' ? 'eraser' : (stroke.eraser ? 'eraser' : 'pen');
+        const strokeColor = typeof stroke.color === 'string' && stroke.color ? stroke.color : '#2f2a24';
         const strokeSize = Number.isFinite(Number(stroke.size)) ? Math.max(1, Number(stroke.size)) : 2.4;
-        const isErasingStroke = Boolean(stroke.eraser);
+        const isErasingStroke = strokeTool === 'eraser';
 
         targetContext.save();
         targetContext.strokeStyle = isErasingStroke ? 'rgba(0,0,0,1)' : strokeColor;
@@ -1850,6 +1892,7 @@
           points: [pointFromPencilEditorEvent(event)],
           color: pencilEditorColor,
           size: pencilEditorSize,
+          tool: pencilEditorEraser ? 'eraser' : 'pen',
           eraser: pencilEditorEraser
         };
         renderPencilEditorCanvas();
@@ -2426,7 +2469,7 @@
           sourceImage = photo;
           imageBlob = blob;
           strokes = cloneProjectData(Array.isArray(currentImage.strokes) ? currentImage.strokes : []);
-          interactiveNotes = cloneProjectData(Array.isArray(currentImage.notes) ? currentImage.notes : []);
+          interactiveNotes = normalizeNotesCollection(cloneProjectData(Array.isArray(currentImage.notes) ? currentImage.notes : []));
           selectedNoteId = interactiveNotes.find((note) => note.id === currentImage.selectedNoteId)?.id || interactiveNotes[0]?.id || null;
           activeTool = currentImage.activeTool === 'notes' ? 'notes' : 'draw';
           selectedNoteMode = currentImage.selectedNoteMode === 'pencil' ? 'pencil' : 'text';
