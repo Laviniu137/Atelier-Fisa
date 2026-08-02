@@ -50,6 +50,8 @@
     .empty { max-width: 290px; padding: 28px; color: #7c7265; text-align: center; font-size: .95rem; line-height: 1.6; }
     .toolbar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
     .toolbar button { width: 100%; padding-inline: 12px; }
+    .fullscreen-inline { display: flex; gap: 10px; margin: 12px 0 8px; }
+    .fullscreen-inline button { flex: 1; min-height: 44px; }
     .mode-switcher { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 12px 0 8px; }
     .mode-switcher button { width: 100%; min-height: 44px; }
     .mode-switcher button.active { border-color: #8b5e3c; background: #fbf2e8; color: #5a3a22; }
@@ -76,6 +78,24 @@
     .help { display: flex; align-items: center; gap: 8px; margin: 14px 2px 0; color: #83796b; font-size: .79rem; line-height: 1.45; }
     .help::before { width: 5px; height: 5px; flex: 0 0 auto; border-radius: 50%; background: #a48358; content: ""; }
     .sr-only { position: fixed; top: 0; left: -9999px; width: 1px; height: 1px; padding: 0; margin: 0; overflow: hidden; opacity: 0; clip: auto; white-space: nowrap; border: 0; }
+    body.fullscreen-mode { overflow: hidden; background: #000; }
+    body.fullscreen-mode .app { padding: 0; }
+    body.fullscreen-mode header { display: none; }
+    body.fullscreen-mode .layout { display: block; padding: 0; }
+    body.fullscreen-mode .notes { display: none; }
+    body.fullscreen-mode .image-panel { position: fixed; inset: 0; z-index: 1000; border: 0; border-radius: 0; padding: 0; background: #000; box-shadow: none; }
+    body.fullscreen-mode .image-panel .section-label, body.fullscreen-mode .image-panel .help { display: none; }
+    body.fullscreen-mode .canvas-shell { min-height: 100vh; height: 100vh; width: 100vw; border: 0; border-radius: 0; background: #000; overflow: hidden; }
+    body.fullscreen-mode .image-stage { max-width: none; height: 100%; width: 100%; }
+    body.fullscreen-mode .image-stage #photo { max-height: none; width: 100%; height: 100%; object-fit: contain; }
+    body.fullscreen-mode .mode-switcher, body.fullscreen-mode .toolbar { position: fixed; left: 50%; transform: translateX(-50%); z-index: 1100; width: min(420px, calc(100vw - 32px)); }
+    body.fullscreen-mode .mode-switcher { top: 16px; margin: 0; }
+    body.fullscreen-mode .toolbar { bottom: 16px; margin: 0; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    body.fullscreen-mode .toolbar button { backdrop-filter: blur(10px); background: rgba(253, 252, 249, .9); box-shadow: 0 10px 25px rgba(0, 0, 0, .18); }
+    body.fullscreen-mode .fullscreen-inline { position: fixed; left: 16px; top: 16px; z-index: 1100; width: auto; }
+    body.fullscreen-mode .fullscreen-inline button { min-width: 132px; }
+    body.fullscreen-mode #exitFullscreenBtn { display: inline-flex; }
+    body.fullscreen-mode #fullscreenBtn { display: none; }
     @media (orientation: portrait), (max-width: 800px) {
       .app { padding: 16px; }
       header { align-items: stretch; flex-direction: column; padding: 18px; }
@@ -114,6 +134,10 @@
             <canvas id="drawingCanvas" aria-label="Zonă de desen pe imagine"></canvas>
             <div class="note-layer" id="noteLayer" hidden></div>
           </div>
+        </div>
+        <div class="fullscreen-inline">
+          <button type="button" id="fullscreenBtn" disabled>Ecran complet</button>
+          <button type="button" id="exitFullscreenBtn" hidden>Înapoi</button>
         </div>
         <div class="mode-switcher" role="toolbar" aria-label="Mod de lucru">
           <button type="button" id="drawModeBtn" class="active">Desen</button>
@@ -171,6 +195,8 @@
       const save = document.getElementById('save');
       const drawModeButton = document.getElementById('drawModeBtn');
       const notesModeButton = document.getElementById('notesModeBtn');
+      const fullscreenButton = document.getElementById('fullscreenBtn');
+      const exitFullscreenButton = document.getElementById('exitFullscreenBtn');
       const addNoteButton = document.getElementById('addNote');
       const deleteSelectedNoteButton = document.getElementById('deleteSelectedNote');
       const noteList = document.getElementById('noteList');
@@ -200,6 +226,11 @@
       let panning = false;
       let panStart = null;
       let panOrigin = null;
+      let fullscreenMode = false;
+      let activeTouches = new Map();
+      let pinchStartDistance = 0;
+      let pinchStartZoom = 1;
+      let pinchCenter = null;
       const databaseName = 'fisa-atelier-offline';
       const databaseStore = 'lucrari';
       const projectVersion = 2;
@@ -273,6 +304,11 @@
       }
 
       function updateImageTransform() {
+        if (!sourceImage || !fullscreenMode) {
+          stage.style.transform = '';
+          stage.style.transformOrigin = '0 0';
+          return;
+        }
         stage.style.transform = `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`;
         stage.style.transformOrigin = '0 0';
       }
@@ -344,6 +380,7 @@
         undo.disabled = !ready || strokes.length === 0 || activeTool !== 'draw';
         clear.disabled = !ready || strokes.length === 0 || activeTool !== 'draw';
         save.disabled = !ready;
+        fullscreenButton.disabled = !ready;
         removeImageButton.disabled = !ready;
         addNoteButton.disabled = !ready || activeTool !== 'notes';
         deleteSelectedNoteButton.disabled = !ready || !selectedNoteId || activeTool !== 'notes';
@@ -655,15 +692,71 @@
         window.removeEventListener('pointermove', handleNoteDrag);
       }
 
-      function beginPan(event) {
-        if (!sourceImage || !event.altKey) return;
+      function setFullscreenMode(enabled) {
+        fullscreenMode = enabled;
+        document.body.classList.toggle('fullscreen-mode', enabled);
+        fullscreenButton.hidden = enabled;
+        exitFullscreenButton.hidden = !enabled;
+        updateImageTransform();
+        configureCanvas();
+        configureNoteCanvas();
+        setControls();
+      }
+
+      function handleStagePointerDown(event) {
+        if (!sourceImage) return;
+        if (event.target === canvas) return;
+        if (event.pointerType === 'touch') {
+          activeTouches.set(event.pointerId, { x: event.clientX, y: event.clientY });
+          if (activeTouches.size === 1 && (fullscreenMode || event.altKey)) {
+            event.preventDefault();
+            panning = true;
+            panStart = { x: event.clientX, y: event.clientY };
+            panOrigin = { ...panOffset };
+          } else if (activeTouches.size === 2) {
+            const points = Array.from(activeTouches.values());
+            pinchStartDistance = getPointerDistance(points[0], points[1]);
+            pinchStartZoom = zoomLevel;
+            pinchCenter = getPointerMidpoint(points[0], points[1]);
+            panning = false;
+          }
+          return;
+        }
+        if (!fullscreenMode && !event.altKey) return;
         event.preventDefault();
         panning = true;
         panStart = { x: event.clientX, y: event.clientY };
         panOrigin = { ...panOffset };
       }
 
-      function continuePan(event) {
+      function handleStagePointerMove(event) {
+        if (!sourceImage) return;
+        if (event.pointerType === 'touch' && activeTouches.has(event.pointerId)) {
+          activeTouches.set(event.pointerId, { x: event.clientX, y: event.clientY });
+          if (activeTouches.size === 2) {
+            const points = Array.from(activeTouches.values());
+            const distance = getPointerDistance(points[0], points[1]);
+            if (pinchStartDistance > 0) {
+              event.preventDefault();
+              const nextZoom = clamp(pinchStartZoom * (distance / pinchStartDistance), 0.6, 3);
+              const center = getPointerMidpoint(points[0], points[1]);
+              const zoomRatio = nextZoom / zoomLevel;
+              panOffset.x = (panOffset.x - center.x) * zoomRatio + center.x;
+              panOffset.y = (panOffset.y - center.y) * zoomRatio + center.y;
+              zoomLevel = nextZoom;
+              updateImageTransform();
+              scheduleSave();
+            }
+            return;
+          }
+          if (!panning) return;
+          event.preventDefault();
+          panOffset.x = panOrigin.x + (event.clientX - panStart.x);
+          panOffset.y = panOrigin.y + (event.clientY - panStart.y);
+          updateImageTransform();
+          scheduleSave();
+          return;
+        }
         if (!panning) return;
         event.preventDefault();
         panOffset.x = panOrigin.x + (event.clientX - panStart.x);
@@ -672,10 +765,27 @@
         scheduleSave();
       }
 
-      function finishPan() {
+      function handleStagePointerUp(event) {
+        if (event.pointerType === 'touch') {
+          activeTouches.delete(event.pointerId);
+          if (activeTouches.size < 2) {
+            pinchStartDistance = 0;
+            pinchStartZoom = zoomLevel;
+            pinchCenter = null;
+          }
+        }
+        if (!panning) return;
         panning = false;
         panStart = null;
         panOrigin = null;
+      }
+
+      function getPointerDistance(pointA, pointB) {
+        return Math.hypot(pointB.x - pointA.x, pointB.y - pointA.y);
+      }
+
+      function getPointerMidpoint(pointA, pointB) {
+        return { x: (pointA.x + pointB.x) / 2, y: (pointA.y + pointB.y) / 2 };
       }
 
       function handleImageWheel(event) {
@@ -826,6 +936,8 @@
         event.preventDefault();
         imageInput.click();
       });
+      fullscreenButton.addEventListener('click', () => setFullscreenMode(true));
+      exitFullscreenButton.addEventListener('click', () => setFullscreenMode(false));
       removeImageButton.addEventListener('click', confirmRemoveImage);
       loadProjectButton.addEventListener('click', (event) => {
         event.preventDefault();
@@ -883,11 +995,12 @@
       canvas.addEventListener('pointermove', continueDrawing, { passive: false });
       canvas.addEventListener('pointerup', finishDrawing, { passive: false });
       canvas.addEventListener('pointercancel', finishDrawing, { passive: false });
-      stage.addEventListener('pointerdown', beginPan, { passive: false });
+      stage.addEventListener('pointerdown', handleStagePointerDown, { passive: false });
       stage.addEventListener('wheel', handleImageWheel, { passive: false });
       canvas.addEventListener('gesturestart', (event) => event.preventDefault(), { passive: false });
-      window.addEventListener('pointermove', continuePan);
-      window.addEventListener('pointerup', finishPan);
+      window.addEventListener('pointermove', handleStagePointerMove);
+      window.addEventListener('pointerup', handleStagePointerUp);
+      window.addEventListener('pointercancel', handleStagePointerUp);
       window.addEventListener('resize', () => {
         configureCanvas();
         configureNoteCanvas();
