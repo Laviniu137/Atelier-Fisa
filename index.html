@@ -110,12 +110,26 @@
     body.fullscreen-mode .image-panel.fullscreen-panel .image-stage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; max-width: none; width: 100%; height: 100%; margin: 0; }
     body.fullscreen-mode .image-panel.fullscreen-panel .image-stage #photo { max-height: none; width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
     body.fullscreen-mode .mode-switcher { display: none; }
-    body.fullscreen-mode .toolbar { position: fixed; left: 50%; transform: translateX(-50%); z-index: 1500; width: min(420px, calc(100vw - 32px)); bottom: 16px; margin: 0; grid-template-columns: repeat(4, minmax(0, 1fr)); }
-    body.fullscreen-mode .toolbar button { backdrop-filter: blur(10px); background: rgba(253, 252, 249, .9); box-shadow: 0 10px 25px rgba(0, 0, 0, .18); }
+    body.fullscreen-mode .toolbar { display: none; }
     body.fullscreen-mode .fullscreen-inline { position: fixed; left: 16px; top: 16px; z-index: 1500; width: auto; }
     body.fullscreen-mode .fullscreen-inline button { min-width: 132px; }
-    body.fullscreen-mode #exitFullscreenBtn { display: inline-flex; }
     body.fullscreen-mode #fullscreenBtn { display: none; }
+    body.fullscreen-mode .fullscreen-close-btn { display: inline-flex; }
+    body.fullscreen-mode .fullscreen-drawing-toolbar { display: flex; }
+    .fullscreen-close-btn { position: fixed; top: 20px; right: 20px; z-index: 1600; display: none; align-items: center; justify-content: center; width: 48px; height: 48px; border: 1px solid rgba(255,255,255,.25); border-radius: 50%; background: rgba(22,18,14,.48); color: #fff; font-size: 1.5rem; box-shadow: 0 10px 24px rgba(0,0,0,.25); cursor: pointer; }
+    .fullscreen-drawing-toolbar { position: fixed; left: 50%; bottom: 18px; z-index: 1600; display: none; align-items: center; gap: 10px; transform: translateX(-50%); width: min(980px, calc(100vw - 24px)); padding: 12px 14px; border: 1px solid rgba(255,255,255,.18); border-radius: 18px; background: rgba(28,24,20,.48); backdrop-filter: blur(16px); box-shadow: 0 18px 40px rgba(0,0,0,.28); }
+    .drawing-tool-group { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 12px; background: rgba(255,255,255,.06); }
+    .tool-label { color: rgba(255,255,255,.8); font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .quick-colors { display: flex; align-items: center; gap: 6px; }
+    .quick-color-button { width: 20px; height: 20px; min-height: unset; padding: 0; border: 2px solid rgba(255,255,255,.6); border-radius: 50%; background: var(--swatch); box-shadow: inset 0 0 0 1px rgba(0,0,0,.18); }
+    .quick-color-button.is-selected { outline: 2px solid rgba(255,255,255,.9); outline-offset: 2px; }
+    #fullscreenColorPicker { width: 40px; height: 36px; padding: 0; border: 0; border-radius: 10px; background: transparent; }
+    #fullscreenBrushSize { width: 130px; accent-color: #f5c16f; }
+    #fullscreenBrushSizeValue { min-width: 54px; color: #fff; font-size: .82rem; font-weight: 700; }
+    .drawing-tool-button { min-height: 42px; padding: 8px 12px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.08); color: #fff; }
+    .drawing-tool-button.active { border-color: rgba(245,193,111,.8); background: rgba(245,193,111,.18); }
+    .drawing-tool-button.danger { background: rgba(220,78,68,.15); border-color: rgba(220,78,68,.45); }
+    .drawing-tool-button:disabled { opacity: .45; }
     @media (orientation: portrait), (max-width: 800px) {
       .app { padding: 16px; }
       header { align-items: stretch; flex-direction: column; padding: 18px; }
@@ -169,7 +183,6 @@
         </div>
         <div class="fullscreen-inline">
           <button type="button" id="fullscreenBtn" disabled>Ecran complet</button>
-          <button type="button" id="exitFullscreenBtn" hidden>Înapoi</button>
         </div>
         <div class="image-gallery" aria-label="Miniaturi imagini">
           <div class="thumbnail-strip" id="thumbnailStrip"></div>
@@ -178,6 +191,31 @@
         <div class="mode-switcher" role="toolbar" aria-label="Mod de lucru">
           <button type="button" id="drawModeBtn" class="active">Desen</button>
           <button type="button" id="notesModeBtn">Note</button>
+        </div>
+        <div class="fullscreen-close-btn" id="fullscreenCloseButton" aria-label="Închide ecran complet" title="Închide ecran complet" hidden>✕</div>
+        <div class="fullscreen-drawing-toolbar" id="fullscreenDrawingToolbar" hidden>
+          <div class="drawing-tool-group color-group">
+            <span class="tool-label">Culoare</span>
+            <input id="fullscreenColorPicker" type="color" value="#000000" aria-label="Alege culoarea creionului">
+            <div class="quick-colors" aria-label="Culori rapide">
+              <button type="button" class="quick-color-button is-selected" data-color="#000000" style="--swatch:#000000" title="Negru" aria-label="Negru"></button>
+              <button type="button" class="quick-color-button" data-color="#e53935" style="--swatch:#e53935" title="Roșu" aria-label="Roșu"></button>
+              <button type="button" class="quick-color-button" data-color="#1e88e5" style="--swatch:#1e88e5" title="Albastru" aria-label="Albastru"></button>
+              <button type="button" class="quick-color-button" data-color="#43a047" style="--swatch:#43a047" title="Verde" aria-label="Verde"></button>
+              <button type="button" class="quick-color-button" data-color="#f9c74f" style="--swatch:#f9c74f" title="Galben" aria-label="Galben"></button>
+              <button type="button" class="quick-color-button" data-color="#fb8c00" style="--swatch:#fb8c00" title="Portocaliu" aria-label="Portocaliu"></button>
+            </div>
+          </div>
+          <div class="drawing-tool-group size-group">
+            <label class="tool-label" for="fullscreenBrushSize">Grosime</label>
+            <input id="fullscreenBrushSize" type="range" min="1" max="20" step="1" value="4">
+            <span id="fullscreenBrushSizeValue">4 px</span>
+          </div>
+          <button type="button" id="fullscreenEraserBtn" class="drawing-tool-button">🩹 Radieră</button>
+          <button type="button" id="fullscreenUndoBtn" class="drawing-tool-button" aria-label="Anulează ultima linie">↩️</button>
+          <button type="button" id="fullscreenRedoBtn" class="drawing-tool-button" aria-label="Refă ultima linie">↪️</button>
+          <button type="button" id="fullscreenClearBtn" class="drawing-tool-button danger">🗑️</button>
+          <button type="button" id="fullscreenCloseToolbarBtn" class="drawing-tool-button danger" aria-label="Închide ecran complet">❌</button>
         </div>
         <div class="toolbar" aria-label="Instrumente desen">
           <button type="button" id="undo" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10a6 6 0 0 1 6 6v1"></path></svg><span>Înapoi</span></button>
@@ -234,7 +272,16 @@
       const drawModeButton = document.getElementById('drawModeBtn');
       const notesModeButton = document.getElementById('notesModeBtn');
       const fullscreenButton = document.getElementById('fullscreenBtn');
-      const exitFullscreenButton = document.getElementById('exitFullscreenBtn');
+      const fullscreenCloseButton = document.getElementById('fullscreenCloseButton');
+      const fullscreenDrawingToolbar = document.getElementById('fullscreenDrawingToolbar');
+      const fullscreenColorPicker = document.getElementById('fullscreenColorPicker');
+      const fullscreenBrushSize = document.getElementById('fullscreenBrushSize');
+      const fullscreenBrushSizeValue = document.getElementById('fullscreenBrushSizeValue');
+      const fullscreenEraserBtn = document.getElementById('fullscreenEraserBtn');
+      const fullscreenUndoBtn = document.getElementById('fullscreenUndoBtn');
+      const fullscreenRedoBtn = document.getElementById('fullscreenRedoBtn');
+      const fullscreenClearBtn = document.getElementById('fullscreenClearBtn');
+      const fullscreenCloseToolbarBtn = document.getElementById('fullscreenCloseToolbarBtn');
       const thumbnailStrip = document.getElementById('thumbnailStrip');
       const thumbnailAddImageButton = document.getElementById('thumbnailAddImage');
       const addNoteButton = document.getElementById('addNote');
@@ -267,6 +314,10 @@
       let activeTool = 'draw';
       let previousFullscreenTool = 'draw';
       let selectedNoteMode = 'text';
+      let brushColor = '#000000';
+      let brushSize = 4;
+      let isErasing = false;
+      let redoStack = [];
       let activePencilStroke = null;
       let zoomLevel = 1;
       let panOffset = { x: 0, y: 0 };
@@ -323,6 +374,9 @@
 
       function cloneProjectImageState(image = {}) {
         const source = image && typeof image === 'object' ? image : {};
+        const drawSettings = source.drawSettings && typeof source.drawSettings === 'object' ? source.drawSettings : {};
+        const colorValue = typeof drawSettings.color === 'string' && drawSettings.color ? drawSettings.color : '#000000';
+        const sizeValue = Number(drawSettings.size);
         return {
           id: source.id || createNoteId(),
           name: source.name || '',
@@ -336,7 +390,12 @@
             : { x: 0, y: 0 },
           activeTool: source.activeTool === 'notes' ? 'notes' : 'draw',
           selectedNoteId: source.selectedNoteId || null,
-          selectedNoteMode: source.selectedNoteMode === 'pencil' ? 'pencil' : 'text'
+          selectedNoteMode: source.selectedNoteMode === 'pencil' ? 'pencil' : 'text',
+          drawSettings: {
+            color: colorValue,
+            size: Number.isFinite(sizeValue) ? clamp(sizeValue, 1, 20) : 4,
+            eraser: Boolean(drawSettings.eraser)
+          }
         };
       }
 
@@ -459,7 +518,12 @@
               pan: imageRecord.pan && typeof imageRecord.pan.x === 'number' && typeof imageRecord.pan.y === 'number' ? { x: imageRecord.pan.x, y: imageRecord.pan.y } : { x: 0, y: 0 },
               activeTool: imageRecord.activeTool === 'notes' ? 'notes' : 'draw',
               selectedNoteId: imageRecord.selectedNoteId || null,
-              selectedNoteMode: imageRecord.selectedNoteMode === 'pencil' ? 'pencil' : 'text'
+              selectedNoteMode: imageRecord.selectedNoteMode === 'pencil' ? 'pencil' : 'text',
+              drawSettings: {
+                color: imageRecord.drawSettings && typeof imageRecord.drawSettings.color === 'string' ? imageRecord.drawSettings.color : brushColor,
+                size: Number.isFinite(Number(imageRecord.drawSettings && imageRecord.drawSettings.size)) ? clamp(Number(imageRecord.drawSettings.size), 1, 20) : brushSize,
+                eraser: Boolean(imageRecord.drawSettings && imageRecord.drawSettings.eraser)
+              }
             };
           }))
         };
@@ -578,7 +642,12 @@
           pan: image.pan && typeof image.pan.x === 'number' && typeof image.pan.y === 'number' ? { x: image.pan.x, y: image.pan.y } : { x: 0, y: 0 },
           activeTool: image.activeTool === 'notes' ? 'notes' : 'draw',
           selectedNoteId: image.selectedNoteId || null,
-          selectedNoteMode: image.selectedNoteMode === 'pencil' ? 'pencil' : 'text'
+          selectedNoteMode: image.selectedNoteMode === 'pencil' ? 'pencil' : 'text',
+          drawSettings: image.drawSettings && typeof image.drawSettings === 'object' ? image.drawSettings : {
+            color: '#000000',
+            size: 4,
+            eraser: false
+          }
         }));
 
         console.log('[debug] applyProjectState: projectImages after map', projectImages.map((image, index) => ({
@@ -687,17 +756,21 @@
       function drawStroke(stroke) {
         if (!stroke || stroke.points.length === 0) return;
         const rect = photo.getBoundingClientRect();
+        const strokeColor = typeof stroke.color === 'string' ? stroke.color : brushColor;
+        const strokeSize = typeof stroke.size === 'number' ? stroke.size : brushSize;
+        const isErasingStroke = Boolean(stroke.eraser);
         ctx.save();
-        ctx.strokeStyle = '#000';
-        ctx.fillStyle = '#000';
-        ctx.lineWidth = 4;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
+        ctx.lineWidth = strokeSize;
+        ctx.strokeStyle = isErasingStroke ? 'rgba(0,0,0,1)' : strokeColor;
+        ctx.fillStyle = isErasingStroke ? 'rgba(0,0,0,1)' : strokeColor;
+        ctx.globalCompositeOperation = isErasingStroke ? 'destination-out' : 'source-over';
         ctx.beginPath();
         const first = stroke.points[0];
         ctx.moveTo(first.x * rect.width, first.y * rect.height);
         if (stroke.points.length === 1) {
-          ctx.arc(first.x * rect.width, first.y * rect.height, 2, 0, Math.PI * 2);
+          ctx.arc(first.x * rect.width, first.y * rect.height, Math.max(1, strokeSize / 2), 0, Math.PI * 2);
           ctx.fill();
         } else {
           for (let index = 1; index < stroke.points.length; index += 1) {
@@ -716,6 +789,31 @@
         if (activeStroke) drawStroke(activeStroke);
       }
 
+      function syncBrushControls() {
+        if (fullscreenColorPicker) {
+          fullscreenColorPicker.value = brushColor;
+        }
+        if (fullscreenBrushSize) {
+          fullscreenBrushSize.value = String(brushSize);
+        }
+        if (fullscreenBrushSizeValue) {
+          fullscreenBrushSizeValue.textContent = `${brushSize} px`;
+        }
+        if (fullscreenEraserBtn) {
+          fullscreenEraserBtn.classList.toggle('active', isErasing);
+        }
+        document.querySelectorAll('.quick-color-button').forEach((button) => {
+          const isActive = button.dataset.color && button.dataset.color.toLowerCase() === brushColor.toLowerCase();
+          button.classList.toggle('is-selected', isActive);
+        });
+        if (fullscreenUndoBtn) {
+          fullscreenUndoBtn.disabled = strokes.length === 0;
+        }
+        if (fullscreenRedoBtn) {
+          fullscreenRedoBtn.disabled = redoStack.length === 0;
+        }
+      }
+
       function pointFromEvent(event) {
         const rect = canvas.getBoundingClientRect();
         return {
@@ -731,7 +829,12 @@
         canvas.setPointerCapture(event.pointerId);
         activeDrawingPointerId = event.pointerId;
         isDrawing = true;
-        activeStroke = { points: [pointFromEvent(event)] };
+        activeStroke = {
+          points: [pointFromEvent(event)],
+          color: brushColor,
+          size: brushSize,
+          eraser: isErasing
+        };
         redraw();
       }
 
@@ -749,9 +852,11 @@
         activeDrawingPointerId = null;
         isDrawing = false;
         strokes.push(activeStroke);
+        redoStack = [];
         activeStroke = null;
         redraw();
         setControls();
+        syncBrushControls();
         saveLastWork();
       }
 
@@ -1075,7 +1180,12 @@
         fullscreenMode = enabled;
         document.body.classList.toggle('fullscreen-mode', enabled);
         fullscreenButton.hidden = enabled;
-        exitFullscreenButton.hidden = !enabled;
+        if (fullscreenCloseButton) {
+          fullscreenCloseButton.hidden = !enabled;
+        }
+        if (fullscreenDrawingToolbar) {
+          fullscreenDrawingToolbar.hidden = !enabled;
+        }
         if (enabled) {
           previousFullscreenTool = activeTool;
           setActiveTool('draw');
@@ -1090,6 +1200,7 @@
           updateFullscreenFrame();
           zoomLevel = 1;
           panOffset = { x: 0, y: 0 };
+          syncBrushControls();
           attachFullscreenInputHandlers();
         } else {
           resetInteractionState();
@@ -1105,6 +1216,12 @@
           overlay.hidden = true;
           imagePanel.classList.remove('fullscreen-panel');
           setActiveTool(previousFullscreenTool);
+          if (fullscreenDrawingToolbar) {
+            fullscreenDrawingToolbar.hidden = true;
+          }
+          if (fullscreenCloseButton) {
+            fullscreenCloseButton.hidden = true;
+          }
         }
         requestAnimationFrame(() => {
           configureCanvas();
@@ -1246,6 +1363,10 @@
         activeWritingPointerId = null;
         activeTool = 'draw';
         selectedNoteMode = 'text';
+        redoStack = [];
+        brushColor = '#000000';
+        brushSize = 4;
+        isErasing = false;
         zoomLevel = 1;
         panOffset = { x: 0, y: 0 };
         panning = false;
@@ -1264,6 +1385,7 @@
         stage.hidden = true;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         noteCanvasCtx.clearRect(0, 0, noteCanvas.width, noteCanvas.height);
+        syncBrushControls();
         renderImageThumbnails();
         updateImageTransform();
         setActiveTool('draw');
@@ -1289,6 +1411,17 @@
           }
         }
         resetCurrentProject();
+      }
+
+      function applyCurrentBrushSettings() {
+        if (!sourceImage) return;
+        const currentProjectImage = projectImages[activeImageIndex];
+        if (!currentProjectImage) return;
+        currentProjectImage.drawSettings = {
+          color: brushColor,
+          size: brushSize,
+          eraser: isErasing
+        };
       }
 
       async function activateImageAt(index, { persist = true } = {}) {
@@ -1339,6 +1472,11 @@
           selectedNoteId = interactiveNotes.find((note) => note.id === currentImage.selectedNoteId)?.id || interactiveNotes[0]?.id || null;
           activeTool = currentImage.activeTool === 'notes' ? 'notes' : 'draw';
           selectedNoteMode = currentImage.selectedNoteMode === 'pencil' ? 'pencil' : 'text';
+          const savedSettings = currentImage.drawSettings && typeof currentImage.drawSettings === 'object' ? currentImage.drawSettings : {};
+          brushColor = typeof savedSettings.color === 'string' && savedSettings.color ? savedSettings.color : '#000000';
+          brushSize = Number.isFinite(Number(savedSettings.size)) ? clamp(Number(savedSettings.size), 1, 20) : 4;
+          isErasing = Boolean(savedSettings.eraser);
+          redoStack = [];
           zoomLevel = typeof currentImage.zoom === 'number' ? currentImage.zoom : 1;
           panOffset = currentImage.pan && typeof currentImage.pan.x === 'number' && typeof currentImage.pan.y === 'number'
             ? { x: currentImage.pan.x, y: currentImage.pan.y }
@@ -1351,6 +1489,7 @@
           renderNoteList();
           renderImageThumbnails();
           syncSelectedNoteForm();
+          syncBrushControls();
           setActiveTool(activeTool);
           setSelectedNoteMode(selectedNoteMode);
           updateImageTransform();
@@ -1361,7 +1500,8 @@
             notesCount: interactiveNotes.length,
             zoomLevel,
             panOffset,
-            selectedNoteId
+            selectedNoteId,
+            drawSettings: { color: brushColor, size: brushSize, eraser: isErasing }
           });
           if (persist) {
             saveLastWork();
@@ -1390,7 +1530,12 @@
             pan: { x: 0, y: 0 },
             activeTool: 'draw',
             selectedNoteId: null,
-            selectedNoteMode: 'text'
+            selectedNoteMode: 'text',
+            drawSettings: {
+              color: brushColor,
+              size: brushSize,
+              eraser: isErasing
+            }
           };
           console.log('[debug] loadImage: pushing new image entry', {
             imageEntry,
@@ -1412,16 +1557,31 @@
 
       function clearDrawings() {
         activeStroke = null;
+        redoStack = [];
         strokes = [];
         redraw();
         setControls();
+        syncBrushControls();
         saveLastWork();
       }
 
       function undoLastLine() {
-        strokes.pop();
+        if (!strokes.length) return;
+        const lastStroke = strokes.pop();
+        redoStack.push(lastStroke);
         redraw();
         setControls();
+        syncBrushControls();
+        saveLastWork();
+      }
+
+      function redoLastLine() {
+        if (!redoStack.length) return;
+        const lastRedo = redoStack.pop();
+        strokes.push(lastRedo);
+        redraw();
+        setControls();
+        syncBrushControls();
         saveLastWork();
       }
 
@@ -1531,7 +1691,54 @@
         imageInput.click();
       });
       fullscreenButton.addEventListener('click', () => setFullscreenMode(true));
-      exitFullscreenButton.addEventListener('click', () => setFullscreenMode(false));
+      fullscreenCloseButton.addEventListener('click', () => setFullscreenMode(false));
+      fullscreenCloseToolbarBtn.addEventListener('click', () => setFullscreenMode(false));
+      fullscreenColorPicker.addEventListener('input', (event) => {
+        brushColor = event.target.value;
+        isErasing = false;
+        applyCurrentBrushSettings();
+        syncBrushControls();
+        scheduleSave();
+      });
+      fullscreenBrushSize.addEventListener('input', (event) => {
+        brushSize = Number(event.target.value) || 4;
+        applyCurrentBrushSettings();
+        syncBrushControls();
+        scheduleSave();
+      });
+      fullscreenEraserBtn.addEventListener('click', () => {
+        isErasing = !isErasing;
+        applyCurrentBrushSettings();
+        syncBrushControls();
+        scheduleSave();
+      });
+      fullscreenUndoBtn.addEventListener('click', () => {
+        undoLastLine();
+      });
+      fullscreenRedoBtn.addEventListener('click', () => {
+        redoLastLine();
+      });
+      fullscreenClearBtn.addEventListener('click', () => {
+        clearDrawings();
+      });
+      document.querySelectorAll('.quick-color-button').forEach((button) => {
+        button.addEventListener('click', () => {
+          const selectedColor = button.dataset.color;
+          if (!selectedColor) return;
+          brushColor = selectedColor;
+          isErasing = false;
+          applyCurrentBrushSettings();
+          syncBrushControls();
+          scheduleSave();
+        });
+      });
+      window.addEventListener('keydown', (event) => {
+        if (!fullscreenMode) return;
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          setFullscreenMode(false);
+        }
+      });
       removeImageButton.addEventListener('click', confirmRemoveImage);
       loadProjectButton.addEventListener('click', (event) => {
         event.preventDefault();
