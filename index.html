@@ -39,13 +39,26 @@
     .image-stage { position: relative; display: inline-block; max-width: 100%; line-height: 0; box-shadow: 0 7px 20px rgba(56, 43, 26, .16); }
     #photo { display: block; max-width: 100%; max-height: min(66vh, 760px); width: auto; height: auto; }
     #drawingCanvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+    .note-layer { position: absolute; inset: 0; pointer-events: none; }
+    .note-marker { position: absolute; display: grid; place-items: center; width: 42px; height: 42px; transform: translate(-50%, -50%); border: 0; border-radius: 999px; background: linear-gradient(140deg, #8b5e3c, #6a3d22); color: #fffdfa; font-weight: 800; font-size: .95rem; box-shadow: 0 10px 20px rgba(61, 39, 23, .24); cursor: grab; pointer-events: auto; -webkit-tap-highlight-color: transparent; }
+    .note-marker:active { cursor: grabbing; }
+    .note-marker.selected { background: linear-gradient(140deg, #2f6f51, #1f4e3d); transform: translate(-50%, -50%) scale(1.06); }
     .empty { max-width: 290px; padding: 28px; color: #7c7265; text-align: center; font-size: .95rem; line-height: 1.6; }
     .toolbar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
     .toolbar button { width: 100%; padding-inline: 12px; }
     #clear { background: #f5f0e8; }
     .notes { display: flex; flex-direction: column; min-height: 0; padding: clamp(18px, 2.3vw, 25px); }
-    #notes { width: 100%; min-height: 390px; height: 100%; flex: 1; resize: vertical; border: 1px solid #e2dbd1; border-radius: 14px; padding: 18px; color: #322c23; background: linear-gradient(#fffefa, #fbf8f2); box-shadow: inset 0 1px 2px rgba(60, 47, 28, .03); font-size: 16px; line-height: 1.65; }
-    #notes::placeholder { color: #a39a8e; }
+    .notes-toolbar { display: flex; gap: 10px; margin-bottom: 12px; }
+    .notes-toolbar button { flex: 1; min-height: 44px; }
+    .note-list { display: grid; gap: 10px; margin-bottom: 14px; }
+    .note-list-item { width: 100%; border: 1px solid #e3ddd3; border-radius: 14px; padding: 12px 13px; background: #fdfcf9; text-align: left; color: #322c23; box-shadow: inset 0 1px 0 rgba(255,255,255,.4); }
+    .note-list-item.selected { border-color: #8b5e3c; background: #fbf2e8; }
+    .note-list-item strong { display: block; font-size: .95rem; }
+    .note-list-item small { display: block; margin-top: 4px; color: #7a7267; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .note-form { display: grid; gap: 10px; }
+    .note-form label { color: #655947; font-size: .72rem; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
+    .note-form input, .note-form textarea { width: 100%; border: 1px solid #e2dbd1; border-radius: 12px; padding: 12px 13px; color: #322c23; background: linear-gradient(#fffefa, #fbf8f2); font-size: 15px; }
+    .note-form textarea { min-height: 120px; resize: vertical; }
     .help { display: flex; align-items: center; gap: 8px; margin: 14px 2px 0; color: #83796b; font-size: .79rem; line-height: 1.45; }
     .help::before { width: 5px; height: 5px; flex: 0 0 auto; border-radius: 50%; background: #a48358; content: ""; }
     .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
@@ -67,7 +80,7 @@
 <body>
   <main class="app">
     <header>
-      <h1>Notițe pe imagini</h1>
+      <h1>Notițe interactive pe imagine</h1>
       <button type="button" id="addImage"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="M7 8l5-5 5 5"></path><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"></path></svg><span>Adaugă imagine</span></button>
       <input class="sr-only" id="imageInput" type="file" accept="image/*" capture="environment">
     </header>
@@ -80,6 +93,7 @@
           <div class="image-stage" id="imageStage" hidden>
             <img id="photo" alt="Fotografia încărcată">
             <canvas id="drawingCanvas" aria-label="Zonă de desen pe imagine"></canvas>
+            <div class="note-layer" id="noteLayer" hidden></div>
           </div>
         </div>
         <div class="toolbar" aria-label="Instrumente desen">
@@ -91,8 +105,18 @@
       </section>
 
       <section class="notes" aria-labelledby="notesLabel">
-        <label class="section-label" id="notesLabel" for="notes">Fișă de lucru</label>
-        <textarea id="notes" placeholder="Adaugă detalii, măsurători sau observații pentru lucrare…"></textarea>
+        <label class="section-label" id="notesLabel">Notițe interactive</label>
+        <div class="notes-toolbar">
+          <button type="button" id="addNote">Adaugă notă</button>
+          <button type="button" id="deleteSelectedNote" disabled>Șterge nota</button>
+        </div>
+        <div class="note-list" id="noteList" aria-live="polite"></div>
+        <div class="note-form">
+          <label for="noteTitle">Titlu</label>
+          <input id="noteTitle" type="text" placeholder="Ex.: Detaliu important">
+          <label for="noteContent">Conținut</label>
+          <textarea id="noteContent" placeholder="Scrie observații, măsurători sau idei pentru această zonă…"></textarea>
+        </div>
       </section>
     </div>
   </main>
@@ -104,11 +128,16 @@
       const photo = document.getElementById('photo');
       const canvas = document.getElementById('drawingCanvas');
       const stage = document.getElementById('imageStage');
+      const noteLayer = document.getElementById('noteLayer');
       const emptyState = document.getElementById('emptyState');
       const undo = document.getElementById('undo');
       const clear = document.getElementById('clear');
       const save = document.getElementById('save');
-      const notes = document.getElementById('notes');
+      const addNoteButton = document.getElementById('addNote');
+      const deleteSelectedNoteButton = document.getElementById('deleteSelectedNote');
+      const noteList = document.getElementById('noteList');
+      const noteTitleInput = document.getElementById('noteTitle');
+      const noteContentTextarea = document.getElementById('noteContent');
       const ctx = canvas.getContext('2d');
       let strokes = [];
       let activeStroke = null;
@@ -116,6 +145,9 @@
       let currentObjectUrl = null;
       let imageBlob = null;
       let saveTimer = null;
+      let interactiveNotes = [];
+      let selectedNoteId = null;
+      let draggingNoteId = null;
       const databaseName = 'fisa-atelier-offline';
       const databaseStore = 'lucrari';
 
@@ -132,7 +164,7 @@
         try {
           const database = await openDatabase();
           const transaction = database.transaction(databaseStore, 'readwrite');
-          transaction.objectStore(databaseStore).put({ image: imageBlob, strokes, notes: notes.value }, 'ultima-lucrare');
+          transaction.objectStore(databaseStore).put({ image: imageBlob, strokes, interactiveNotes }, 'ultima-lucrare');
           transaction.oncomplete = () => database.close();
         } catch (error) {
           console.warn('Lucrarea nu a putut fi salvată local.', error);
@@ -153,8 +185,9 @@
             const work = request.result;
             database.close();
             if (!work) return;
-            notes.value = work.notes || '';
-            if (work.image) loadImage(work.image, { storedStrokes: work.strokes || [], shouldPersist: false });
+            if (work.image) {
+              loadImage(work.image, { storedStrokes: work.strokes || [], storedNotes: work.interactiveNotes || [], shouldPersist: false });
+            }
           };
           request.onerror = () => database.close();
         } catch (error) {
@@ -167,6 +200,8 @@
         undo.disabled = !ready || strokes.length === 0;
         clear.disabled = !ready || strokes.length === 0;
         save.disabled = !ready;
+        addNoteButton.disabled = !ready;
+        deleteSelectedNoteButton.disabled = !ready || !selectedNoteId;
       }
 
       function configureCanvas() {
@@ -245,7 +280,125 @@
         saveLastWork();
       }
 
-      function loadImage(file, { storedStrokes = [], shouldPersist = true } = {}) {
+      function createNoteId() {
+        return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      }
+
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function renderNoteList() {
+        noteList.innerHTML = '';
+        if (!interactiveNotes.length) {
+          const empty = document.createElement('div');
+          empty.className = 'note-list-item';
+          empty.innerHTML = '<strong>Nu există încă note</strong><small>Adaugă una pentru a marca zone importante pe imagine.</small>';
+          noteList.appendChild(empty);
+          return;
+        }
+        interactiveNotes.forEach((note) => {
+          const item = document.createElement('button');
+          item.type = 'button';
+          item.className = `note-list-item${selectedNoteId === note.id ? ' selected' : ''}`;
+          item.innerHTML = `<strong>${escapeHtml(note.title || 'Notă')}</strong><small>${escapeHtml(note.content ? note.content.split(/\n/)[0] : 'Fără conținut')}</small>`;
+          item.addEventListener('click', () => selectNote(note.id));
+          noteList.appendChild(item);
+        });
+      }
+
+      function syncSelectedNoteForm() {
+        const note = interactiveNotes.find((item) => item.id === selectedNoteId);
+        noteTitleInput.value = note ? note.title : '';
+        noteContentTextarea.value = note ? note.content : '';
+      }
+
+      function renderNotes() {
+        noteLayer.innerHTML = '';
+        noteLayer.hidden = !interactiveNotes.length;
+        interactiveNotes.forEach((note, index) => {
+          const marker = document.createElement('button');
+          marker.type = 'button';
+          marker.className = `note-marker${selectedNoteId === note.id ? ' selected' : ''}`;
+          marker.style.left = `${note.x * 100}%`;
+          marker.style.top = `${note.y * 100}%`;
+          marker.textContent = String(index + 1);
+          marker.addEventListener('click', (event) => {
+            event.stopPropagation();
+            selectNote(note.id);
+          });
+          marker.addEventListener('pointerdown', (event) => {
+            if (event.button !== undefined && event.button !== 0) return;
+            event.preventDefault();
+            event.stopPropagation();
+            selectNote(note.id);
+            draggingNoteId = note.id;
+            window.addEventListener('pointermove', handleNoteDrag);
+            window.addEventListener('pointerup', stopNoteDrag, { once: true });
+          });
+          noteLayer.appendChild(marker);
+        });
+      }
+
+      function selectNote(noteId) {
+        selectedNoteId = noteId;
+        renderNotes();
+        renderNoteList();
+        syncSelectedNoteForm();
+        setControls();
+      }
+
+      function addNote() {
+        const newNote = {
+          id: createNoteId(),
+          title: `Notă ${interactiveNotes.length + 1}`,
+          content: '',
+          x: 0.5,
+          y: 0.5
+        };
+        interactiveNotes.push(newNote);
+        selectNote(newNote.id);
+        scheduleSave();
+      }
+
+      function deleteSelectedNote() {
+        if (!selectedNoteId) return;
+        interactiveNotes = interactiveNotes.filter((note) => note.id !== selectedNoteId);
+        selectedNoteId = interactiveNotes[0] ? interactiveNotes[0].id : null;
+        renderNotes();
+        renderNoteList();
+        syncSelectedNoteForm();
+        setControls();
+        scheduleSave();
+      }
+
+      function handleNoteDrag(event) {
+        if (!draggingNoteId) return;
+        const note = interactiveNotes.find((item) => item.id === draggingNoteId);
+        if (!note) return;
+        const rect = stage.getBoundingClientRect();
+        const x = clamp((event.clientX - rect.left) / rect.width, 0, 1);
+        const y = clamp((event.clientY - rect.top) / rect.height, 0, 1);
+        note.x = x;
+        note.y = y;
+        renderNotes();
+        scheduleSave();
+      }
+
+      function stopNoteDrag() {
+        draggingNoteId = null;
+        window.removeEventListener('pointermove', handleNoteDrag);
+      }
+
+      function loadImage(file, { storedStrokes = [], storedNotes = [], shouldPersist = true } = {}) {
         if (!file || !file.type.startsWith('image/')) return;
         if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
         currentObjectUrl = URL.createObjectURL(file);
@@ -253,9 +406,15 @@
           sourceImage = photo;
           imageBlob = file;
           strokes = storedStrokes;
+          interactiveNotes = storedNotes;
+          selectedNoteId = interactiveNotes[0] ? interactiveNotes[0].id : null;
           emptyState.hidden = true;
           stage.hidden = false;
+          noteLayer.hidden = !interactiveNotes.length;
           configureCanvas();
+          renderNotes();
+          renderNoteList();
+          syncSelectedNoteForm();
           setControls();
           if (shouldPersist) saveLastWork();
         };
@@ -306,18 +465,14 @@
 
       async function saveImage() {
         if (!sourceImage) return;
-        const noteText = notes.value.trim();
-        const noteWidth = noteText ? Math.max(420, Math.round(photo.naturalWidth * 0.55)) : 0;
-        const padding = noteText ? Math.max(36, Math.round(noteWidth * 0.08)) : 0;
-        const fontSize = noteText ? Math.max(24, Math.round(noteWidth * 0.055)) : 0;
-        const lineHeight = Math.round(fontSize * 1.45);
         const exported = document.createElement('canvas');
-        const measureContext = exported.getContext('2d');
-        measureContext.font = `${fontSize}px Arial`;
-        const noteLines = noteText ? wrapText(measureContext, noteText, noteWidth - padding * 2) : [];
-        const noteHeight = noteText ? padding * 2 + fontSize + 18 + noteLines.length * lineHeight : 0;
+        const noteWidth = Math.max(320, Math.round(photo.naturalWidth * 0.3));
+        const padding = Math.max(24, Math.round(noteWidth * 0.08));
+        const titleSize = Math.max(20, Math.round(noteWidth * 0.055));
+        const bodySize = Math.max(15, Math.round(noteWidth * 0.04));
+        const lineHeight = Math.round(bodySize * 1.35);
         exported.width = photo.naturalWidth + noteWidth;
-        exported.height = Math.max(photo.naturalHeight, noteHeight);
+        exported.height = photo.naturalHeight;
         const exportCtx = exported.getContext('2d');
         exportCtx.fillStyle = '#fff';
         exportCtx.fillRect(0, 0, exported.width, exported.height);
@@ -340,25 +495,30 @@
             exportCtx.stroke();
           }
         });
-        if (noteText) {
-          const textX = photo.naturalWidth + padding;
-          let textY = padding + fontSize;
-          exportCtx.fillStyle = '#000';
-          exportCtx.font = `600 ${fontSize}px Arial`;
-          exportCtx.fillText('Notițe', textX, textY);
-          exportCtx.font = `${fontSize}px Arial`;
-          textY += fontSize + 18;
-          noteLines.forEach((line) => {
-            exportCtx.fillText(line, textX, textY);
-            textY += lineHeight;
+        exportCtx.fillStyle = '#1f2937';
+        exportCtx.font = `600 ${titleSize}px Arial`;
+        exportCtx.fillText('N o t e', photo.naturalWidth + padding, padding + titleSize);
+        exportCtx.font = `${bodySize}px Arial`;
+        interactiveNotes.forEach((note, index) => {
+          const x = photo.naturalWidth + padding;
+          const y = padding + titleSize + 30 + index * 90;
+          exportCtx.fillStyle = '#8b5e3c';
+          exportCtx.beginPath();
+          exportCtx.arc(x + 8, y + 6, 8, 0, Math.PI * 2);
+          exportCtx.fill();
+          exportCtx.fillStyle = '#1f2937';
+          exportCtx.fillText(`${index + 1}. ${note.title || 'Notă'}`, x + 24, y + 10);
+          const noteLines = wrapText(exportCtx, note.content || '', noteWidth - padding * 2 - 24);
+          noteLines.slice(0, 3).forEach((line, lineIndex) => {
+            exportCtx.fillText(line, x + 24, y + 34 + lineIndex * lineHeight);
           });
-        }
+        });
         const blob = await canvasToBlob(exported);
         if (!blob) return;
-        const imageFile = new File([blob], 'imagine-cu-notite.png', { type: 'image/png' });
+        const imageFile = new File([blob], 'imagine-cu-notite-interactive.png', { type: 'image/png' });
         if (navigator.canShare && navigator.canShare({ files: [imageFile] })) {
           try {
-            await navigator.share({ files: [imageFile], title: 'Imagine cu notițe' });
+            await navigator.share({ files: [imageFile], title: 'Imagine cu notițe interactive' });
             return;
           } catch (error) {
             if (error.name === 'AbortError') return;
@@ -377,7 +537,23 @@
       undo.addEventListener('click', undoLastLine);
       clear.addEventListener('click', clearDrawings);
       save.addEventListener('click', saveImage);
-      notes.addEventListener('input', scheduleSave);
+      addNoteButton.addEventListener('click', addNote);
+      deleteSelectedNoteButton.addEventListener('click', deleteSelectedNote);
+      noteTitleInput.addEventListener('input', () => {
+        const note = interactiveNotes.find((item) => item.id === selectedNoteId);
+        if (!note) return;
+        note.title = noteTitleInput.value;
+        renderNoteList();
+        renderNotes();
+        scheduleSave();
+      });
+      noteContentTextarea.addEventListener('input', () => {
+        const note = interactiveNotes.find((item) => item.id === selectedNoteId);
+        if (!note) return;
+        note.content = noteContentTextarea.value;
+        renderNoteList();
+        scheduleSave();
+      });
       canvas.addEventListener('pointerdown', beginDrawing, { passive: false });
       canvas.addEventListener('pointermove', continueDrawing, { passive: false });
       canvas.addEventListener('pointerup', finishDrawing, { passive: false });
