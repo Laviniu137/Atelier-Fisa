@@ -117,20 +117,199 @@
     body.fullscreen-mode #fullscreenBtn { display: none; }
     body.fullscreen-mode .fullscreen-close-btn { display: inline-flex; }
     body.fullscreen-mode .fullscreen-drawing-toolbar { display: flex; }
-    .fullscreen-close-btn { position: fixed; top: 20px; right: 20px; z-index: 1600; display: none; align-items: center; justify-content: center; width: 48px; height: 48px; border: 1px solid rgba(255,255,255,.25); border-radius: 50%; background: rgba(22,18,14,.48); color: #fff; font-size: 1.5rem; box-shadow: 0 10px 24px rgba(0,0,0,.25); cursor: pointer; }
-    .fullscreen-drawing-toolbar { position: fixed; left: 50%; bottom: 18px; z-index: 1600; display: none; align-items: center; gap: 10px; transform: translateX(-50%); width: min(980px, calc(100vw - 24px)); padding: 12px 14px; border: 1px solid rgba(255,255,255,.18); border-radius: 18px; background: rgba(28,24,20,.48); backdrop-filter: blur(16px); box-shadow: 0 18px 40px rgba(0,0,0,.28); }
-    .drawing-tool-group { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 12px; background: rgba(255,255,255,.06); }
-    .tool-label { color: rgba(255,255,255,.8); font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-    .quick-colors { display: flex; align-items: center; gap: 6px; }
-    .quick-color-button { width: 20px; height: 20px; min-height: unset; padding: 0; border: 2px solid rgba(255,255,255,.6); border-radius: 50%; background: var(--swatch); box-shadow: inset 0 0 0 1px rgba(0,0,0,.18); }
-    .quick-color-button.is-selected { outline: 2px solid rgba(255,255,255,.9); outline-offset: 2px; }
-    #fullscreenColorPicker { width: 40px; height: 36px; padding: 0; border: 0; border-radius: 10px; background: transparent; }
-    #fullscreenBrushSize { width: 130px; accent-color: #f5c16f; }
-    #fullscreenBrushSizeValue { min-width: 54px; color: #fff; font-size: .82rem; font-weight: 700; }
-    .drawing-tool-button { min-height: 42px; padding: 8px 12px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.08); color: #fff; }
-    .drawing-tool-button.active { border-color: rgba(245,193,111,.8); background: rgba(245,193,111,.18); }
-    .drawing-tool-button.danger { background: rgba(220,78,68,.15); border-color: rgba(220,78,68,.45); }
-    .drawing-tool-button:disabled { opacity: .45; }
+    .fullscreen-close-btn {
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 0px) + 18px);
+      right: calc(env(safe-area-inset-right, 0px) + 18px);
+      z-index: 1650;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 52px;
+      height: 52px;
+      padding: 0;
+      border: 1px solid rgba(255, 255, 255, .28);
+      border-radius: 16px;
+      background: linear-gradient(165deg, rgba(42, 48, 58, .62), rgba(22, 26, 34, .52));
+      color: #edf3ff;
+      box-shadow: 0 10px 24px rgba(3, 6, 14, .34);
+      backdrop-filter: blur(14px) saturate(140%);
+      cursor: pointer;
+    }
+    .fullscreen-close-btn svg { width: 22px; height: 22px; stroke-width: 2.2; }
+
+    .fullscreen-drawing-toolbar {
+      --panel-line: rgba(255, 255, 255, .16);
+      --panel-fill: linear-gradient(165deg, rgba(36, 45, 58, .58), rgba(16, 21, 28, .44));
+      --panel-text: rgba(233, 240, 255, .95);
+      --panel-muted: rgba(214, 225, 245, .74);
+      --panel-highlight: rgba(108, 211, 255, .72);
+      position: fixed;
+      left: 50%;
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+      z-index: 1600;
+      display: none;
+      align-items: center;
+      gap: 12px;
+      transform: translateX(-50%);
+      width: clamp(520px, 64vw, 860px);
+      max-width: calc(100vw - 34px);
+      min-height: 92px;
+      padding: 10px 16px;
+      border: 1px solid var(--panel-line);
+      border-radius: 24px;
+      background: var(--panel-fill);
+      color: var(--panel-text);
+      box-shadow: 0 20px 44px rgba(4, 7, 15, .34), inset 0 1px 0 rgba(255, 255, 255, .1);
+      backdrop-filter: blur(20px) saturate(150%);
+    }
+    .drawing-tool-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 0;
+      background: transparent;
+    }
+    .drawing-tool-group-row { display: flex; align-items: center; gap: 8px; }
+    .tool-label {
+      margin-left: 2px;
+      color: var(--panel-muted);
+      font-size: .62rem;
+      font-weight: 720;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      user-select: none;
+    }
+    .drawing-tool-divider {
+      width: 1px;
+      align-self: stretch;
+      background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, .2), rgba(255, 255, 255, 0));
+    }
+    .quick-colors { display: flex; align-items: center; gap: 8px; }
+    .quick-color-button {
+      width: 24px;
+      height: 24px;
+      min-width: 24px;
+      min-height: 24px;
+      padding: 0;
+      border: 1.5px solid rgba(255, 255, 255, .42);
+      border-radius: 999px;
+      background: var(--swatch);
+      box-shadow: inset 0 0 0 1px rgba(5, 10, 16, .26), 0 0 0 0 rgba(126, 217, 255, 0);
+      transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+    }
+    .quick-color-button:hover:not(:disabled) { transform: translateY(-1px); border-color: rgba(255, 255, 255, .7); }
+    .quick-color-button.is-selected {
+      border-color: rgba(255, 255, 255, .98);
+      box-shadow: inset 0 0 0 1px rgba(9, 13, 20, .28), 0 0 0 2px rgba(255, 255, 255, .88), 0 0 14px rgba(126, 217, 255, .62);
+    }
+    #fullscreenColorPicker {
+      width: 38px;
+      height: 38px;
+      min-width: 38px;
+      min-height: 38px;
+      padding: 0;
+      border: 1px solid rgba(255, 255, 255, .32);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, .1);
+      overflow: hidden;
+    }
+    #fullscreenColorPicker::-webkit-color-swatch-wrapper { padding: 0; }
+    #fullscreenColorPicker::-webkit-color-swatch { border: 0; border-radius: 9px; }
+    #fullscreenBrushSize {
+      width: 118px;
+      height: 4px;
+      margin: 0;
+      -webkit-appearance: none;
+      appearance: none;
+      border-radius: 999px;
+      background: linear-gradient(to right, rgba(111, 208, 255, .88), rgba(255, 255, 255, .35));
+      outline: none;
+    }
+    #fullscreenBrushSize::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, .86);
+      border-radius: 999px;
+      background: #f4fbff;
+      box-shadow: 0 4px 14px rgba(8, 14, 24, .35);
+      cursor: pointer;
+    }
+    #fullscreenBrushSize::-moz-range-track {
+      height: 4px;
+      border-radius: 999px;
+      background: linear-gradient(to right, rgba(111, 208, 255, .88), rgba(255, 255, 255, .35));
+    }
+    #fullscreenBrushSize::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, .86);
+      border-radius: 999px;
+      background: #f4fbff;
+      box-shadow: 0 4px 14px rgba(8, 14, 24, .35);
+      cursor: pointer;
+    }
+    #fullscreenBrushSizeValue {
+      min-width: 50px;
+      color: rgba(246, 251, 255, .95);
+      font-size: .79rem;
+      font-weight: 700;
+      letter-spacing: .02em;
+      text-align: left;
+    }
+    .drawing-tool-button {
+      width: 46px;
+      height: 46px;
+      min-width: 46px;
+      min-height: 46px;
+      padding: 0;
+      border: 1px solid rgba(255, 255, 255, .24);
+      border-radius: 13px;
+      background: linear-gradient(165deg, rgba(255, 255, 255, .13), rgba(255, 255, 255, .04));
+      color: rgba(236, 243, 255, .94);
+      box-shadow: 0 5px 14px rgba(0, 0, 0, .2);
+      transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease;
+    }
+    .drawing-tool-button svg { width: 20px; height: 20px; stroke-width: 2; }
+    .drawing-tool-button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      border-color: rgba(255, 255, 255, .42);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, .26);
+    }
+    .drawing-tool-button:active:not(:disabled) { transform: translateY(1px) scale(.97); }
+    .drawing-tool-button.active {
+      border-color: rgba(126, 217, 255, .95);
+      background: linear-gradient(165deg, rgba(126, 217, 255, .36), rgba(93, 183, 240, .22));
+      box-shadow: inset 0 0 0 1px rgba(228, 246, 255, .38), 0 0 14px rgba(112, 210, 255, .45);
+    }
+    .drawing-tool-button.danger {
+      border-color: rgba(255, 126, 126, .42);
+      background: linear-gradient(165deg, rgba(255, 138, 138, .22), rgba(255, 120, 120, .12));
+    }
+    .drawing-tool-button:disabled { opacity: .44; box-shadow: none; }
+    .fullscreen-toolbar-close-fallback { display: none; }
+
+    @media (orientation: portrait) and (min-width: 768px) {
+      .fullscreen-drawing-toolbar { width: clamp(520px, 70vw, 780px); }
+    }
+    @media (max-width: 820px) {
+      .fullscreen-drawing-toolbar {
+        width: min(94vw, 700px);
+        padding: 9px 11px;
+        gap: 9px;
+        border-radius: 20px;
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+      }
+      .drawing-tool-group-row { gap: 6px; }
+      .tool-label { font-size: .58rem; letter-spacing: .11em; }
+      .drawing-tool-button { width: 42px; height: 42px; min-width: 42px; min-height: 42px; border-radius: 11px; }
+      #fullscreenColorPicker { width: 34px; height: 34px; min-width: 34px; min-height: 34px; }
+      #fullscreenBrushSize { width: 98px; }
+      #fullscreenBrushSizeValue { min-width: 44px; font-size: .74rem; }
+      .quick-color-button { width: 22px; height: 22px; min-width: 22px; min-height: 22px; }
+    }
     @media (min-width: 820px) and (max-width: 1366px) {
       .app { padding: clamp(16px, 1.8vw, 26px); }
       .layout { grid-template-columns: minmax(0, 1.6fr) minmax(320px, .9fr); gap: 18px; }
@@ -202,30 +381,56 @@
           <button type="button" id="drawModeBtn" class="active">Desen</button>
           <button type="button" id="notesModeBtn">Note</button>
         </div>
-        <div class="fullscreen-close-btn" id="fullscreenCloseButton" aria-label="Închide ecran complet" title="Închide ecran complet" hidden>✕</div>
+        <button type="button" class="fullscreen-close-btn" id="fullscreenCloseButton" aria-label="Închide ecran complet" title="Închide ecran complet" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6 6 18"></path></svg>
+        </button>
         <div class="fullscreen-drawing-toolbar" id="fullscreenDrawingToolbar" hidden>
           <div class="drawing-tool-group color-group">
-            <span class="tool-label">Culoare</span>
-            <input id="fullscreenColorPicker" type="color" value="#000000" aria-label="Alege culoarea creionului">
-            <div class="quick-colors" aria-label="Culori rapide">
-              <button type="button" class="quick-color-button is-selected" data-color="#000000" style="--swatch:#000000" title="Negru" aria-label="Negru"></button>
-              <button type="button" class="quick-color-button" data-color="#e53935" style="--swatch:#e53935" title="Roșu" aria-label="Roșu"></button>
-              <button type="button" class="quick-color-button" data-color="#1e88e5" style="--swatch:#1e88e5" title="Albastru" aria-label="Albastru"></button>
-              <button type="button" class="quick-color-button" data-color="#43a047" style="--swatch:#43a047" title="Verde" aria-label="Verde"></button>
-              <button type="button" class="quick-color-button" data-color="#f9c74f" style="--swatch:#f9c74f" title="Galben" aria-label="Galben"></button>
-              <button type="button" class="quick-color-button" data-color="#fb8c00" style="--swatch:#fb8c00" title="Portocaliu" aria-label="Portocaliu"></button>
+            <span class="tool-label">Desen</span>
+            <div class="drawing-tool-group-row">
+              <input id="fullscreenColorPicker" type="color" value="#000000" aria-label="Alege culoarea creionului" title="Culoare personalizată">
+              <div class="quick-colors" aria-label="Culori rapide">
+                <button type="button" class="quick-color-button is-selected" data-color="#000000" style="--swatch:#000000" title="Negru" aria-label="Negru"></button>
+                <button type="button" class="quick-color-button" data-color="#e53935" style="--swatch:#e53935" title="Roșu" aria-label="Roșu"></button>
+                <button type="button" class="quick-color-button" data-color="#1e88e5" style="--swatch:#1e88e5" title="Albastru" aria-label="Albastru"></button>
+                <button type="button" class="quick-color-button" data-color="#43a047" style="--swatch:#43a047" title="Verde" aria-label="Verde"></button>
+                <button type="button" class="quick-color-button" data-color="#f9c74f" style="--swatch:#f9c74f" title="Galben" aria-label="Galben"></button>
+                <button type="button" class="quick-color-button" data-color="#fb8c00" style="--swatch:#fb8c00" title="Portocaliu" aria-label="Portocaliu"></button>
+              </div>
+            </div>
+            <div class="drawing-tool-group-row">
+              <label class="tool-label" for="fullscreenBrushSize">Grosime</label>
+              <input id="fullscreenBrushSize" type="range" min="1" max="20" step="1" value="4">
+              <span id="fullscreenBrushSizeValue">4 px</span>
             </div>
           </div>
-          <div class="drawing-tool-group size-group">
-            <label class="tool-label" for="fullscreenBrushSize">Grosime</label>
-            <input id="fullscreenBrushSize" type="range" min="1" max="20" step="1" value="4">
-            <span id="fullscreenBrushSizeValue">4 px</span>
+          <span class="drawing-tool-divider" aria-hidden="true"></span>
+          <div class="drawing-tool-group edit-group">
+            <span class="tool-label">Editare</span>
+            <div class="drawing-tool-group-row">
+              <button type="button" id="fullscreenEraserBtn" class="drawing-tool-button" aria-label="Radieră" title="Radieră">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.2 15.4 11 7.2a2.2 2.2 0 0 0-3.1 0L3.8 11.3a2.2 2.2 0 0 0 0 3.1l3.3 3.3a2.2 2.2 0 0 0 1.5.6H17"></path><path d="M13 20h8"></path></svg>
+              </button>
+              <button type="button" id="fullscreenUndoBtn" class="drawing-tool-button" aria-label="Anulează ultima linie" title="Undo">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10a6 6 0 0 1 6 6v1"></path></svg>
+              </button>
+              <button type="button" id="fullscreenRedoBtn" class="drawing-tool-button" aria-label="Refă ultima linie" title="Redo">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5"></path><path d="M20 9H10a6 6 0 0 0-6 6v1"></path></svg>
+              </button>
+            </div>
           </div>
-          <button type="button" id="fullscreenEraserBtn" class="drawing-tool-button">🩹 Radieră</button>
-          <button type="button" id="fullscreenUndoBtn" class="drawing-tool-button" aria-label="Anulează ultima linie">↩️</button>
-          <button type="button" id="fullscreenRedoBtn" class="drawing-tool-button" aria-label="Refă ultima linie">↪️</button>
-          <button type="button" id="fullscreenClearBtn" class="drawing-tool-button danger">🗑️</button>
-          <button type="button" id="fullscreenCloseToolbarBtn" class="drawing-tool-button danger" aria-label="Închide ecran complet">❌</button>
+          <span class="drawing-tool-divider" aria-hidden="true"></span>
+          <div class="drawing-tool-group actions-group">
+            <span class="tool-label">Acțiuni</span>
+            <div class="drawing-tool-group-row">
+              <button type="button" id="fullscreenClearBtn" class="drawing-tool-button danger" aria-label="Șterge desenul" title="Șterge desenul">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg>
+              </button>
+              <button type="button" id="fullscreenCloseToolbarBtn" class="drawing-tool-button danger fullscreen-toolbar-close-fallback" aria-label="Închide ecran complet" title="Închide ecran complet">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6 6 18"></path></svg>
+              </button>
+            </div>
+          </div>
         </div>
         <div class="toolbar" aria-label="Instrumente desen">
           <button type="button" id="undo" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10a6 6 0 0 1 6 6v1"></path></svg><span>Înapoi</span></button>
