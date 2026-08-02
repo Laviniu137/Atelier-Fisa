@@ -2053,15 +2053,49 @@
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('./sw.js').then((registration) => {
-            registration.update();
+            let refreshingAfterUpdate = false;
+
+            const askAndActivateUpdate = async (worker) => {
+              if (!worker || worker.state !== 'installed' || !navigator.serviceWorker.controller) return;
+              const shouldReload = window.confirm('Este disponibilă o versiune nouă. Reîncarcă aplicația?');
+              if (!shouldReload) return;
+              try {
+                await saveLastWork();
+              } catch (error) {
+                console.warn('Starea curentă nu a putut fi salvată înainte de actualizare.', error);
+              }
+              worker.postMessage({ type: 'SKIP_WAITING' });
+            };
+
+            if (registration.waiting) {
+              askAndActivateUpdate(registration.waiting);
+            }
+
             registration.addEventListener('updatefound', () => {
               const installingWorker = registration.installing;
               if (!installingWorker) return;
               installingWorker.addEventListener('statechange', () => {
-                if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  window.location.reload();
+                if (installingWorker.state === 'installed') {
+                  askAndActivateUpdate(installingWorker);
                 }
               });
+            });
+
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+              if (refreshingAfterUpdate) return;
+              refreshingAfterUpdate = true;
+              window.location.reload();
+            });
+
+            registration.update().catch(() => {});
+
+            window.setInterval(() => {
+              if (!navigator.onLine) return;
+              registration.update().catch(() => {});
+            }, 15 * 60 * 1000);
+
+            window.addEventListener('online', () => {
+              registration.update().catch(() => {});
             });
           }).catch(() => {});
         });
