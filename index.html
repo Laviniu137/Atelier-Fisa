@@ -373,8 +373,8 @@
           name: currentState.name || getProjectImageName(activeImageIndex),
           dataUrl: currentState.dataUrl || '',
           type: currentState.type || imageBlob?.type || 'image/png',
-          strokes: Array.isArray(strokes) ? strokes : [],
-          notes: Array.isArray(interactiveNotes) ? interactiveNotes : [],
+          strokes: cloneProjectData(Array.isArray(strokes) ? strokes : []),
+          notes: cloneProjectData(Array.isArray(interactiveNotes) ? interactiveNotes : []),
           zoom: typeof zoomLevel === 'number' ? zoomLevel : 1,
           pan: panOffset && typeof panOffset.x === 'number' && typeof panOffset.y === 'number'
             ? { x: panOffset.x, y: panOffset.y }
@@ -1239,7 +1239,7 @@
           resetCurrentProject({ persist });
           return;
         }
-        saveCurrentImageState();
+        await saveCurrentImageState();
         activeImageIndex = ((index % projectImages.length) + projectImages.length) % projectImages.length;
         const currentImage = projectImages[activeImageIndex];
         if (!currentImage || !currentImage.dataUrl) {
