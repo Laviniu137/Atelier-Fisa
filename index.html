@@ -52,7 +52,15 @@
     .toolbar button { width: 100%; padding-inline: 12px; }
     .fullscreen-inline { display: flex; gap: 10px; margin: 12px 0 8px; flex-wrap: wrap; }
     .fullscreen-inline button { flex: 1; min-height: 44px; }
-    .image-nav-btn { min-width: 118px; }
+    .image-gallery { display: flex; align-items: center; gap: 10px; margin-top: 14px; padding-top: 4px; }
+    .thumbnail-strip { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 8px; scrollbar-width: thin; scrollbar-color: rgba(111, 98, 84, .4) transparent; flex: 1; }
+    .thumbnail-strip::-webkit-scrollbar { height: 7px; }
+    .thumbnail-strip::-webkit-scrollbar-thumb { background: rgba(111, 98, 84, .35); border-radius: 999px; }
+    .image-thumb { position: relative; flex: 0 0 80px; width: 80px; height: 80px; border: 2px solid transparent; border-radius: 14px; background: #f8f4ee; overflow: hidden; box-shadow: 0 8px 18px rgba(48, 38, 28, .08); cursor: pointer; transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease, background .15s ease; }
+    .image-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .image-thumb.is-active { border-color: #a3652b; background: #fbf2e8; box-shadow: 0 12px 22px rgba(109, 76, 46, .15); transform: translateY(-1px); }
+    .image-thumb.is-active::after { position: absolute; inset: 8px; border-radius: 10px; border: 2px solid rgba(255, 255, 255, .84); content: ''; pointer-events: none; }
+    .thumbnail-add-btn { flex: 0 0 auto; min-width: 112px; min-height: 80px; padding: 8px 12px; border-style: dashed; background: #f9f5f0; color: #4f4131; }
     .mode-switcher { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 12px 0 8px; }
     .mode-switcher button { width: 100%; min-height: 44px; }
     .mode-switcher button.active { border-color: #8b5e3c; background: #fbf2e8; color: #5a3a22; }
@@ -160,10 +168,12 @@
           </div>
         </div>
         <div class="fullscreen-inline">
-          <button type="button" id="prevImage" class="image-nav-btn" disabled>Anterior</button>
-          <button type="button" id="nextImage" class="image-nav-btn" disabled>Următor</button>
           <button type="button" id="fullscreenBtn" disabled>Ecran complet</button>
           <button type="button" id="exitFullscreenBtn" hidden>Înapoi</button>
+        </div>
+        <div class="image-gallery" aria-label="Miniaturi imagini">
+          <div class="thumbnail-strip" id="thumbnailStrip"></div>
+          <button type="button" id="thumbnailAddImage" class="thumbnail-add-btn">+ Adaugă imagine</button>
         </div>
         <div class="mode-switcher" role="toolbar" aria-label="Mod de lucru">
           <button type="button" id="drawModeBtn" class="active">Desen</button>
@@ -225,8 +235,8 @@
       const notesModeButton = document.getElementById('notesModeBtn');
       const fullscreenButton = document.getElementById('fullscreenBtn');
       const exitFullscreenButton = document.getElementById('exitFullscreenBtn');
-      const prevImageButton = document.getElementById('prevImage');
-      const nextImageButton = document.getElementById('nextImage');
+      const thumbnailStrip = document.getElementById('thumbnailStrip');
+      const thumbnailAddImageButton = document.getElementById('thumbnailAddImage');
       const addNoteButton = document.getElementById('addNote');
       const deleteSelectedNoteButton = document.getElementById('deleteSelectedNote');
       const noteList = document.getElementById('noteList');
@@ -528,16 +538,47 @@
 
       function setControls() {
         const ready = Boolean(sourceImage);
-        const hasMultipleImages = projectImages.length > 1;
         undo.disabled = !ready || strokes.length === 0 || activeTool !== 'draw';
         clear.disabled = !ready || strokes.length === 0 || activeTool !== 'draw';
         save.disabled = !ready;
         fullscreenButton.disabled = !ready;
         removeImageButton.disabled = !ready;
-        prevImageButton.disabled = !ready || !hasMultipleImages;
-        nextImageButton.disabled = !ready || !hasMultipleImages;
         addNoteButton.disabled = !ready || activeTool !== 'notes';
         deleteSelectedNoteButton.disabled = !ready || !selectedNoteId || activeTool !== 'notes';
+      }
+
+      function renderImageThumbnails() {
+        if (!thumbnailStrip) return;
+        thumbnailStrip.innerHTML = '';
+
+        if (!projectImages.length) {
+          const placeholder = document.createElement('div');
+          placeholder.className = 'image-thumb';
+          placeholder.innerHTML = '<img alt="" style="opacity:.2; object-fit:cover;" src="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22 viewBox=%220 0 80 80%22%3E%3Crect width=%2280%22 height=%2280%22 fill=%22%23efe7dc%22/%3E%3Cpath d=%22M20 50l12-12 10 10 18-22 12 20v14H20z%22 fill=%22%23d3c5b5%22/%3E%3C/svg%3E">';
+          thumbnailStrip.appendChild(placeholder);
+          return;
+        }
+
+        projectImages.forEach((image, index) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = `image-thumb${index === activeImageIndex ? ' is-active' : ''}`;
+          button.title = image.name || getProjectImageName(index);
+          button.setAttribute('aria-label', image.name || getProjectImageName(index));
+          button.addEventListener('click', () => {
+            if (index === activeImageIndex) return;
+            activateImageAt(index, { persist: true });
+          });
+
+          const preview = document.createElement('img');
+          preview.alt = image.name || getProjectImageName(index);
+          preview.src = image.dataUrl || '';
+          if (!image.dataUrl) {
+            preview.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22 viewBox=%220 0 80 80%22%3E%3Crect width=%2280%22 height=%2280%22 fill=%22%23efe7dc%22/%3E%3Cpath d=%22M20 50l12-12 10 10 18-22 12 20v14H20z%22 fill=%22%23d3c5b5%22/%3E%3C/svg%3E';
+          }
+          button.appendChild(preview);
+          thumbnailStrip.appendChild(button);
+        });
       }
 
       function setActiveTool(tool) {
@@ -1138,6 +1179,7 @@
         stage.hidden = true;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         noteCanvasCtx.clearRect(0, 0, noteCanvas.width, noteCanvas.height);
+        renderImageThumbnails();
         updateImageTransform();
         setActiveTool('draw');
         setSelectedNoteMode('text');
@@ -1199,6 +1241,7 @@
           configureCanvas();
           renderNotes();
           renderNoteList();
+          renderImageThumbnails();
           syncSelectedNoteForm();
           setActiveTool(activeTool);
           setSelectedNoteMode(selectedNoteMode);
@@ -1304,6 +1347,10 @@
         event.preventDefault();
         imageInput.click();
       });
+      thumbnailAddImageButton.addEventListener('click', (event) => {
+        event.preventDefault();
+        imageInput.click();
+      });
       fullscreenButton.addEventListener('click', () => setFullscreenMode(true));
       exitFullscreenButton.addEventListener('click', () => setFullscreenMode(false));
       removeImageButton.addEventListener('click', confirmRemoveImage);
@@ -1330,14 +1377,6 @@
       undo.addEventListener('click', undoLastLine);
       clear.addEventListener('click', clearDrawings);
       save.addEventListener('click', saveProject);
-      prevImageButton.addEventListener('click', () => {
-        if (!projectImages.length) return;
-        activateImageAt(activeImageIndex - 1, { persist: true });
-      });
-      nextImageButton.addEventListener('click', () => {
-        if (!projectImages.length) return;
-        activateImageAt(activeImageIndex + 1, { persist: true });
-      });
       cancelProjectSaveButton.addEventListener('click', closeSaveProjectDialog);
       confirmProjectSaveButton.addEventListener('click', async () => {
         const name = projectNameInput.value;
