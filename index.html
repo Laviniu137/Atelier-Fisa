@@ -290,6 +290,79 @@
     .save-dialog input { width: 100%; padding: 12px 13px; border: 1px solid #e2dbd1; border-radius: 12px; color: #322c23; background: linear-gradient(#fffefa, #fbf8f2); font-size: 15px; }
     .save-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
     .save-dialog-actions button { min-width: 130px; }
+    .danger-dialog-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 2300;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(16, 14, 11, .44);
+      backdrop-filter: blur(8px);
+      opacity: 1;
+      transition: opacity .2s ease;
+    }
+    .danger-dialog-backdrop[hidden] {
+      display: none;
+      opacity: 0;
+    }
+    .danger-dialog {
+      width: min(560px, 100%);
+      border: 1px solid rgba(161, 143, 118, .28);
+      border-radius: 20px;
+      padding: 20px 18px 16px;
+      background: rgba(255, 252, 247, .96);
+      box-shadow: 0 24px 56px rgba(29, 22, 15, .3);
+      transform: translateY(0) scale(1);
+      animation: dangerDialogIn .2s ease;
+    }
+    .danger-dialog h2 {
+      margin: 0 0 10px;
+      color: #2d261f;
+      font-size: 1.22rem;
+      letter-spacing: -.01em;
+    }
+    .danger-dialog p {
+      margin: 0;
+      color: #4f4538;
+      font-size: .95rem;
+      line-height: 1.52;
+    }
+    .danger-dialog ul {
+      margin: 12px 0;
+      padding-left: 20px;
+      color: #42382d;
+      line-height: 1.5;
+    }
+    .danger-dialog li { margin: 2px 0; }
+    .danger-dialog-warning {
+      margin-top: 8px;
+      color: #8f1f1f;
+      font-weight: 700;
+      font-size: .9rem;
+    }
+    .danger-dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .danger-dialog-actions button { min-width: 120px; }
+    .danger-confirm-btn {
+      border-color: #a22a2a;
+      background: #b03434;
+      color: #fff;
+      box-shadow: 0 8px 16px rgba(136, 34, 34, .25);
+    }
+    .danger-confirm-btn:hover:not(:disabled) {
+      border-color: #872323;
+      background: #952929;
+    }
+    @keyframes dangerDialogIn {
+      from { opacity: 0; transform: translateY(8px) scale(.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
     .sr-only { position: fixed; top: 0; left: -9999px; width: 1px; height: 1px; padding: 0; margin: 0; overflow: hidden; opacity: 0; clip: auto; white-space: nowrap; border: 0; }
     .fullscreen-overlay { position: fixed; inset: 0; z-index: 1400; display: none; align-items: stretch; justify-content: stretch; padding: 0; background: #000; }
     .fullscreen-overlay.is-active { display: flex; }
@@ -587,6 +660,23 @@
       </div>
     </div>
   </div>
+  <div id="clearAllDialog" class="danger-dialog-backdrop" hidden>
+    <div class="danger-dialog" role="dialog" aria-modal="true" aria-labelledby="clearAllDialogTitle" aria-describedby="clearAllDialogDescription">
+      <h2 id="clearAllDialogTitle">Ștergere proiect</h2>
+      <p id="clearAllDialogDescription">Ești sigur că dorești să ștergi toate datele din imaginea curentă?</p>
+      <ul>
+        <li>desenul;</li>
+        <li>toate notițele;</li>
+        <li>toate marcatoarele;</li>
+        <li>scrisul cu Apple Pencil.</li>
+      </ul>
+      <p class="danger-dialog-warning">Această acțiune nu poate fi anulată.</p>
+      <div class="danger-dialog-actions">
+        <button type="button" id="cancelClearAll">Anulează</button>
+        <button type="button" id="confirmClearAll" class="danger-confirm-btn">Șterge</button>
+      </div>
+    </div>
+  </div>
   <div id="fullscreenOverlay" class="fullscreen-overlay" hidden></div>
   <main class="app">
     <header>
@@ -759,6 +849,9 @@
       const projectNameInput = document.getElementById('projectNameInput');
       const cancelProjectSaveButton = document.getElementById('cancelProjectSave');
       const confirmProjectSaveButton = document.getElementById('confirmProjectSave');
+      const clearAllDialog = document.getElementById('clearAllDialog');
+      const cancelClearAllButton = document.getElementById('cancelClearAll');
+      const confirmClearAllButton = document.getElementById('confirmClearAll');
       const photo = document.getElementById('photo');
       const canvas = document.getElementById('drawingCanvas');
       const stage = document.getElementById('imageStage');
@@ -2420,14 +2513,41 @@
         });
       }
 
-      function clearDrawings() {
+      function clearCurrentImageData() {
         activeStroke = null;
+        activePencilStroke = null;
         redoStack = [];
         strokes = [];
+        interactiveNotes = [];
+        selectedNoteId = null;
+        draggingNoteId = null;
+        noteLayer.innerHTML = '';
+        noteLayer.hidden = true;
+        noteList.innerHTML = '';
+        noteContentTextarea.value = '';
+        handwritingPreview.hidden = true;
+        if (pencilEditorOpen) {
+          closePencilEditor({ saveChanges: false });
+        }
+        renderNotes();
+        renderNoteList();
+        syncSelectedNoteForm();
         redraw();
         setControls();
         syncBrushControls();
         saveLastWork();
+      }
+
+      function openClearAllDialog() {
+        if (!sourceImage) return;
+        clearAllDialog.hidden = false;
+        requestAnimationFrame(() => {
+          cancelClearAllButton.focus();
+        });
+      }
+
+      function closeClearAllDialog() {
+        clearAllDialog.hidden = true;
       }
 
       function undoLastLine() {
@@ -2593,7 +2713,7 @@
         setFloatingToolbarOpen(false);
       });
       fullscreenClearBtn.addEventListener('click', () => {
-        clearDrawings();
+        openClearAllDialog();
         setFloatingToolbarOpen(false);
       });
       document.querySelectorAll('.quick-color-button').forEach((button) => {
@@ -2609,6 +2729,11 @@
         });
       });
       window.addEventListener('keydown', (event) => {
+        if (!clearAllDialog.hidden && event.key === 'Escape') {
+          event.preventDefault();
+          closeClearAllDialog();
+          return;
+        }
         if (pencilEditorOpen && event.key === 'Escape') {
           event.preventDefault();
           closePencilEditor({ saveChanges: false });
@@ -2648,8 +2773,17 @@
       drawModeButton.addEventListener('click', () => setActiveTool('draw'));
       notesModeButton.addEventListener('click', () => setActiveTool('notes'));
       undo.addEventListener('click', undoLastLine);
-      clear.addEventListener('click', clearDrawings);
+      clear.addEventListener('click', openClearAllDialog);
       save.addEventListener('click', saveProject);
+      cancelClearAllButton.addEventListener('click', closeClearAllDialog);
+      confirmClearAllButton.addEventListener('click', () => {
+        closeClearAllDialog();
+        clearCurrentImageData();
+      });
+      clearAllDialog.addEventListener('pointerdown', (event) => {
+        if (event.target !== clearAllDialog) return;
+        closeClearAllDialog();
+      });
       cancelProjectSaveButton.addEventListener('click', closeSaveProjectDialog);
       confirmProjectSaveButton.addEventListener('click', async () => {
         const name = projectNameInput.value;
@@ -2664,6 +2798,18 @@
         }
         if (event.key === 'Escape') {
           closeSaveProjectDialog();
+        }
+      });
+      cancelClearAllButton.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeClearAllDialog();
+        }
+      });
+      confirmClearAllButton.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeClearAllDialog();
         }
       });
       addNoteButton.addEventListener('click', addNote);
