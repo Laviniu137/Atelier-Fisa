@@ -29,6 +29,7 @@
     button:disabled { cursor: not-allowed; border-color: #e6e1d9; background: #f5f2ed; color: #afa89e; box-shadow: none; }
     .app { max-width: 1380px; margin: 0 auto; padding: clamp(18px, 3vw, 42px); }
     header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 20px 18px 24px; border: 1px solid rgba(136, 119, 91, .16); border-radius: 20px; background: rgba(255, 254, 251, .76); box-shadow: 0 12px 32px rgba(63, 51, 35, .08); backdrop-filter: blur(10px); }
+    .header-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
     h1 { position: relative; margin: 0; padding-left: 16px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.38rem, 2.8vw, 2rem); font-weight: 600; letter-spacing: -.035em; color: #332d23; }
     h1::before { position: absolute; left: 0; top: .16em; bottom: .16em; width: 4px; border-radius: 4px; background: #876c47; content: ""; }
     #addImage, #save { border-color: #4b4133; background: #4b4133; color: #fffdfa; box-shadow: 0 7px 16px rgba(50, 41, 29, .18); }
@@ -94,8 +95,12 @@
   <main class="app">
     <header>
       <h1>Notițe interactive pe imagine</h1>
-      <button type="button" id="addImage"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="M7 8l5-5 5 5"></path><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"></path></svg><span>Adaugă imagine</span></button>
-      <input class="sr-only" id="imageInput" type="file" accept="image/*" capture="environment" multiple>
+      <div class="header-actions">
+        <button type="button" id="loadProject"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg><span>Încarcă proiect</span></button>
+        <button type="button" id="addImage"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="M7 8l5-5 5 5"></path><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"></path></svg><span>Adaugă imagine</span></button>
+        <input class="sr-only" id="imageInput" type="file" accept="image/*" capture="environment" multiple>
+        <input class="sr-only" id="projectInput" type="file" accept="application/json,.json">
+      </div>
     </header>
 
     <div class="layout">
@@ -152,6 +157,8 @@
     (() => {
       const addImage = document.getElementById('addImage');
       const imageInput = document.getElementById('imageInput');
+      const loadProjectButton = document.getElementById('loadProject');
+      const projectInput = document.getElementById('projectInput');
       const photo = document.getElementById('photo');
       const canvas = document.getElementById('drawingCanvas');
       const stage = document.getElementById('imageStage');
@@ -186,8 +193,14 @@
       let activeTool = 'draw';
       let selectedNoteMode = 'text';
       let activePencilStroke = null;
+      let zoomLevel = 1;
+      let panOffset = { x: 0, y: 0 };
+      let panning = false;
+      let panStart = null;
+      let panOrigin = null;
       const databaseName = 'fisa-atelier-offline';
       const databaseStore = 'lucrari';
+      const projectVersion = 2;
 
       function openDatabase() {
         return new Promise((resolve, reject) => {
@@ -198,11 +211,54 @@
         });
       }
 
-      async function saveLastWork() {
+      function blobToDataUrl(blob) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(reader.error);
+          reader.readAsDataURL(blob);
+        });
+      }
+
+      function dataUrlToFile(dataUrl, name = 'imagine.png') {
+        return fetch(dataUrl)
+          .then((response) => response.blob())
+          .then((blob) => new File([blob], name, { type: blob.type || 'image/png' }));
+      }
+
+      async function buildProjectPayload() {
+        const payload = {
+          version: projectVersion,
+          updatedAt: new Date().toISOString(),
+          image: null,
+          drawing: { strokes },
+          notes: interactiveNotes,
+          ui: {
+            activeTool,
+            selectedNoteId,
+            selectedNoteMode,
+            zoom: zoomLevel,
+            pan: panOffset
+          }
+        };
+
+        if (imageBlob) {
+          payload.image = {
+            name: imageBlob.name || 'imagine.png',
+            type: imageBlob.type || 'image/png',
+            dataUrl: await blobToDataUrl(imageBlob)
+          };
+        }
+
+        return payload;
+      }
+
+      async function saveLastWork(projectOverride = null) {
         try {
           const database = await openDatabase();
           const transaction = database.transaction(databaseStore, 'readwrite');
-          transaction.objectStore(databaseStore).put({ image: imageBlob, strokes, interactiveNotes }, 'ultima-lucrare');
+          const payload = projectOverride || await buildProjectPayload();
+          transaction.objectStore(databaseStore).put(payload, 'ultima-lucrare');
           transaction.oncomplete = () => database.close();
         } catch (error) {
           console.warn('Lucrarea nu a putut fi salvată local.', error);
@@ -211,7 +267,48 @@
 
       function scheduleSave() {
         window.clearTimeout(saveTimer);
-        saveTimer = window.setTimeout(saveLastWork, 350);
+        saveTimer = window.setTimeout(() => saveLastWork(), 350);
+      }
+
+      function updateImageTransform() {
+        stage.style.transform = `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`;
+        stage.style.transformOrigin = '0 0';
+      }
+
+      function applyProjectState(project) {
+        const notes = Array.isArray(project?.notes) ? project.notes : [];
+        const strokesFromProject = Array.isArray(project?.drawing?.strokes) ? project.drawing.strokes : [];
+        const ui = project?.ui || {};
+        strokes = strokesFromProject;
+        interactiveNotes = notes;
+        selectedNoteId = interactiveNotes.find((note) => note.id === ui.selectedNoteId)?.id || interactiveNotes[0]?.id || null;
+        activeTool = ui.activeTool === 'notes' ? 'notes' : 'draw';
+        selectedNoteMode = ui.selectedNoteMode === 'pencil' ? 'pencil' : 'text';
+        zoomLevel = typeof ui.zoom === 'number' ? ui.zoom : 1;
+        panOffset = ui.pan && typeof ui.pan.x === 'number' && typeof ui.pan.y === 'number'
+          ? { x: ui.pan.x, y: ui.pan.y }
+          : { x: 0, y: 0 };
+        setActiveTool(activeTool);
+        updateImageTransform();
+        renderNotes();
+        renderNoteList();
+        syncSelectedNoteForm();
+        setControls();
+      }
+
+      async function restoreProject(project) {
+        if (!project) return;
+        if (project.image?.dataUrl) {
+          try {
+            const file = await dataUrlToFile(project.image.dataUrl, project.image.name || 'imagine.png');
+            await loadImage(file, { storedStrokes: project.drawing?.strokes || [], storedNotes: project.notes || [], shouldPersist: false });
+          } catch (error) {
+            console.warn('Proiectul nu a putut fi restaurat.', error);
+          }
+        } else if (project.image) {
+          await loadImage(project.image, { storedStrokes: project.drawing?.strokes || [], storedNotes: project.notes || [], shouldPersist: false });
+        }
+        applyProjectState(project);
       }
 
       async function restoreLastWork() {
@@ -219,12 +316,19 @@
           const database = await openDatabase();
           const transaction = database.transaction(databaseStore, 'readonly');
           const request = transaction.objectStore(databaseStore).get('ultima-lucrare');
-          request.onsuccess = () => {
+          request.onsuccess = async () => {
             const work = request.result;
             database.close();
             if (!work) return;
-            if (work.image) {
-              loadImage(work.image, { storedStrokes: work.strokes || [], storedNotes: work.interactiveNotes || [], shouldPersist: false });
+            if (work.version) {
+              await restoreProject(work);
+            } else if (work.image) {
+              await loadImage(work.image, { storedStrokes: work.strokes || [], storedNotes: work.interactiveNotes || [], shouldPersist: false });
+              applyProjectState({
+                notes: work.interactiveNotes || [],
+                drawing: { strokes: work.strokes || [] },
+                ui: { activeTool: 'draw', selectedNoteId: null, selectedNoteMode: 'text', zoom: 1, pan: { x: 0, y: 0 } }
+              });
             }
           };
           request.onerror = () => database.close();
@@ -301,7 +405,7 @@
       }
 
       function beginDrawing(event) {
-        if (!sourceImage || activeTool !== 'draw') return;
+        if (!sourceImage || activeTool !== 'draw' || event.altKey) return;
         if (event.pointerType === 'mouse' && event.button !== undefined && event.button !== 0) return;
         event.preventDefault();
         canvas.setPointerCapture(event.pointerId);
@@ -548,28 +652,77 @@
         window.removeEventListener('pointermove', handleNoteDrag);
       }
 
+      function beginPan(event) {
+        if (!sourceImage || !event.altKey) return;
+        event.preventDefault();
+        panning = true;
+        panStart = { x: event.clientX, y: event.clientY };
+        panOrigin = { ...panOffset };
+      }
+
+      function continuePan(event) {
+        if (!panning) return;
+        event.preventDefault();
+        panOffset.x = panOrigin.x + (event.clientX - panStart.x);
+        panOffset.y = panOrigin.y + (event.clientY - panStart.y);
+        updateImageTransform();
+        scheduleSave();
+      }
+
+      function finishPan() {
+        panning = false;
+        panStart = null;
+        panOrigin = null;
+      }
+
+      function handleImageWheel(event) {
+        if (!sourceImage) return;
+        event.preventDefault();
+        const rect = stage.getBoundingClientRect();
+        const pointerX = event.clientX - rect.left;
+        const pointerY = event.clientY - rect.top;
+        const baseX = (pointerX - panOffset.x) / zoomLevel;
+        const baseY = (pointerY - panOffset.y) / zoomLevel;
+        const scaleFactor = event.deltaY < 0 ? 1.08 : 0.92;
+        const nextZoom = clamp(zoomLevel * scaleFactor, 0.6, 3);
+        panOffset.x = pointerX - baseX * nextZoom;
+        panOffset.y = pointerY - baseY * nextZoom;
+        zoomLevel = nextZoom;
+        updateImageTransform();
+        scheduleSave();
+      }
+
       function loadImage(file, { storedStrokes = [], storedNotes = [], shouldPersist = true } = {}) {
-        if (!file || !file.type.startsWith('image/')) return;
-        if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
-        currentObjectUrl = URL.createObjectURL(file);
-        photo.onload = () => {
-          sourceImage = photo;
-          imageBlob = file;
-          strokes = storedStrokes;
-          interactiveNotes = storedNotes;
-          selectedNoteId = interactiveNotes[0] ? interactiveNotes[0].id : null;
-          emptyState.hidden = true;
-          stage.hidden = false;
-          noteLayer.hidden = !interactiveNotes.length;
-          configureCanvas();
-          renderNotes();
-          renderNoteList();
-          syncSelectedNoteForm();
-          setControls();
-          if (shouldPersist) saveLastWork();
-        };
-        photo.src = currentObjectUrl;
-        imageInput.value = '';
+        return new Promise((resolve) => {
+          if (!file || !file.type.startsWith('image/')) {
+            resolve();
+            return;
+          }
+          if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+          currentObjectUrl = URL.createObjectURL(file);
+          photo.onload = async () => {
+            sourceImage = photo;
+            imageBlob = file;
+            strokes = storedStrokes;
+            interactiveNotes = storedNotes;
+            selectedNoteId = interactiveNotes[0] ? interactiveNotes[0].id : null;
+            emptyState.hidden = true;
+            stage.hidden = false;
+            noteLayer.hidden = !interactiveNotes.length;
+            configureCanvas();
+            renderNotes();
+            renderNoteList();
+            syncSelectedNoteForm();
+            setControls();
+            if (shouldPersist) {
+              await saveLastWork();
+            }
+            resolve();
+          };
+          photo.src = currentObjectUrl;
+          imageInput.value = '';
+          projectInput.value = '';
+        });
       }
 
       function clearDrawings() {
@@ -587,108 +740,44 @@
         saveLastWork();
       }
 
-      function canvasToBlob(source) {
-        return new Promise((resolve) => source.toBlob(resolve, 'image/png'));
-      }
-
-      function wrapText(context, value, maxWidth) {
-        const lines = [];
-        value.split(/\r?\n/).forEach((paragraph) => {
-          if (!paragraph) {
-            lines.push('');
-            return;
-          }
-          let line = '';
-          paragraph.trim().split(/\s+/).forEach((word) => {
-            const candidate = line ? `${line} ${word}` : word;
-            if (line && context.measureText(candidate).width > maxWidth) {
-              lines.push(line);
-              line = word;
-            } else {
-              line = candidate;
-            }
-          });
-          if (line) lines.push(line);
-        });
-        return lines;
-      }
-
-      async function saveImage() {
+      async function saveProject() {
         if (!sourceImage) return;
-        const exported = document.createElement('canvas');
-        const noteWidth = Math.max(320, Math.round(photo.naturalWidth * 0.3));
-        const padding = Math.max(24, Math.round(noteWidth * 0.08));
-        const titleSize = Math.max(20, Math.round(noteWidth * 0.055));
-        const bodySize = Math.max(15, Math.round(noteWidth * 0.04));
-        const lineHeight = Math.round(bodySize * 1.35);
-        exported.width = photo.naturalWidth + noteWidth;
-        exported.height = photo.naturalHeight;
-        const exportCtx = exported.getContext('2d');
-        exportCtx.fillStyle = '#fff';
-        exportCtx.fillRect(0, 0, exported.width, exported.height);
-        exportCtx.drawImage(photo, 0, 0, photo.naturalWidth, photo.naturalHeight);
-        exportCtx.strokeStyle = '#000';
-        exportCtx.fillStyle = '#000';
-        exportCtx.lineWidth = 4 * (exported.width / photo.getBoundingClientRect().width);
-        exportCtx.lineCap = 'round';
-        exportCtx.lineJoin = 'round';
-        strokes.forEach((stroke) => {
-          const first = stroke.points[0];
-          if (!first) return;
-          exportCtx.beginPath();
-          exportCtx.moveTo(first.x * exported.width, first.y * exported.height);
-          if (stroke.points.length === 1) {
-            exportCtx.arc(first.x * exported.width, first.y * exported.height, exportCtx.lineWidth / 2, 0, Math.PI * 2);
-            exportCtx.fill();
-          } else {
-            stroke.points.slice(1).forEach((point) => exportCtx.lineTo(point.x * exported.width, point.y * exported.height));
-            exportCtx.stroke();
-          }
-        });
-        exportCtx.fillStyle = '#1f2937';
-        exportCtx.font = `600 ${titleSize}px Arial`;
-        exportCtx.fillText('N o t e', photo.naturalWidth + padding, padding + titleSize);
-        exportCtx.font = `${bodySize}px Arial`;
-        interactiveNotes.forEach((note, index) => {
-          const x = photo.naturalWidth + padding;
-          const y = padding + titleSize + 30 + index * 90;
-          exportCtx.fillStyle = '#8b5e3c';
-          exportCtx.beginPath();
-          exportCtx.arc(x + 8, y + 6, 8, 0, Math.PI * 2);
-          exportCtx.fill();
-          exportCtx.fillStyle = '#1f2937';
-          exportCtx.fillText(`${index + 1}. ${note.title || 'Notă'}`, x + 24, y + 10);
-          const noteLines = wrapText(exportCtx, note.content || '', noteWidth - padding * 2 - 24);
-          noteLines.slice(0, 3).forEach((line, lineIndex) => {
-            exportCtx.fillText(line, x + 24, y + 34 + lineIndex * lineHeight);
-          });
-        });
-        const blob = await canvasToBlob(exported);
-        if (!blob) return;
-        const imageFile = new File([blob], 'imagine-cu-notite-interactive.png', { type: 'image/png' });
-        if (navigator.canShare && navigator.canShare({ files: [imageFile] })) {
-          try {
-            await navigator.share({ files: [imageFile], title: 'Imagine cu notițe interactive' });
-            return;
-          } catch (error) {
-            if (error.name === 'AbortError') return;
-          }
-        }
-        const link = document.createElement('a');
+        const project = await buildProjectPayload();
+        const blob = new Blob([JSON.stringify(project, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
-        link.download = imageFile.name;
+        const link = document.createElement('a');
+        link.download = 'fisa-proiect.json';
         link.href = url;
         link.click();
         window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+        await saveLastWork(project);
+      }
+
+      async function loadProjectFromFile(file) {
+        if (!file || file.type !== 'application/json' && !file.name.toLowerCase().endsWith('.json')) return;
+        try {
+          const text = await file.text();
+          const project = JSON.parse(text);
+          await restoreProject(project);
+        } catch (error) {
+          console.warn('Proiectul nu a putut fi încărcat.', error);
+        }
       }
 
       addImage.addEventListener('click', () => imageInput.click());
+      loadProjectButton.addEventListener('click', () => projectInput.click());
       imageInput.addEventListener('change', (event) => loadImage(event.target.files[0]));
+      projectInput.addEventListener('change', async (event) => {
+        const [file] = event.target.files || [];
+        if (file) {
+          await loadProjectFromFile(file);
+        }
+      });
       drawModeButton.addEventListener('click', () => setActiveTool('draw'));
       notesModeButton.addEventListener('click', () => setActiveTool('notes'));
       undo.addEventListener('click', undoLastLine);
       clear.addEventListener('click', clearDrawings);
-      save.addEventListener('click', saveImage);
+      save.addEventListener('click', saveProject);
       addNoteButton.addEventListener('click', addNote);
       deleteSelectedNoteButton.addEventListener('click', deleteSelectedNote);
       noteTitleInput.addEventListener('input', () => {
@@ -729,12 +818,17 @@
       canvas.addEventListener('pointermove', continueDrawing, { passive: false });
       canvas.addEventListener('pointerup', finishDrawing, { passive: false });
       canvas.addEventListener('pointercancel', finishDrawing, { passive: false });
+      stage.addEventListener('pointerdown', beginPan, { passive: false });
+      stage.addEventListener('wheel', handleImageWheel, { passive: false });
       canvas.addEventListener('gesturestart', (event) => event.preventDefault(), { passive: false });
+      window.addEventListener('pointermove', continuePan);
+      window.addEventListener('pointerup', finishPan);
       window.addEventListener('resize', () => {
         configureCanvas();
         configureNoteCanvas();
       });
       setActiveTool('draw');
+      updateImageTransform();
       restoreLastWork();
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
