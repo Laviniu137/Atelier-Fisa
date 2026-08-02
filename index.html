@@ -83,10 +83,19 @@
     .note-input-toolbar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 6px; }
     .note-input-toolbar button { min-height: 42px; padding-inline: 10px; }
     .note-input-toolbar button.active { border-color: #8b5e3c; background: #fbf2e8; color: #5a3a22; }
-    .handwriting-panel { display: grid; gap: 8px; padding: 10px; border: 1px solid #e2dbd1; border-radius: 12px; background: linear-gradient(#fffefa, #fbf8f2); }
-    .handwriting-panel canvas { width: 100%; min-height: 220px; border: 1px solid #e3ddd3; border-radius: 10px; background: #fffdf9; touch-action: none; }
+    .handwriting-panel { display: grid; gap: 8px; padding: 10px; border: 1px solid #e2dbd1; border-radius: 12px; background: linear-gradient(#fffefa, #fbf8f2); -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+    .handwriting-panel canvas { width: 100%; min-height: 220px; border: 1px solid #e3ddd3; border-radius: 10px; background: #fffdf9; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
     .handwriting-actions { display: flex; gap: 8px; }
     .handwriting-actions button { flex: 1; min-height: 40px; }
+    body.pencil-writing-mode,
+    body.pencil-writing-mode .notes,
+    body.pencil-writing-mode .note-form,
+    body.pencil-writing-mode .handwriting-panel,
+    body.pencil-writing-mode #noteCanvas {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
     .help { display: flex; align-items: center; gap: 8px; margin: 14px 2px 0; color: #83796b; font-size: .79rem; line-height: 1.45; }
     .help::before { width: 5px; height: 5px; flex: 0 0 auto; border-radius: 50%; background: #a48358; content: ""; }
     .save-dialog-backdrop { position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; background: rgba(19, 17, 15, .42); padding: 20px; }
@@ -612,6 +621,7 @@
       let floatingToolbarDragOffset = { x: 0, y: 0 };
       let floatingToolbarMoved = false;
       let ignoreToolbarToggleClick = false;
+      let suppressPencilContextMenu = false;
       const databaseName = 'fisa-atelier-offline';
       const databaseStore = 'lucrari';
       const projectVersion = 2;
@@ -1357,6 +1367,37 @@
         renderHandwritingCanvas();
       }
 
+      function dismissKeyboardAndSelection() {
+        const active = document.activeElement;
+        if (active && typeof active.blur === 'function') {
+          active.blur();
+        }
+        const selection = window.getSelection && window.getSelection();
+        if (selection && selection.rangeCount) {
+          selection.removeAllRanges();
+        }
+      }
+
+      function handlePencilContextMenu(event) {
+        if (!suppressPencilContextMenu || selectedNoteMode !== 'pencil') return;
+        event.preventDefault();
+      }
+
+      function handlePencilSelectStart(event) {
+        if (!suppressPencilContextMenu || selectedNoteMode !== 'pencil') return;
+        event.preventDefault();
+      }
+
+      function handlePencilTouchStart(event) {
+        if (!suppressPencilContextMenu || selectedNoteMode !== 'pencil') return;
+        event.preventDefault();
+      }
+
+      function setPencilInteractionLock(isLocked) {
+        suppressPencilContextMenu = Boolean(isLocked);
+        document.body.classList.toggle('pencil-writing-mode', suppressPencilContextMenu);
+      }
+
       function drawNoteStroke(stroke) {
         if (!stroke || stroke.points.length === 0) return;
         const rect = noteCanvas.getBoundingClientRect();
@@ -1402,6 +1443,7 @@
         if (!note || selectedNoteMode !== 'pencil') return;
         if (event.pointerType === 'mouse' && event.button !== undefined && event.button !== 0) return;
         event.preventDefault();
+        dismissKeyboardAndSelection();
         noteCanvas.setPointerCapture(event.pointerId);
         activeWritingPointerId = event.pointerId;
         activePencilStroke = { points: [pointFromNoteEvent(event)] };
@@ -1435,7 +1477,11 @@
         noteContentTextarea.hidden = selectedNoteMode === 'pencil';
         handwritingPanel.hidden = selectedNoteMode !== 'pencil';
         if (selectedNoteMode === 'pencil') {
+          dismissKeyboardAndSelection();
+          setPencilInteractionLock(true);
           setTimeout(configureNoteCanvas, 0);
+        } else {
+          setPencilInteractionLock(false);
         }
       }
 
@@ -1824,6 +1870,7 @@
         noteContentTextarea.value = '';
         noteContentTextarea.hidden = false;
         handwritingPanel.hidden = true;
+        setPencilInteractionLock(false);
         textModeButton.classList.add('active');
         pencilModeButton.classList.remove('active');
         noteList.innerHTML = '';
@@ -2266,6 +2313,11 @@
       noteCanvas.addEventListener('pointermove', continuePencilWriting, { passive: false });
       noteCanvas.addEventListener('pointerup', finishPencilWriting, { passive: false });
       noteCanvas.addEventListener('pointercancel', finishPencilWriting, { passive: false });
+      noteCanvas.addEventListener('contextmenu', handlePencilContextMenu);
+      noteCanvas.addEventListener('selectstart', handlePencilSelectStart);
+      noteCanvas.addEventListener('touchstart', handlePencilTouchStart, { passive: false });
+      handwritingPanel.addEventListener('contextmenu', handlePencilContextMenu);
+      handwritingPanel.addEventListener('selectstart', handlePencilSelectStart);
       canvas.addEventListener('pointerdown', beginDrawing, { passive: false });
       canvas.addEventListener('pointermove', continueDrawing, { passive: false });
       canvas.addEventListener('pointerup', finishDrawing, { passive: false });
