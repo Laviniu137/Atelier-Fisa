@@ -50,8 +50,9 @@
     .empty { max-width: 290px; padding: 28px; color: #7c7265; text-align: center; font-size: .95rem; line-height: 1.6; }
     .toolbar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
     .toolbar button { width: 100%; padding-inline: 12px; }
-    .fullscreen-inline { display: flex; gap: 10px; margin: 12px 0 8px; }
+    .fullscreen-inline { display: flex; gap: 10px; margin: 12px 0 8px; flex-wrap: wrap; }
     .fullscreen-inline button { flex: 1; min-height: 44px; }
+    .image-nav-btn { min-width: 118px; }
     .mode-switcher { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 12px 0 8px; }
     .mode-switcher button { width: 100%; min-height: 44px; }
     .mode-switcher button.active { border-color: #8b5e3c; background: #fbf2e8; color: #5a3a22; }
@@ -159,6 +160,8 @@
           </div>
         </div>
         <div class="fullscreen-inline">
+          <button type="button" id="prevImage" class="image-nav-btn" disabled>Anterior</button>
+          <button type="button" id="nextImage" class="image-nav-btn" disabled>Următor</button>
           <button type="button" id="fullscreenBtn" disabled>Ecran complet</button>
           <button type="button" id="exitFullscreenBtn" hidden>Înapoi</button>
         </div>
@@ -222,6 +225,8 @@
       const notesModeButton = document.getElementById('notesModeBtn');
       const fullscreenButton = document.getElementById('fullscreenBtn');
       const exitFullscreenButton = document.getElementById('exitFullscreenBtn');
+      const prevImageButton = document.getElementById('prevImage');
+      const nextImageButton = document.getElementById('nextImage');
       const addNoteButton = document.getElementById('addNote');
       const deleteSelectedNoteButton = document.getElementById('deleteSelectedNote');
       const noteList = document.getElementById('noteList');
@@ -243,6 +248,8 @@
       let currentObjectUrl = null;
       let imageBlob = null;
       let saveTimer = null;
+      let projectImages = [];
+      let activeImageIndex = 0;
       let currentProjectName = 'Proiect nou';
       let interactiveNotes = [];
       let selectedNoteId = null;
@@ -312,30 +319,80 @@
         return currentProjectName;
       }
 
+      function getProjectImageName(index) {
+        return `Imagine ${index + 1}`;
+      }
+
+      async function saveCurrentImageState() {
+        const activeImage = projectImages[activeImageIndex] || {
+          id: createNoteId(),
+          name: getProjectImageName(activeImageIndex),
+          dataUrl: '',
+          type: 'image/png',
+          strokes: [],
+          notes: [],
+          zoom: 1,
+          pan: { x: 0, y: 0 },
+          activeTool: 'draw',
+          selectedNoteId: null,
+          selectedNoteMode: 'text'
+        };
+
+        activeImage.name = activeImage.name || getProjectImageName(activeImageIndex);
+        if (!activeImage.dataUrl) {
+          if (imageBlob) {
+            activeImage.dataUrl = await blobToDataUrl(imageBlob);
+          } else if (currentObjectUrl && currentObjectUrl.startsWith('blob:')) {
+            const response = await fetch(currentObjectUrl);
+            const blob = await response.blob();
+            activeImage.dataUrl = await blobToDataUrl(blob);
+          }
+        }
+        activeImage.type = activeImage.type || imageBlob?.type || 'image/png';
+        activeImage.strokes = Array.isArray(strokes) ? strokes : [];
+        activeImage.notes = Array.isArray(interactiveNotes) ? interactiveNotes : [];
+        activeImage.zoom = typeof zoomLevel === 'number' ? zoomLevel : 1;
+        activeImage.pan = panOffset && typeof panOffset.x === 'number' && typeof panOffset.y === 'number'
+          ? { x: panOffset.x, y: panOffset.y }
+          : { x: 0, y: 0 };
+        activeImage.activeTool = activeTool === 'notes' ? 'notes' : 'draw';
+        activeImage.selectedNoteId = selectedNoteId;
+        activeImage.selectedNoteMode = selectedNoteMode === 'pencil' ? 'pencil' : 'text';
+        projectImages[activeImageIndex] = activeImage;
+      }
+
       async function buildProjectPayload() {
+        await saveCurrentImageState();
         const payload = {
           version: projectVersion,
           updatedAt: new Date().toISOString(),
           projectName: currentProjectName,
-          image: null,
-          drawing: { strokes },
-          notes: interactiveNotes,
-          ui: {
-            activeTool,
-            selectedNoteId,
-            selectedNoteMode,
-            zoom: zoomLevel,
-            pan: panOffset
-          }
+          images: await Promise.all(projectImages.map(async (image, index) => {
+            let dataUrl = image.dataUrl || '';
+            if (dataUrl && !dataUrl.startsWith('data:')) {
+              try {
+                const response = await fetch(dataUrl);
+                const blob = await response.blob();
+                dataUrl = await blobToDataUrl(blob);
+              } catch (error) {
+                dataUrl = '';
+              }
+            }
+            return {
+              id: image.id || createNoteId(),
+              name: image.name || getProjectImageName(index),
+              type: image.type || 'image/png',
+              dataUrl,
+              strokes: Array.isArray(image.strokes) ? image.strokes : [],
+              notes: Array.isArray(image.notes) ? image.notes : [],
+              zoom: typeof image.zoom === 'number' ? image.zoom : 1,
+              pan: image.pan && typeof image.pan.x === 'number' && typeof image.pan.y === 'number' ? { x: image.pan.x, y: image.pan.y } : { x: 0, y: 0 },
+              activeTool: image.activeTool === 'notes' ? 'notes' : 'draw',
+              selectedNoteId: image.selectedNoteId || null,
+              selectedNoteMode: image.selectedNoteMode === 'pencil' ? 'pencil' : 'text'
+            };
+          }))
         };
-
-        if (imageBlob) {
-          payload.image = {
-            name: imageBlob.name || 'imagine.png',
-            type: imageBlob.type || 'image/png',
-            dataUrl: await blobToDataUrl(imageBlob)
-          };
-        }
 
         return payload;
       }
@@ -402,45 +459,54 @@
         stage.style.transformOrigin = '0 0';
       }
 
-      function applyProjectState(project) {
-        const notes = Array.isArray(project?.notes) ? project.notes : [];
-        const strokesFromProject = Array.isArray(project?.drawing?.strokes) ? project.drawing.strokes : [];
-        const ui = project?.ui || {};
-        if (project?.projectName) {
-          setProjectName(project.projectName);
-        } else if (project?.name) {
-          setProjectName(project.name);
+      async function applyProjectState(project) {
+        if (!project) return;
+        if (project.projectName || project.name) {
+          setProjectName(project.projectName || project.name);
         }
-        strokes = strokesFromProject;
-        interactiveNotes = notes;
-        selectedNoteId = interactiveNotes.find((note) => note.id === ui.selectedNoteId)?.id || interactiveNotes[0]?.id || null;
-        activeTool = ui.activeTool === 'notes' ? 'notes' : 'draw';
-        selectedNoteMode = ui.selectedNoteMode === 'pencil' ? 'pencil' : 'text';
-        zoomLevel = typeof ui.zoom === 'number' ? ui.zoom : 1;
-        panOffset = ui.pan && typeof ui.pan.x === 'number' && typeof ui.pan.y === 'number'
-          ? { x: ui.pan.x, y: ui.pan.y }
-          : { x: 0, y: 0 };
-        setActiveTool(activeTool);
-        updateImageTransform();
-        renderNotes();
-        renderNoteList();
-        syncSelectedNoteForm();
-        setControls();
+
+        const sourceImages = Array.isArray(project.images) && project.images.length
+          ? project.images
+          : (project.image?.dataUrl ? [{
+              id: createNoteId(),
+              name: project.image.name || 'Imagine 1',
+              dataUrl: project.image.dataUrl,
+              type: project.image.type || 'image/png',
+              strokes: Array.isArray(project.drawing?.strokes) ? project.drawing.strokes : [],
+              notes: Array.isArray(project.notes) ? project.notes : [],
+              zoom: typeof project.ui?.zoom === 'number' ? project.ui.zoom : 1,
+              pan: project.ui?.pan && typeof project.ui.pan.x === 'number' && typeof project.ui.pan.y === 'number' ? { x: project.ui.pan.x, y: project.ui.pan.y } : { x: 0, y: 0 },
+              activeTool: project.ui?.activeTool === 'notes' ? 'notes' : 'draw',
+              selectedNoteId: project.ui?.selectedNoteId || null,
+              selectedNoteMode: project.ui?.selectedNoteMode === 'pencil' ? 'pencil' : 'text'
+            }] : []);
+
+        projectImages = sourceImages.map((image, index) => ({
+          id: image.id || createNoteId(),
+          name: image.name || getProjectImageName(index),
+          dataUrl: image.dataUrl || '',
+          type: image.type || 'image/png',
+          strokes: Array.isArray(image.strokes) ? image.strokes : [],
+          notes: Array.isArray(image.notes) ? image.notes : [],
+          zoom: typeof image.zoom === 'number' ? image.zoom : 1,
+          pan: image.pan && typeof image.pan.x === 'number' && typeof image.pan.y === 'number' ? { x: image.pan.x, y: image.pan.y } : { x: 0, y: 0 },
+          activeTool: image.activeTool === 'notes' ? 'notes' : 'draw',
+          selectedNoteId: image.selectedNoteId || null,
+          selectedNoteMode: image.selectedNoteMode === 'pencil' ? 'pencil' : 'text'
+        }));
+
+        if (!projectImages.length) {
+          resetCurrentProject({ persist: false });
+          return;
+        }
+
+        activeImageIndex = 0;
+        await activateImageAt(0, { persist: false });
       }
 
       async function restoreProject(project) {
         if (!project) return;
-        if (project.image?.dataUrl) {
-          try {
-            const file = await dataUrlToFile(project.image.dataUrl, project.image.name || 'imagine.png');
-            await loadImage(file, { storedStrokes: project.drawing?.strokes || [], storedNotes: project.notes || [], shouldPersist: false });
-          } catch (error) {
-            console.warn('Proiectul nu a putut fi restaurat.', error);
-          }
-        } else if (project.image) {
-          await loadImage(project.image, { storedStrokes: project.drawing?.strokes || [], storedNotes: project.notes || [], shouldPersist: false });
-        }
-        applyProjectState(project);
+        await applyProjectState(project);
       }
 
       async function restoreLastWork() {
@@ -452,16 +518,7 @@
             const work = request.result;
             database.close();
             if (!work) return;
-            if (work.version) {
-              await restoreProject(work);
-            } else if (work.image) {
-              await loadImage(work.image, { storedStrokes: work.strokes || [], storedNotes: work.interactiveNotes || [], shouldPersist: false });
-              applyProjectState({
-                notes: work.interactiveNotes || [],
-                drawing: { strokes: work.strokes || [] },
-                ui: { activeTool: 'draw', selectedNoteId: null, selectedNoteMode: 'text', zoom: 1, pan: { x: 0, y: 0 } }
-              });
-            }
+            await restoreProject(work);
           };
           request.onerror = () => database.close();
         } catch (error) {
@@ -471,11 +528,14 @@
 
       function setControls() {
         const ready = Boolean(sourceImage);
+        const hasMultipleImages = projectImages.length > 1;
         undo.disabled = !ready || strokes.length === 0 || activeTool !== 'draw';
         clear.disabled = !ready || strokes.length === 0 || activeTool !== 'draw';
         save.disabled = !ready;
         fullscreenButton.disabled = !ready;
         removeImageButton.disabled = !ready;
+        prevImageButton.disabled = !ready || !hasMultipleImages;
+        nextImageButton.disabled = !ready || !hasMultipleImages;
         addNoteButton.disabled = !ready || activeTool !== 'notes';
         deleteSelectedNoteButton.disabled = !ready || !selectedNoteId || activeTool !== 'notes';
       }
@@ -1035,13 +1095,13 @@
       }
 
       function resetCurrentProject({ persist = true } = {}) {
-        if (currentObjectUrl) {
+        if (currentObjectUrl && currentObjectUrl.startsWith('blob:')) {
           URL.revokeObjectURL(currentObjectUrl);
         }
-        setProjectName('Proiect nou');
         if (photo.src && photo.src.startsWith('blob:')) {
           photo.removeAttribute('src');
         }
+        setProjectName('Proiect nou');
         sourceImage = null;
         imageBlob = null;
         currentObjectUrl = null;
@@ -1049,6 +1109,8 @@
         activePencilStroke = null;
         strokes = [];
         interactiveNotes = [];
+        projectImages = [];
+        activeImageIndex = 0;
         selectedNoteId = null;
         draggingNoteId = null;
         isDrawing = false;
@@ -1089,41 +1151,92 @@
 
       function confirmRemoveImage() {
         if (!sourceImage) return;
-        const confirmed = window.confirm('Sigur dorești să ștergi imaginea? Toate notițele, marcatorii și desenele asociate vor fi șterse.');
+        const confirmed = window.confirm('Sigur dorești să ștergi imaginea activă din proiect? Toate notițele, marcatorii și desenele asociate acestei imagini vor fi șterse.');
         if (!confirmed) return;
+        if (projectImages.length > 1) {
+          projectImages.splice(activeImageIndex, 1);
+          activeImageIndex = clamp(activeImageIndex, 0, Math.max(projectImages.length - 1, 0));
+          if (projectImages.length) {
+            activateImageAt(activeImageIndex, { persist: true });
+            return;
+          }
+        }
         resetCurrentProject();
       }
 
+      async function activateImageAt(index, { persist = true } = {}) {
+        if (!projectImages.length) {
+          resetCurrentProject({ persist });
+          return;
+        }
+        saveCurrentImageState();
+        activeImageIndex = ((index % projectImages.length) + projectImages.length) % projectImages.length;
+        const currentImage = projectImages[activeImageIndex];
+        if (!currentImage || !currentImage.dataUrl) {
+          resetCurrentProject({ persist });
+          return;
+        }
+        if (currentObjectUrl && currentObjectUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(currentObjectUrl);
+        }
+        const blob = await (await fetch(currentImage.dataUrl)).blob();
+        currentObjectUrl = URL.createObjectURL(blob);
+        photo.onload = () => {
+          sourceImage = photo;
+          imageBlob = blob;
+          strokes = Array.isArray(currentImage.strokes) ? currentImage.strokes : [];
+          interactiveNotes = Array.isArray(currentImage.notes) ? currentImage.notes : [];
+          selectedNoteId = interactiveNotes.find((note) => note.id === currentImage.selectedNoteId)?.id || interactiveNotes[0]?.id || null;
+          activeTool = currentImage.activeTool === 'notes' ? 'notes' : 'draw';
+          selectedNoteMode = currentImage.selectedNoteMode === 'pencil' ? 'pencil' : 'text';
+          zoomLevel = typeof currentImage.zoom === 'number' ? currentImage.zoom : 1;
+          panOffset = currentImage.pan && typeof currentImage.pan.x === 'number' && typeof currentImage.pan.y === 'number'
+            ? { x: currentImage.pan.x, y: currentImage.pan.y }
+            : { x: 0, y: 0 };
+          emptyState.hidden = true;
+          stage.hidden = false;
+          noteLayer.hidden = !interactiveNotes.length;
+          configureCanvas();
+          renderNotes();
+          renderNoteList();
+          syncSelectedNoteForm();
+          setActiveTool(activeTool);
+          setSelectedNoteMode(selectedNoteMode);
+          updateImageTransform();
+          setControls();
+          if (persist) {
+            saveLastWork();
+          }
+        };
+        photo.src = currentObjectUrl;
+        imageInput.value = '';
+        projectInput.value = '';
+      }
+
       function loadImage(file, { storedStrokes = [], storedNotes = [], shouldPersist = true } = {}) {
-        return new Promise((resolve) => {
+        return new Promise(async (resolve) => {
           if (!file || !file.type.startsWith('image/')) {
             resolve();
             return;
           }
-          if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
-          currentObjectUrl = URL.createObjectURL(file);
-          photo.onload = async () => {
-            sourceImage = photo;
-            imageBlob = file;
-            strokes = storedStrokes;
-            interactiveNotes = storedNotes;
-            selectedNoteId = interactiveNotes[0] ? interactiveNotes[0].id : null;
-            emptyState.hidden = true;
-            stage.hidden = false;
-            noteLayer.hidden = !interactiveNotes.length;
-            configureCanvas();
-            renderNotes();
-            renderNoteList();
-            syncSelectedNoteForm();
-            setControls();
-            if (shouldPersist) {
-              await saveLastWork();
-            }
-            resolve();
+          const dataUrl = await blobToDataUrl(file);
+          const imageEntry = {
+            id: createNoteId(),
+            name: file.name || getProjectImageName(projectImages.length),
+            dataUrl,
+            type: file.type || 'image/png',
+            strokes: storedStrokes,
+            notes: storedNotes,
+            zoom: 1,
+            pan: { x: 0, y: 0 },
+            activeTool: 'draw',
+            selectedNoteId: null,
+            selectedNoteMode: 'text'
           };
-          photo.src = currentObjectUrl;
-          imageInput.value = '';
-          projectInput.value = '';
+          projectImages.push(imageEntry);
+          activeImageIndex = projectImages.length - 1;
+          await activateImageAt(activeImageIndex, { persist: shouldPersist });
+          resolve();
         });
       }
 
@@ -1198,7 +1311,14 @@
         event.preventDefault();
         projectInput.click();
       });
-      imageInput.addEventListener('change', (event) => loadImage(event.target.files[0]));
+      imageInput.addEventListener('change', async (event) => {
+        const files = Array.from(event.target.files || []);
+        if (!files.length) return;
+        for (const file of files) {
+          await loadImage(file, { shouldPersist: true });
+        }
+        imageInput.value = '';
+      });
       projectInput.addEventListener('change', async (event) => {
         const [file] = event.target.files || [];
         if (file) {
@@ -1210,6 +1330,14 @@
       undo.addEventListener('click', undoLastLine);
       clear.addEventListener('click', clearDrawings);
       save.addEventListener('click', saveProject);
+      prevImageButton.addEventListener('click', () => {
+        if (!projectImages.length) return;
+        activateImageAt(activeImageIndex - 1, { persist: true });
+      });
+      nextImageButton.addEventListener('click', () => {
+        if (!projectImages.length) return;
+        activateImageAt(activeImageIndex + 1, { persist: true });
+      });
       cancelProjectSaveButton.addEventListener('click', closeSaveProjectDialog);
       confirmProjectSaveButton.addEventListener('click', async () => {
         const name = projectNameInput.value;
