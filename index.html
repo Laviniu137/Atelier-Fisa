@@ -116,6 +116,7 @@
     body.fullscreen-mode .fullscreen-inline button { min-width: 132px; }
     body.fullscreen-mode #fullscreenBtn { display: none; }
     body.fullscreen-mode .fullscreen-close-btn { display: inline-flex; }
+    body.fullscreen-mode .fullscreen-toolbar-toggle { display: inline-flex; }
     body.fullscreen-mode .fullscreen-drawing-toolbar { display: flex; }
     .fullscreen-close-btn {
       position: fixed;
@@ -138,6 +139,43 @@
     }
     .fullscreen-close-btn svg { width: 22px; height: 22px; stroke-width: 2.2; }
 
+    .fullscreen-toolbar-toggle {
+      position: fixed;
+      left: 22px;
+      top: 112px;
+      z-index: 1640;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 56px;
+      height: 56px;
+      min-width: 56px;
+      min-height: 56px;
+      padding: 0;
+      border: 1px solid rgba(255, 255, 255, .28);
+      border-radius: 18px;
+      background: linear-gradient(165deg, rgba(43, 53, 66, .72), rgba(19, 26, 36, .58));
+      color: #f4f9ff;
+      box-shadow: 0 14px 28px rgba(2, 6, 14, .34);
+      backdrop-filter: blur(14px) saturate(145%);
+      cursor: grab;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+      transition: box-shadow .16s ease, transform .16s ease, border-color .16s ease;
+    }
+    .fullscreen-toolbar-toggle svg { width: 22px; height: 22px; stroke-width: 2.1; }
+    .fullscreen-toolbar-toggle:active { cursor: grabbing; }
+    .fullscreen-toolbar-toggle:hover:not(:disabled) {
+      transform: translateY(-1px);
+      border-color: rgba(255, 255, 255, .44);
+      box-shadow: 0 16px 30px rgba(2, 6, 14, .42);
+    }
+    .fullscreen-toolbar-toggle.is-active {
+      border-color: rgba(126, 217, 255, .95);
+      box-shadow: 0 0 0 1px rgba(233, 248, 255, .45), 0 0 16px rgba(119, 214, 255, .5);
+    }
+
     .fullscreen-drawing-toolbar {
       --panel-line: rgba(255, 255, 255, .16);
       --panel-fill: linear-gradient(165deg, rgba(36, 45, 58, .58), rgba(16, 21, 28, .44));
@@ -145,15 +183,18 @@
       --panel-muted: rgba(214, 225, 245, .74);
       --panel-highlight: rgba(108, 211, 255, .72);
       position: fixed;
-      left: 50%;
-      bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+      left: 24px;
+      top: 188px;
       z-index: 1600;
       display: none;
       align-items: center;
       gap: 12px;
-      transform: translateX(-50%);
-      width: clamp(520px, 64vw, 860px);
-      max-width: calc(100vw - 34px);
+      transform: translateY(8px) scale(.94);
+      transform-origin: left top;
+      opacity: 0;
+      pointer-events: none;
+      width: clamp(420px, 52vw, 680px);
+      max-width: calc(100vw - 26px);
       min-height: 92px;
       padding: 10px 16px;
       border: 1px solid var(--panel-line);
@@ -162,6 +203,12 @@
       color: var(--panel-text);
       box-shadow: 0 20px 44px rgba(4, 7, 15, .34), inset 0 1px 0 rgba(255, 255, 255, .1);
       backdrop-filter: blur(20px) saturate(150%);
+      transition: opacity .2s ease, transform .2s ease;
+    }
+    .fullscreen-drawing-toolbar.is-open {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0) scale(1);
     }
     .drawing-tool-group {
       display: flex;
@@ -292,15 +339,15 @@
     .fullscreen-toolbar-close-fallback { display: none; }
 
     @media (orientation: portrait) and (min-width: 768px) {
-      .fullscreen-drawing-toolbar { width: clamp(520px, 70vw, 780px); }
+      .fullscreen-drawing-toolbar { width: clamp(420px, 66vw, 620px); }
     }
     @media (max-width: 820px) {
       .fullscreen-drawing-toolbar {
-        width: min(94vw, 700px);
+        width: min(92vw, 560px);
         padding: 9px 11px;
         gap: 9px;
         border-radius: 20px;
-        bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+        max-width: calc(100vw - 20px);
       }
       .drawing-tool-group-row { gap: 6px; }
       .tool-label { font-size: .58rem; letter-spacing: .11em; }
@@ -309,6 +356,7 @@
       #fullscreenBrushSize { width: 98px; }
       #fullscreenBrushSizeValue { min-width: 44px; font-size: .74rem; }
       .quick-color-button { width: 22px; height: 22px; min-width: 22px; min-height: 22px; }
+      .fullscreen-toolbar-toggle { width: 52px; height: 52px; min-width: 52px; min-height: 52px; border-radius: 16px; }
     }
     @media (min-width: 820px) and (max-width: 1366px) {
       .app { padding: clamp(16px, 1.8vw, 26px); }
@@ -383,6 +431,9 @@
         </div>
         <button type="button" class="fullscreen-close-btn" id="fullscreenCloseButton" aria-label="Închide ecran complet" title="Închide ecran complet" hidden>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6 6 18"></path></svg>
+        </button>
+        <button type="button" class="fullscreen-toolbar-toggle" id="fullscreenToolbarToggle" aria-label="Afișează instrumentele de desen" title="Instrumente desen" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-1 10-10a2.2 2.2 0 0 0 0-3.1l-.1-.1a2.2 2.2 0 0 0-3.1 0L5 15.7 4 20z"></path><path d="m13.4 7.4 3.2 3.2"></path></svg>
         </button>
         <div class="fullscreen-drawing-toolbar" id="fullscreenDrawingToolbar" hidden>
           <div class="drawing-tool-group color-group">
@@ -488,6 +539,7 @@
       const notesModeButton = document.getElementById('notesModeBtn');
       const fullscreenButton = document.getElementById('fullscreenBtn');
       const fullscreenCloseButton = document.getElementById('fullscreenCloseButton');
+      const fullscreenToolbarToggle = document.getElementById('fullscreenToolbarToggle');
       const fullscreenDrawingToolbar = document.getElementById('fullscreenDrawingToolbar');
       const fullscreenColorPicker = document.getElementById('fullscreenColorPicker');
       const fullscreenBrushSize = document.getElementById('fullscreenBrushSize');
@@ -553,9 +605,17 @@
       let pinchCenter = null;
       let lastTapTime = 0;
       let lastTapPoint = null;
+      let floatingToolbarOpen = false;
+      let floatingToolbarPosition = { x: 22, y: 112 };
+      let floatingToolbarDragging = false;
+      let floatingToolbarPointerId = null;
+      let floatingToolbarDragOffset = { x: 0, y: 0 };
+      let floatingToolbarMoved = false;
+      let ignoreToolbarToggleClick = false;
       const databaseName = 'fisa-atelier-offline';
       const databaseStore = 'lucrari';
       const projectVersion = 2;
+      const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
 
       function openDatabase() {
         return new Promise((resolve, reject) => {
@@ -1085,6 +1145,144 @@
         return Math.min(max, Math.max(min, value));
       }
 
+      function getFloatingToolbarBounds() {
+        const buttonWidth = fullscreenToolbarToggle?.offsetWidth || 56;
+        const buttonHeight = fullscreenToolbarToggle?.offsetHeight || 56;
+        const minX = 10;
+        const minY = 10;
+        const maxX = Math.max(minX, window.innerWidth - buttonWidth - 10);
+        const maxY = Math.max(minY, window.innerHeight - buttonHeight - 10);
+        return { minX, minY, maxX, maxY };
+      }
+
+      function saveFloatingToolbarPosition() {
+        try {
+          localStorage.setItem(floatingToolbarStorageKey, JSON.stringify(floatingToolbarPosition));
+        } catch (error) {
+          console.warn('Poziția butonului flotant nu a putut fi salvată.', error);
+        }
+      }
+
+      function restoreFloatingToolbarPosition() {
+        try {
+          const value = localStorage.getItem(floatingToolbarStorageKey);
+          if (!value) return;
+          const parsed = JSON.parse(value);
+          if (parsed && Number.isFinite(parsed.x) && Number.isFinite(parsed.y)) {
+            floatingToolbarPosition = { x: parsed.x, y: parsed.y };
+          }
+        } catch (error) {
+          console.warn('Poziția butonului flotant nu a putut fi restaurată.', error);
+        }
+      }
+
+      function applyFloatingToolbarPosition() {
+        if (!fullscreenToolbarToggle) return;
+        const { minX, minY, maxX, maxY } = getFloatingToolbarBounds();
+        floatingToolbarPosition.x = clamp(floatingToolbarPosition.x, minX, maxX);
+        floatingToolbarPosition.y = clamp(floatingToolbarPosition.y, minY, maxY);
+        fullscreenToolbarToggle.style.left = `${floatingToolbarPosition.x}px`;
+        fullscreenToolbarToggle.style.top = `${floatingToolbarPosition.y}px`;
+      }
+
+      function positionFloatingToolbar() {
+        if (!fullscreenToolbarToggle || !fullscreenDrawingToolbar) return;
+        const buttonRect = fullscreenToolbarToggle.getBoundingClientRect();
+        const toolbarRect = fullscreenDrawingToolbar.getBoundingClientRect();
+        const offset = 12;
+        const spaceRight = window.innerWidth - buttonRect.right;
+        const spaceLeft = buttonRect.left;
+        const spaceBelow = window.innerHeight - buttonRect.bottom;
+        const spaceAbove = buttonRect.top;
+
+        let left = buttonRect.right + offset;
+        if (spaceRight < toolbarRect.width + offset && spaceLeft > toolbarRect.width + offset) {
+          left = buttonRect.left - toolbarRect.width - offset;
+        }
+        left = clamp(left, 10, Math.max(10, window.innerWidth - toolbarRect.width - 10));
+
+        let top = buttonRect.top;
+        if (spaceBelow < toolbarRect.height + offset && spaceAbove > toolbarRect.height + offset) {
+          top = buttonRect.bottom - toolbarRect.height;
+        }
+        if (top + toolbarRect.height > window.innerHeight - 10) {
+          top = window.innerHeight - toolbarRect.height - 10;
+        }
+        top = clamp(top, 10, Math.max(10, window.innerHeight - toolbarRect.height - 10));
+
+        fullscreenDrawingToolbar.style.left = `${left}px`;
+        fullscreenDrawingToolbar.style.top = `${top}px`;
+      }
+
+      function setFloatingToolbarOpen(isOpen) {
+        if (!fullscreenDrawingToolbar || !fullscreenToolbarToggle) return;
+        floatingToolbarOpen = Boolean(isOpen);
+        fullscreenToolbarToggle.classList.toggle('is-active', floatingToolbarOpen);
+        fullscreenDrawingToolbar.classList.toggle('is-open', floatingToolbarOpen);
+        fullscreenToolbarToggle.setAttribute('aria-expanded', floatingToolbarOpen ? 'true' : 'false');
+        if (floatingToolbarOpen) {
+          positionFloatingToolbar();
+        }
+      }
+
+      function handleFloatingToolbarPointerDown(event) {
+        if (!fullscreenMode || !fullscreenToolbarToggle) return;
+        if (event.pointerType === 'mouse' && event.button !== 0) return;
+        event.preventDefault();
+        floatingToolbarDragging = true;
+        floatingToolbarMoved = false;
+        floatingToolbarPointerId = event.pointerId;
+        floatingToolbarDragOffset = {
+          x: event.clientX - floatingToolbarPosition.x,
+          y: event.clientY - floatingToolbarPosition.y
+        };
+        fullscreenToolbarToggle.setPointerCapture(event.pointerId);
+      }
+
+      function handleFloatingToolbarPointerMove(event) {
+        if (!floatingToolbarDragging || event.pointerId !== floatingToolbarPointerId) return;
+        event.preventDefault();
+        const nextX = event.clientX - floatingToolbarDragOffset.x;
+        const nextY = event.clientY - floatingToolbarDragOffset.y;
+        if (Math.abs(nextX - floatingToolbarPosition.x) > 2 || Math.abs(nextY - floatingToolbarPosition.y) > 2) {
+          floatingToolbarMoved = true;
+        }
+        floatingToolbarPosition = { x: nextX, y: nextY };
+        applyFloatingToolbarPosition();
+        if (floatingToolbarOpen) {
+          positionFloatingToolbar();
+        }
+      }
+
+      function handleFloatingToolbarPointerUp(event) {
+        if (event.pointerId !== floatingToolbarPointerId) return;
+        event.preventDefault();
+        releasePointerCapture(fullscreenToolbarToggle, event.pointerId);
+        floatingToolbarDragging = false;
+        floatingToolbarPointerId = null;
+        applyFloatingToolbarPosition();
+        saveFloatingToolbarPosition();
+        if (floatingToolbarMoved) {
+          ignoreToolbarToggleClick = true;
+        }
+      }
+
+      function handleFloatingToolbarToggleClick() {
+        if (!fullscreenMode) return;
+        if (ignoreToolbarToggleClick) {
+          ignoreToolbarToggleClick = false;
+          return;
+        }
+        setFloatingToolbarOpen(!floatingToolbarOpen);
+      }
+
+      function handleFloatingToolbarOutsidePointerDown(event) {
+        if (!fullscreenMode || !floatingToolbarOpen) return;
+        if (!fullscreenDrawingToolbar || !fullscreenToolbarToggle) return;
+        if (fullscreenDrawingToolbar.contains(event.target) || fullscreenToolbarToggle.contains(event.target)) return;
+        setFloatingToolbarOpen(false);
+      }
+
       function escapeHtml(value) {
         return String(value)
           .replace(/&/g, '&amp;')
@@ -1380,6 +1578,10 @@
         window.addEventListener('resize', () => {
           if (fullscreenMode) {
             updateFullscreenFrame();
+            applyFloatingToolbarPosition();
+            if (floatingToolbarOpen) {
+              positionFloatingToolbar();
+            }
           }
           configureCanvas();
           configureNoteCanvas();
@@ -1400,8 +1602,12 @@
         if (fullscreenCloseButton) {
           fullscreenCloseButton.hidden = !enabled;
         }
+        if (fullscreenToolbarToggle) {
+          fullscreenToolbarToggle.hidden = !enabled;
+        }
         if (fullscreenDrawingToolbar) {
           fullscreenDrawingToolbar.hidden = !enabled;
+          fullscreenDrawingToolbar.classList.remove('is-open');
         }
         if (enabled) {
           previousFullscreenTool = activeTool;
@@ -1417,6 +1623,9 @@
           updateFullscreenFrame();
           zoomLevel = 1;
           panOffset = { x: 0, y: 0 };
+          restoreFloatingToolbarPosition();
+          applyFloatingToolbarPosition();
+          setFloatingToolbarOpen(false);
           syncBrushControls();
           attachFullscreenInputHandlers();
         } else {
@@ -1433,8 +1642,12 @@
           overlay.hidden = true;
           imagePanel.classList.remove('fullscreen-panel');
           setActiveTool(previousFullscreenTool);
+          setFloatingToolbarOpen(false);
           if (fullscreenDrawingToolbar) {
             fullscreenDrawingToolbar.hidden = true;
+          }
+          if (fullscreenToolbarToggle) {
+            fullscreenToolbarToggle.hidden = true;
           }
           if (fullscreenCloseButton) {
             fullscreenCloseButton.hidden = true;
@@ -1928,6 +2141,12 @@
       fullscreenButton.addEventListener('click', () => setFullscreenMode(true));
       fullscreenCloseButton.addEventListener('click', () => setFullscreenMode(false));
       fullscreenCloseToolbarBtn.addEventListener('click', () => setFullscreenMode(false));
+      fullscreenToolbarToggle.addEventListener('pointerdown', handleFloatingToolbarPointerDown, { passive: false });
+      fullscreenToolbarToggle.addEventListener('pointermove', handleFloatingToolbarPointerMove, { passive: false });
+      fullscreenToolbarToggle.addEventListener('pointerup', handleFloatingToolbarPointerUp, { passive: false });
+      fullscreenToolbarToggle.addEventListener('pointercancel', handleFloatingToolbarPointerUp, { passive: false });
+      fullscreenToolbarToggle.addEventListener('click', handleFloatingToolbarToggleClick);
+      window.addEventListener('pointerdown', handleFloatingToolbarOutsidePointerDown);
       fullscreenColorPicker.addEventListener('input', (event) => {
         brushColor = event.target.value;
         isErasing = false;
@@ -1946,15 +2165,19 @@
         applyCurrentBrushSettings();
         syncBrushControls();
         scheduleSave();
+        setFloatingToolbarOpen(false);
       });
       fullscreenUndoBtn.addEventListener('click', () => {
         undoLastLine();
+        setFloatingToolbarOpen(false);
       });
       fullscreenRedoBtn.addEventListener('click', () => {
         redoLastLine();
+        setFloatingToolbarOpen(false);
       });
       fullscreenClearBtn.addEventListener('click', () => {
         clearDrawings();
+        setFloatingToolbarOpen(false);
       });
       document.querySelectorAll('.quick-color-button').forEach((button) => {
         button.addEventListener('click', () => {
@@ -1965,6 +2188,7 @@
           applyCurrentBrushSettings();
           syncBrushControls();
           scheduleSave();
+          setFloatingToolbarOpen(false);
         });
       });
       window.addEventListener('keydown', (event) => {
