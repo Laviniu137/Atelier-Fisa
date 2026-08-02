@@ -307,6 +307,39 @@
         });
       }
 
+      function cloneProjectData(value) {
+        if (Array.isArray(value)) {
+          return value.map((item) => cloneProjectData(item));
+        }
+        if (value && typeof value === 'object') {
+          const clone = {};
+          Object.keys(value).forEach((key) => {
+            clone[key] = cloneProjectData(value[key]);
+          });
+          return clone;
+        }
+        return value;
+      }
+
+      function cloneProjectImageState(image = {}) {
+        const source = image && typeof image === 'object' ? image : {};
+        return {
+          id: source.id || createNoteId(),
+          name: source.name || '',
+          dataUrl: source.dataUrl || '',
+          type: source.type || 'image/png',
+          strokes: cloneProjectData(Array.isArray(source.strokes) ? source.strokes : []),
+          notes: cloneProjectData(Array.isArray(source.notes) ? source.notes : []),
+          zoom: typeof source.zoom === 'number' ? source.zoom : 1,
+          pan: source.pan && typeof source.pan.x === 'number' && typeof source.pan.y === 'number'
+            ? { x: source.pan.x, y: source.pan.y }
+            : { x: 0, y: 0 },
+          activeTool: source.activeTool === 'notes' ? 'notes' : 'draw',
+          selectedNoteId: source.selectedNoteId || null,
+          selectedNoteMode: source.selectedNoteMode === 'pencil' ? 'pencil' : 'text'
+        };
+      }
+
       function dataUrlToFile(dataUrl, name = 'imagine.png') {
         return fetch(dataUrl)
           .then((response) => response.blob())
@@ -334,21 +367,23 @@
       }
 
       async function saveCurrentImageState() {
-        const activeImage = projectImages[activeImageIndex] || {
-          id: createNoteId(),
-          name: getProjectImageName(activeImageIndex),
-          dataUrl: '',
-          type: 'image/png',
-          strokes: [],
-          notes: [],
-          zoom: 1,
-          pan: { x: 0, y: 0 },
-          activeTool: 'draw',
-          selectedNoteId: null,
-          selectedNoteMode: 'text'
-        };
+        const currentState = projectImages[activeImageIndex] || {};
+        const activeImage = cloneProjectImageState({
+          ...currentState,
+          name: currentState.name || getProjectImageName(activeImageIndex),
+          dataUrl: currentState.dataUrl || '',
+          type: currentState.type || imageBlob?.type || 'image/png',
+          strokes: Array.isArray(strokes) ? strokes : [],
+          notes: Array.isArray(interactiveNotes) ? interactiveNotes : [],
+          zoom: typeof zoomLevel === 'number' ? zoomLevel : 1,
+          pan: panOffset && typeof panOffset.x === 'number' && typeof panOffset.y === 'number'
+            ? { x: panOffset.x, y: panOffset.y }
+            : { x: 0, y: 0 },
+          activeTool: activeTool === 'notes' ? 'notes' : 'draw',
+          selectedNoteId: selectedNoteId,
+          selectedNoteMode: selectedNoteMode === 'pencil' ? 'pencil' : 'text'
+        });
 
-        activeImage.name = activeImage.name || getProjectImageName(activeImageIndex);
         if (!activeImage.dataUrl) {
           if (imageBlob) {
             activeImage.dataUrl = await blobToDataUrl(imageBlob);
@@ -358,16 +393,8 @@
             activeImage.dataUrl = await blobToDataUrl(blob);
           }
         }
-        activeImage.type = activeImage.type || imageBlob?.type || 'image/png';
-        activeImage.strokes = Array.isArray(strokes) ? strokes : [];
-        activeImage.notes = Array.isArray(interactiveNotes) ? interactiveNotes : [];
-        activeImage.zoom = typeof zoomLevel === 'number' ? zoomLevel : 1;
-        activeImage.pan = panOffset && typeof panOffset.x === 'number' && typeof panOffset.y === 'number'
-          ? { x: panOffset.x, y: panOffset.y }
-          : { x: 0, y: 0 };
-        activeImage.activeTool = activeTool === 'notes' ? 'notes' : 'draw';
-        activeImage.selectedNoteId = selectedNoteId;
-        activeImage.selectedNoteMode = selectedNoteMode === 'pencil' ? 'pencil' : 'text';
+
+        activeImage.name = activeImage.name || getProjectImageName(activeImageIndex);
         projectImages[activeImageIndex] = activeImage;
       }
 
@@ -378,7 +405,8 @@
           updatedAt: new Date().toISOString(),
           projectName: currentProjectName,
           images: await Promise.all(projectImages.map(async (image, index) => {
-            let dataUrl = image.dataUrl || '';
+            const imageRecord = cloneProjectImageState(image);
+            let dataUrl = imageRecord.dataUrl || '';
             if (dataUrl && !dataUrl.startsWith('data:')) {
               try {
                 const response = await fetch(dataUrl);
@@ -389,17 +417,17 @@
               }
             }
             return {
-              id: image.id || createNoteId(),
-              name: image.name || getProjectImageName(index),
-              type: image.type || 'image/png',
+              id: imageRecord.id || createNoteId(),
+              name: imageRecord.name || getProjectImageName(index),
+              type: imageRecord.type || 'image/png',
               dataUrl,
-              strokes: Array.isArray(image.strokes) ? image.strokes : [],
-              notes: Array.isArray(image.notes) ? image.notes : [],
-              zoom: typeof image.zoom === 'number' ? image.zoom : 1,
-              pan: image.pan && typeof image.pan.x === 'number' && typeof image.pan.y === 'number' ? { x: image.pan.x, y: image.pan.y } : { x: 0, y: 0 },
-              activeTool: image.activeTool === 'notes' ? 'notes' : 'draw',
-              selectedNoteId: image.selectedNoteId || null,
-              selectedNoteMode: image.selectedNoteMode === 'pencil' ? 'pencil' : 'text'
+              strokes: cloneProjectData(imageRecord.strokes),
+              notes: cloneProjectData(imageRecord.notes),
+              zoom: typeof imageRecord.zoom === 'number' ? imageRecord.zoom : 1,
+              pan: imageRecord.pan && typeof imageRecord.pan.x === 'number' && typeof imageRecord.pan.y === 'number' ? { x: imageRecord.pan.x, y: imageRecord.pan.y } : { x: 0, y: 0 },
+              activeTool: imageRecord.activeTool === 'notes' ? 'notes' : 'draw',
+              selectedNoteId: imageRecord.selectedNoteId || null,
+              selectedNoteMode: imageRecord.selectedNoteMode === 'pencil' ? 'pencil' : 'text'
             };
           }))
         };
@@ -491,7 +519,7 @@
               selectedNoteMode: project.ui?.selectedNoteMode === 'pencil' ? 'pencil' : 'text'
             }] : []);
 
-        projectImages = sourceImages.map((image, index) => ({
+        projectImages = sourceImages.map((image, index) => cloneProjectImageState({
           id: image.id || createNoteId(),
           name: image.name || getProjectImageName(index),
           dataUrl: image.dataUrl || '',
@@ -1226,8 +1254,8 @@
         photo.onload = () => {
           sourceImage = photo;
           imageBlob = blob;
-          strokes = Array.isArray(currentImage.strokes) ? currentImage.strokes : [];
-          interactiveNotes = Array.isArray(currentImage.notes) ? currentImage.notes : [];
+          strokes = cloneProjectData(Array.isArray(currentImage.strokes) ? currentImage.strokes : []);
+          interactiveNotes = cloneProjectData(Array.isArray(currentImage.notes) ? currentImage.notes : []);
           selectedNoteId = interactiveNotes.find((note) => note.id === currentImage.selectedNoteId)?.id || interactiveNotes[0]?.id || null;
           activeTool = currentImage.activeTool === 'notes' ? 'notes' : 'draw';
           selectedNoteMode = currentImage.selectedNoteMode === 'pencil' ? 'pencil' : 'text';
@@ -1268,8 +1296,8 @@
             name: file.name || getProjectImageName(projectImages.length),
             dataUrl,
             type: file.type || 'image/png',
-            strokes: storedStrokes,
-            notes: storedNotes,
+            strokes: cloneProjectData(storedStrokes),
+            notes: cloneProjectData(storedNotes),
             zoom: 1,
             pan: { x: 0, y: 0 },
             activeTool: 'draw',
