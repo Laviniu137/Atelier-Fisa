@@ -79,6 +79,14 @@
     .handwriting-actions button { flex: 1; min-height: 40px; }
     .help { display: flex; align-items: center; gap: 8px; margin: 14px 2px 0; color: #83796b; font-size: .79rem; line-height: 1.45; }
     .help::before { width: 5px; height: 5px; flex: 0 0 auto; border-radius: 50%; background: #a48358; content: ""; }
+    .save-dialog-backdrop { position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; background: rgba(19, 17, 15, .42); padding: 20px; }
+    .save-dialog-backdrop[hidden] { display: none; }
+    .save-dialog { width: min(460px, 100%); padding: 20px 18px 16px; border: 1px solid rgba(136, 119, 91, .22); border-radius: 18px; background: #fffdfb; box-shadow: 0 24px 48px rgba(34, 27, 18, .28); }
+    .save-dialog h2 { margin: 0 0 12px; font-size: 1.2rem; color: #2d261f; }
+    .save-dialog label { display: block; margin: 0 0 8px; color: #655947; font-size: .72rem; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
+    .save-dialog input { width: 100%; padding: 12px 13px; border: 1px solid #e2dbd1; border-radius: 12px; color: #322c23; background: linear-gradient(#fffefa, #fbf8f2); font-size: 15px; }
+    .save-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+    .save-dialog-actions button { min-width: 130px; }
     .sr-only { position: fixed; top: 0; left: -9999px; width: 1px; height: 1px; padding: 0; margin: 0; overflow: hidden; opacity: 0; clip: auto; white-space: nowrap; border: 0; }
     .fullscreen-overlay { position: fixed; inset: 0; z-index: 1400; display: none; align-items: stretch; justify-content: stretch; padding: 0; background: #000; }
     .fullscreen-overlay.is-active { display: flex; }
@@ -115,6 +123,17 @@
   </style>
 </head>
 <body>
+  <div id="saveProjectDialog" class="save-dialog-backdrop" hidden>
+    <div class="save-dialog" role="dialog" aria-modal="true" aria-labelledby="saveDialogTitle">
+      <h2 id="saveDialogTitle">Salvează proiectul</h2>
+      <label for="projectNameInput">Numele proiectului</label>
+      <input id="projectNameInput" type="text" value="Proiect nou" maxlength="120">
+      <div class="save-dialog-actions">
+        <button type="button" id="cancelProjectSave">Anulează</button>
+        <button type="button" id="confirmProjectSave">Salvează</button>
+      </div>
+    </div>
+  </div>
   <div id="fullscreenOverlay" class="fullscreen-overlay" hidden></div>
   <main class="app">
     <header>
@@ -187,6 +206,10 @@
       const imageInput = document.getElementById('imageInput');
       const loadProjectButton = document.getElementById('loadProject');
       const projectInput = document.getElementById('projectInput');
+      const saveProjectDialog = document.getElementById('saveProjectDialog');
+      const projectNameInput = document.getElementById('projectNameInput');
+      const cancelProjectSaveButton = document.getElementById('cancelProjectSave');
+      const confirmProjectSaveButton = document.getElementById('confirmProjectSave');
       const photo = document.getElementById('photo');
       const canvas = document.getElementById('drawingCanvas');
       const stage = document.getElementById('imageStage');
@@ -220,6 +243,7 @@
       let currentObjectUrl = null;
       let imageBlob = null;
       let saveTimer = null;
+      let currentProjectName = 'Proiect nou';
       let interactiveNotes = [];
       let selectedNoteId = null;
       let draggingNoteId = null;
@@ -272,10 +296,27 @@
           .then((blob) => new File([blob], name, { type: blob.type || 'image/png' }));
       }
 
+      function normalizeProjectName(value) {
+        const text = String(value ?? '').replace(/\.json$/i, '').trim();
+        return text || 'Proiect nou';
+      }
+
+      function getProjectFileName(value = currentProjectName) {
+        const baseName = normalizeProjectName(value);
+        return `${baseName}.json`;
+      }
+
+      function setProjectName(name) {
+        currentProjectName = normalizeProjectName(name);
+        document.title = `${currentProjectName} | Notițe interactive pe imagine`;
+        return currentProjectName;
+      }
+
       async function buildProjectPayload() {
         const payload = {
           version: projectVersion,
           updatedAt: new Date().toISOString(),
+          projectName: currentProjectName,
           image: null,
           drawing: { strokes },
           notes: interactiveNotes,
@@ -365,6 +406,11 @@
         const notes = Array.isArray(project?.notes) ? project.notes : [];
         const strokesFromProject = Array.isArray(project?.drawing?.strokes) ? project.drawing.strokes : [];
         const ui = project?.ui || {};
+        if (project?.projectName) {
+          setProjectName(project.projectName);
+        } else if (project?.name) {
+          setProjectName(project.name);
+        }
         strokes = strokesFromProject;
         interactiveNotes = notes;
         selectedNoteId = interactiveNotes.find((note) => note.id === ui.selectedNoteId)?.id || interactiveNotes[0]?.id || null;
@@ -992,6 +1038,7 @@
         if (currentObjectUrl) {
           URL.revokeObjectURL(currentObjectUrl);
         }
+        setProjectName('Proiect nou');
         if (photo.src && photo.src.startsWith('blob:')) {
           photo.removeAttribute('src');
         }
@@ -1095,17 +1142,37 @@
         saveLastWork();
       }
 
-      async function saveProject() {
+      function openSaveProjectDialog() {
         if (!sourceImage) return;
+        projectNameInput.value = currentProjectName || 'Proiect nou';
+        saveProjectDialog.hidden = false;
+        requestAnimationFrame(() => {
+          projectNameInput.focus();
+          projectNameInput.select();
+        });
+      }
+
+      function closeSaveProjectDialog() {
+        saveProjectDialog.hidden = true;
+      }
+
+      async function saveProjectWithName(name) {
+        const chosenName = normalizeProjectName(name);
+        setProjectName(chosenName);
         const project = await buildProjectPayload();
         const blob = new Blob([JSON.stringify(project, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
-        link.download = 'fisa-proiect.json';
+        link.download = getProjectFileName();
         link.href = url;
         link.click();
         window.setTimeout(() => URL.revokeObjectURL(url), 1000);
         await saveLastWork(project);
+      }
+
+      async function saveProject() {
+        if (!sourceImage) return;
+        openSaveProjectDialog();
       }
 
       async function loadProjectFromFile(file) {
@@ -1113,6 +1180,7 @@
         try {
           const text = await file.text();
           const project = JSON.parse(text);
+          setProjectName(project?.projectName || project?.name || file.name || 'Proiect nou');
           await restoreProject(project);
         } catch (error) {
           console.warn('Proiectul nu a putut fi încărcat.', error);
@@ -1142,6 +1210,22 @@
       undo.addEventListener('click', undoLastLine);
       clear.addEventListener('click', clearDrawings);
       save.addEventListener('click', saveProject);
+      cancelProjectSaveButton.addEventListener('click', closeSaveProjectDialog);
+      confirmProjectSaveButton.addEventListener('click', async () => {
+        const name = projectNameInput.value;
+        closeSaveProjectDialog();
+        await saveProjectWithName(name);
+      });
+      projectNameInput.addEventListener('keydown', async (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          closeSaveProjectDialog();
+          await saveProjectWithName(projectNameInput.value);
+        }
+        if (event.key === 'Escape') {
+          closeSaveProjectDialog();
+        }
+      });
       addNoteButton.addEventListener('click', addNote);
       deleteSelectedNoteButton.addEventListener('click', deleteSelectedNote);
       noteContentTextarea.addEventListener('input', () => {
