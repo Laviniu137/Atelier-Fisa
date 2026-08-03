@@ -1101,6 +1101,7 @@
       let ignoreToolbarToggleClick = false;
       let suppressPencilContextMenu = false;
       let pendingTransformFrame = null;
+      let lastMarkerScreenScale = null;
       const MIN_ZOOM_LEVEL = 1;
       const MAX_ZOOM_LEVEL = 12;
       const DOUBLE_TAP_ZOOM_LEVEL = 4;
@@ -1242,19 +1243,6 @@
       }
 
       async function saveCurrentImageState() {
-        const beforeSave = cloneProjectImageState(projectImages[activeImageIndex] || {});
-        console.log('[debug] saveCurrentImageState: before save', {
-          activeImageIndex,
-          projectImagesLength: projectImages.length,
-          currentState: beforeSave,
-          strokesCount: strokes.length,
-          notesCount: interactiveNotes.length,
-          zoomLevel,
-          panOffset,
-          activeTool,
-          selectedNoteId
-        });
-
         const currentState = projectImages[activeImageIndex] || {};
         const activeImage = cloneProjectImageState({
           ...currentState,
@@ -1284,19 +1272,6 @@
 
         activeImage.name = activeImage.name || getProjectImageName(activeImageIndex);
         projectImages[activeImageIndex] = activeImage;
-
-        console.log('[debug] saveCurrentImageState: after save', {
-          activeImageIndex,
-          savedImage: cloneProjectImageState(projectImages[activeImageIndex] || {}),
-          projectImagesPreview: projectImages.map((image, index) => ({
-            index,
-            name: image?.name,
-            strokesCount: Array.isArray(image?.strokes) ? image.strokes.length : 0,
-            notesCount: Array.isArray(image?.notes) ? image.notes.length : 0,
-            zoom: image?.zoom,
-            pan: image?.pan
-          }))
-        });
       }
 
       async function buildProjectPayload() {
@@ -1337,21 +1312,6 @@
             };
           }))
         };
-
-        console.log('[debug] buildProjectPayload: payload before export', {
-          projectName: payload.projectName,
-          imagesCount: payload.images.length,
-          firstImage: payload.images[0],
-          allImages: payload.images.map((image, index) => ({
-            index,
-            name: image?.name,
-            strokesCount: Array.isArray(image?.strokes) ? image.strokes.length : 0,
-            notesCount: Array.isArray(image?.notes) ? image.notes.length : 0,
-            zoom: image?.zoom,
-            pan: image?.pan
-          }))
-        });
-
         return payload;
       }
 
@@ -1414,10 +1374,11 @@
             stage.style.transformOrigin = '0 0';
           }
           const markerScale = fullscreenMode ? (1 / Math.max(zoomLevel, 1)) : 1;
-          if (noteLayer) {
+          if (noteLayer && markerScale !== lastMarkerScreenScale) {
             noteLayer.querySelectorAll('.note-marker').forEach((marker) => {
               marker.style.setProperty('--note-marker-screen-scale', String(markerScale));
             });
+            lastMarkerScreenScale = markerScale;
           }
         });
       }
@@ -1444,8 +1405,6 @@
               selectedNoteMode: project.ui?.selectedNoteMode === 'pencil' ? 'pencil' : 'text'
             }] : []);
 
-        console.log('[debug] applyProjectState: source images', sourceImages);
-
         projectImages = sourceImages.map((image, index) => cloneProjectImageState({
           id: image.id || createNoteId(),
           name: image.name || getProjectImageName(index),
@@ -1464,16 +1423,6 @@
             eraser: false
           }
         }));
-
-        console.log('[debug] applyProjectState: projectImages after map', projectImages.map((image, index) => ({
-          index,
-          name: image?.name,
-          strokesCount: Array.isArray(image?.strokes) ? image.strokes.length : 0,
-          notesCount: Array.isArray(image?.notes) ? image.notes.length : 0,
-          zoom: image?.zoom,
-          pan: image?.pan
-        })));
-
         if (!projectImages.length) {
           resetCurrentProject({ persist: false });
           return;
@@ -1977,6 +1926,7 @@
         interactiveNotes.forEach((note) => {
           const item = document.createElement('div');
           item.className = `note-list-item${selectedNoteId === note.id ? ' selected' : ''}`;
+          item.dataset.noteId = note.id;
           item.addEventListener('click', () => selectNote(note.id));
 
           const nameField = document.createElement('input');
@@ -2435,9 +2385,8 @@
         if (renderList) {
           renderNoteList();
         } else {
-          Array.from(noteList.querySelectorAll('.note-list-item')).forEach((item, index) => {
-            const note = interactiveNotes[index];
-            item.classList.toggle('selected', Boolean(note && note.id === selectedNoteId));
+          Array.from(noteList.querySelectorAll('.note-list-item')).forEach((item) => {
+            item.classList.toggle('selected', item.dataset.noteId === selectedNoteId);
           });
         }
         if (!skipFormSync) {
@@ -2864,27 +2813,11 @@
         const targetIndex = ((index % projectImages.length) + projectImages.length) % projectImages.length;
 
         if (sourceImage && projectImages[previousIndex] && previousIndex !== targetIndex) {
-          console.log('[debug] activateImageAt: saving previous image before switch', {
-            previousIndex,
-            targetIndex,
-            strokesCount: strokes.length,
-            notesCount: interactiveNotes.length
-          });
           await saveCurrentImageState();
         }
 
         activeImageIndex = targetIndex;
         const currentImage = projectImages[activeImageIndex];
-        console.log('[debug] activateImageAt: selected image', {
-          activeImageIndex,
-          currentImage: currentImage ? {
-            name: currentImage.name,
-            strokesCount: Array.isArray(currentImage.strokes) ? currentImage.strokes.length : 0,
-            notesCount: Array.isArray(currentImage.notes) ? currentImage.notes.length : 0,
-            zoom: currentImage.zoom,
-            pan: currentImage.pan
-          } : null
-        });
         if (!currentImage || !currentImage.dataUrl) {
           resetCurrentProject({ persist });
           return;
@@ -2892,7 +2825,15 @@
         if (currentObjectUrl && currentObjectUrl.startsWith('blob:')) {
           URL.revokeObjectURL(currentObjectUrl);
         }
-        const blob = await (await fetch(currentImage.dataUrl)).blob();
+        let blob;
+        try {
+          const response = await fetch(currentImage.dataUrl);
+          blob = await response.blob();
+        } catch (error) {
+          console.warn('Imaginea activă nu a putut fi încărcată.', error);
+          resetCurrentProject({ persist });
+          return;
+        }
         currentObjectUrl = URL.createObjectURL(blob);
         photo.onload = () => {
           sourceImage = photo;
@@ -2924,18 +2865,13 @@
           setSelectedNoteMode(selectedNoteMode);
           updateImageTransform();
           setControls();
-          console.log('[debug] activateImageAt: after load image state', {
-            activeImageIndex,
-            strokesCount: strokes.length,
-            notesCount: interactiveNotes.length,
-            zoomLevel,
-            panOffset,
-            selectedNoteId,
-            drawSettings: { color: brushColor, size: brushSize, eraser: isErasing }
-          });
           if (persist) {
             saveLastWork();
           }
+        };
+        photo.onerror = () => {
+          console.warn('Imaginea activă nu a putut fi afișată.');
+          resetCurrentProject({ persist });
         };
         photo.src = currentObjectUrl;
         imageInput.value = '';
@@ -2967,19 +2903,8 @@
               eraser: isErasing
             }
           };
-          console.log('[debug] loadImage: pushing new image entry', {
-            imageEntry,
-            projectImagesBefore: projectImages.length,
-            activeImageIndexBefore: activeImageIndex
-          });
           projectImages.push(imageEntry);
           activeImageIndex = projectImages.length - 1;
-          console.log('[debug] loadImage: projectImages after push', projectImages.map((image, index) => ({
-            index,
-            name: image?.name,
-            strokesCount: Array.isArray(image?.strokes) ? image.strokes.length : 0,
-            notesCount: Array.isArray(image?.notes) ? image.notes.length : 0
-          })));
           await activateImageAt(activeImageIndex, { persist: shouldPersist });
           resolve();
         });
@@ -3060,9 +2985,6 @@
         const chosenName = normalizeProjectName(name);
         setProjectName(chosenName);
         const project = await buildProjectPayload();
-        console.log('[debug] saveProjectWithName: project.images[0]', project.images[0]);
-        console.log('[debug] saveProjectWithName: project.images', project.images);
-
         const fileName = getProjectFileName();
         const fileContent = JSON.stringify(project, null, 2);
         const file = new File([fileContent], fileName, { type: 'application/json' });
