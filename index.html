@@ -833,6 +833,13 @@
       #removeImage { margin-left: 0; }
       .notes-toolbar { grid-template-columns: 1fr; }
     }
+    .app-footer {
+      margin-top: 12px;
+      text-align: right;
+      color: rgba(101, 89, 71, .72);
+      font-size: .76rem;
+      letter-spacing: .04em;
+    }
   </style>
 </head>
 <body>
@@ -1058,6 +1065,9 @@
         </div>
       </section>
     </div>
+    <footer class="app-footer" aria-label="Versiune aplicație">
+      <span id="appVersion">v1.0.0</span>
+    </footer>
   </main>
 
   <div id="pencilEditorOverlay" class="pencil-editor-overlay" hidden>
@@ -1175,6 +1185,7 @@
       const overlay = fullscreenOverlay;
       const layout = document.querySelector('.layout');
       const imagePanel = document.querySelector('.image-panel');
+      const appVersionLabel = document.getElementById('appVersion');
       const noteCanvasCtx = noteCanvas.getContext('2d');
       const pencilEditorCtx = pencilEditorCanvas.getContext('2d');
       const ctx = canvas.getContext('2d');
@@ -1252,8 +1263,13 @@
       const databaseName = 'fisa-atelier-offline';
       const databaseStore = 'lucrari';
       const projectVersion = 2;
+      const APP_VERSION = '1.0.0';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
+
+      if (appVersionLabel) {
+        appVersionLabel.textContent = `v${APP_VERSION}`;
+      }
 
       function openDatabase() {
         return new Promise((resolve, reject) => {
