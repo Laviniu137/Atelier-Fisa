@@ -45,9 +45,9 @@
     #drawingCanvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
     .note-layer { position: absolute; inset: 0; pointer-events: none; }
     .image-stage { touch-action: none; }
-    .note-marker { position: absolute; display: grid; place-items: center; width: 42px; height: 42px; transform: translate(-50%, -50%); border: 0; border-radius: 999px; background: linear-gradient(140deg, #8b5e3c, #6a3d22); color: #fffdfa; font-weight: 800; font-size: .95rem; box-shadow: 0 10px 20px rgba(61, 39, 23, .24); cursor: grab; pointer-events: auto; -webkit-tap-highlight-color: transparent; }
+    .note-marker { position: absolute; display: grid; place-items: center; width: 31px; height: 31px; transform: translate(-50%, -50%); border: 0; border-radius: 999px; background: linear-gradient(140deg, #8b5e3c, #6a3d22); color: #fffdfa; font-weight: 800; font-size: .78rem; box-shadow: 0 6px 14px rgba(61, 39, 23, .22); cursor: grab; pointer-events: auto; touch-action: none; -webkit-tap-highlight-color: transparent; }
     .note-marker:active { cursor: grabbing; }
-    .note-marker.selected { background: linear-gradient(140deg, #2f6f51, #1f4e3d); transform: translate(-50%, -50%) scale(1.06); }
+    .note-marker.selected { background: linear-gradient(140deg, #2f6f51, #1f4e3d); transform: translate(-50%, -50%) scale(1.03); }
     .empty { max-width: 290px; padding: 28px; color: #7c7265; text-align: center; font-size: .95rem; line-height: 1.6; }
     .toolbar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
     .toolbar button { width: 100%; padding-inline: 12px; }
@@ -953,6 +953,10 @@
       let interactiveNotes = [];
       let selectedNoteId = null;
       let draggingNoteId = null;
+      let draggingNotePointerId = null;
+      let draggingNoteMarker = null;
+      let pendingDraggedPointer = null;
+      let noteDragAnimationFrame = null;
       let activeTool = 'draw';
       let previousFullscreenTool = 'draw';
       let selectedNoteMode = 'text';
@@ -2067,15 +2071,69 @@
         scheduleSave();
       }
 
+      function getActiveImageFrame() {
+        if (!stage || !photo || !sourceImage) return null;
+        const stageRect = stage.getBoundingClientRect();
+        const photoRect = photo.getBoundingClientRect();
+        if (!stageRect.width || !stageRect.height || !photoRect.width || !photoRect.height) return null;
+        return {
+          stageRect,
+          photoRect,
+          imageOffsetX: photoRect.left - stageRect.left,
+          imageOffsetY: photoRect.top - stageRect.top
+        };
+      }
+
+      function clientPointToImageCoordinates(clientX, clientY, frame = getActiveImageFrame()) {
+        if (!frame) return null;
+        return {
+          x: clamp((clientX - frame.photoRect.left) / frame.photoRect.width, 0, 1),
+          y: clamp((clientY - frame.photoRect.top) / frame.photoRect.height, 0, 1)
+        };
+      }
+
+      function positionMarkerElement(marker, note, frame = getActiveImageFrame()) {
+        if (!marker || !note || !frame) return;
+        const leftPx = frame.imageOffsetX + clamp(note.x, 0, 1) * frame.photoRect.width;
+        const topPx = frame.imageOffsetY + clamp(note.y, 0, 1) * frame.photoRect.height;
+        marker.style.left = `${(leftPx / frame.stageRect.width) * 100}%`;
+        marker.style.top = `${(topPx / frame.stageRect.height) * 100}%`;
+      }
+
+      function findNoteMarkerById(noteId) {
+        const markers = noteLayer ? Array.from(noteLayer.querySelectorAll('.note-marker')) : [];
+        return markers.find((marker) => marker.dataset.noteId === noteId) || null;
+      }
+
+      function applyPendingNoteDragPosition() {
+        noteDragAnimationFrame = null;
+        if (!draggingNoteId || !pendingDraggedPointer) return;
+        const note = interactiveNotes.find((item) => item.id === draggingNoteId);
+        if (!note) return;
+        const frame = getActiveImageFrame();
+        const point = clientPointToImageCoordinates(pendingDraggedPointer.clientX, pendingDraggedPointer.clientY, frame);
+        if (!point) return;
+        note.x = point.x;
+        note.y = point.y;
+        positionMarkerElement(draggingNoteMarker, note, frame);
+      }
+
+      function queueNoteDragPosition(clientX, clientY) {
+        pendingDraggedPointer = { clientX, clientY };
+        if (noteDragAnimationFrame !== null) return;
+        noteDragAnimationFrame = window.requestAnimationFrame(applyPendingNoteDragPosition);
+      }
+
       function renderNotes() {
         noteLayer.innerHTML = '';
         noteLayer.hidden = !interactiveNotes.length;
+        const frame = getActiveImageFrame();
         interactiveNotes.forEach((note, index) => {
           const marker = document.createElement('button');
           marker.type = 'button';
           marker.className = `note-marker${selectedNoteId === note.id ? ' selected' : ''}`;
-          marker.style.left = `${note.x * 100}%`;
-          marker.style.top = `${note.y * 100}%`;
+          marker.dataset.noteId = note.id;
+          positionMarkerElement(marker, note, frame);
           marker.textContent = String(index + 1);
           marker.addEventListener('click', (event) => {
             event.stopPropagation();
@@ -2088,9 +2146,17 @@
             event.stopPropagation();
             selectNote(note.id);
             draggingNoteId = note.id;
+            draggingNotePointerId = event.pointerId;
             isDraggingNote = true;
-            window.addEventListener('pointermove', handleNoteDrag);
-            window.addEventListener('pointerup', stopNoteDrag, { once: true });
+            draggingNoteMarker = findNoteMarkerById(note.id);
+            pendingDraggedPointer = null;
+            if (draggingNoteMarker) {
+              draggingNoteMarker.setPointerCapture(event.pointerId);
+            }
+            queueNoteDragPosition(event.clientX, event.clientY);
+            window.addEventListener('pointermove', handleNoteDrag, { passive: false });
+            window.addEventListener('pointerup', stopNoteDrag, { once: true, passive: false });
+            window.addEventListener('pointercancel', stopNoteDrag, { once: true, passive: false });
           });
           noteLayer.appendChild(marker);
         });
@@ -2131,22 +2197,33 @@
       }
 
       function handleNoteDrag(event) {
-        if (!draggingNoteId) return;
-        const note = interactiveNotes.find((item) => item.id === draggingNoteId);
-        if (!note) return;
-        const rect = stage.getBoundingClientRect();
-        const x = clamp((event.clientX - rect.left) / rect.width, 0, 1);
-        const y = clamp((event.clientY - rect.top) / rect.height, 0, 1);
-        note.x = x;
-        note.y = y;
-        renderNotes();
-        scheduleSave();
+        if (!draggingNoteId || event.pointerId !== draggingNotePointerId) return;
+        event.preventDefault();
+        queueNoteDragPosition(event.clientX, event.clientY);
       }
 
-      function stopNoteDrag() {
+      function stopNoteDrag(event) {
+        if (event && event.pointerId !== undefined && draggingNotePointerId !== null && event.pointerId !== draggingNotePointerId) {
+          return;
+        }
+        if (event) {
+          event.preventDefault();
+          queueNoteDragPosition(event.clientX, event.clientY);
+        }
+        if (noteDragAnimationFrame !== null) {
+          window.cancelAnimationFrame(noteDragAnimationFrame);
+          noteDragAnimationFrame = null;
+        }
+        applyPendingNoteDragPosition();
+        releasePointerCapture(draggingNoteMarker, draggingNotePointerId);
         draggingNoteId = null;
+        draggingNotePointerId = null;
+        draggingNoteMarker = null;
+        pendingDraggedPointer = null;
         isDraggingNote = false;
         window.removeEventListener('pointermove', handleNoteDrag);
+        window.removeEventListener('pointercancel', stopNoteDrag);
+        scheduleSave();
       }
 
       function releasePointerCapture(target, pointerId) {
@@ -2163,7 +2240,6 @@
       function resetInteractionState() {
         activeStroke = null;
         activePencilStroke = null;
-        draggingNoteId = null;
         isDrawing = false;
         isDraggingNote = false;
         isPanning = false;
@@ -2176,10 +2252,20 @@
         pinchCenter = null;
         releasePointerCapture(canvas, activeDrawingPointerId);
         releasePointerCapture(noteCanvas, activeWritingPointerId);
+        releasePointerCapture(draggingNoteMarker, draggingNotePointerId);
+        draggingNoteId = null;
+        draggingNotePointerId = null;
+        draggingNoteMarker = null;
+        pendingDraggedPointer = null;
         activeDrawingPointerId = null;
         activeWritingPointerId = null;
+        if (noteDragAnimationFrame !== null) {
+          window.cancelAnimationFrame(noteDragAnimationFrame);
+          noteDragAnimationFrame = null;
+        }
         window.removeEventListener('pointermove', handleNoteDrag);
         window.removeEventListener('pointerup', stopNoteDrag);
+        window.removeEventListener('pointercancel', stopNoteDrag);
         redraw();
         renderHandwritingCanvas();
         updateImageTransform();
@@ -2205,6 +2291,7 @@
           }
           configureCanvas();
           configureNoteCanvas();
+          renderNotes();
         }, { signal });
       }
 
@@ -2277,6 +2364,7 @@
         requestAnimationFrame(() => {
           configureCanvas();
           configureNoteCanvas();
+          renderNotes();
           updateImageTransform();
         });
         setControls();
