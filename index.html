@@ -1999,12 +1999,12 @@
           }, { passive: true });
           nameField.addEventListener('click', (event) => {
             event.stopPropagation();
-            selectNote(note.id, { renderList: false });
+            selectNote(note.id, { renderList: false, skipFormSync: true });
           });
           nameField.addEventListener('focus', (event) => {
             event.stopPropagation();
             if (selectedNoteId !== note.id) {
-              selectNote(note.id, { renderList: false });
+              selectNote(note.id, { renderList: false, skipFormSync: true });
             }
           });
           nameField.addEventListener('input', () => {
@@ -2429,7 +2429,7 @@
       }
 
       function selectNote(noteId, options = {}) {
-        const { renderList = true } = options;
+        const { renderList = true, skipFormSync = false } = options;
         selectedNoteId = noteId;
         renderNotes();
         if (renderList) {
@@ -2440,7 +2440,9 @@
             item.classList.toggle('selected', Boolean(note && note.id === selectedNoteId));
           });
         }
-        syncSelectedNoteForm();
+        if (!skipFormSync) {
+          syncSelectedNoteForm();
+        }
         setControls();
       }
 
