@@ -75,8 +75,19 @@
     .note-marker:active { cursor: grabbing; }
     .note-marker.selected { background: linear-gradient(140deg, #2f6f51, #1f4e3d); transform: translate(-50%, -50%) scale(calc(var(--note-marker-screen-scale, 1) * 1.03)); }
     .empty { max-width: 290px; padding: 28px; color: #7c7265; text-align: center; font-size: .95rem; line-height: 1.6; }
-    .toolbar { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin-top: 18px; }
-    .toolbar button { width: 100%; max-width: 420px; margin-inline: auto; padding-inline: 16px; }
+    .toolbar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
+    .toolbar button { width: 100%; max-width: none; margin-inline: 0; padding-inline: 16px; }
+    #saveImage {
+      border-color: #d8d1c6;
+      background: #f9f5ee;
+      color: #3f372d;
+      box-shadow: 0 4px 10px rgba(64, 52, 35, .07);
+    }
+    #saveImage:hover:not(:disabled) {
+      border-color: #bfae97;
+      background: #f4ede2;
+      box-shadow: 0 8px 16px rgba(64, 52, 35, .11);
+    }
     .fullscreen-inline { display: flex; gap: 10px; margin: 12px 0 8px; flex-wrap: wrap; }
     .fullscreen-inline button { flex: 1; min-height: 44px; }
     .image-gallery { display: flex; align-items: center; gap: 10px; margin-top: 14px; padding-top: 4px; }
@@ -349,6 +360,41 @@
     .save-dialog input { width: 100%; padding: 12px 13px; border: 1px solid #e2dbd1; border-radius: 12px; color: #322c23; background: linear-gradient(#fffefa, #fbf8f2); font-size: 15px; }
     .save-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
     .save-dialog-actions button { min-width: 130px; }
+    .export-dialog {
+      width: min(500px, 100%);
+      padding: 20px 18px 16px;
+      border: 1px solid rgba(136, 119, 91, .22);
+      border-radius: 18px;
+      background: #fffdfb;
+      box-shadow: 0 24px 48px rgba(34, 27, 18, .28);
+    }
+    .export-dialog h2 { margin: 0 0 12px; font-size: 1.2rem; color: #2d261f; }
+    .export-section { margin: 0 0 14px; padding: 0; border: 0; }
+    .export-section legend {
+      margin: 0 0 8px;
+      color: #655947;
+      font-size: .72rem;
+      font-weight: 750;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .export-options { display: grid; gap: 8px; }
+    .export-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid #e3ddd3;
+      border-radius: 12px;
+      background: #fdfcf9;
+      color: #322c23;
+      font-size: .92rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .export-option input { margin: 0; accent-color: #4b4133; }
+    .export-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+    .export-dialog-actions button { min-width: 130px; }
     .danger-dialog-backdrop {
       position: fixed;
       inset: 0;
@@ -743,6 +789,7 @@
       #notes { min-height: 300px; }
     }
     @media (max-width: 520px) {
+      .toolbar { grid-template-columns: 1fr; }
       .canvas-shell { min-height: 310px; }
       .brand-title { font-size: clamp(2rem, 11vw, 2.45rem); }
       .brand-subtitle { font-size: clamp(.92rem, 4.2vw, 1rem); }
@@ -762,6 +809,29 @@
       <div class="save-dialog-actions">
         <button type="button" id="cancelProjectSave">Anulează</button>
         <button type="button" id="confirmProjectSave">Salvează</button>
+      </div>
+    </div>
+  </div>
+  <div id="exportImageDialog" class="save-dialog-backdrop" hidden>
+    <div class="export-dialog" role="dialog" aria-modal="true" aria-labelledby="exportImageDialogTitle">
+      <h2 id="exportImageDialogTitle">Export imagine</h2>
+      <fieldset class="export-section">
+        <legend>Format</legend>
+        <div class="export-options">
+          <label class="export-option"><input type="radio" name="exportFormat" value="png" checked> PNG (calitate maximă)</label>
+          <label class="export-option"><input type="radio" name="exportFormat" value="jpeg"> JPEG (calitate 90%)</label>
+        </div>
+      </fieldset>
+      <fieldset class="export-section">
+        <legend>Rezoluție</legend>
+        <div class="export-options">
+          <label class="export-option"><input type="radio" name="exportScale" value="1" checked> Originală</label>
+          <label class="export-option"><input type="radio" name="exportScale" value="2"> 2x (calitate mai mare)</label>
+        </div>
+      </fieldset>
+      <div class="export-dialog-actions">
+        <button type="button" id="cancelExportImage">Anulează</button>
+        <button type="button" id="confirmExportImage">Salvează imaginea</button>
       </div>
     </div>
   </div>
@@ -896,6 +966,7 @@
         </div>
         <div class="toolbar" aria-label="Acțiune principală">
           <button type="button" id="save" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg><span>Salvează</span></button>
+          <button type="button" id="saveImage" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10" r="1.4"></circle><path d="m21 16-5.3-5.3a1 1 0 0 0-1.4 0L8 17"></path></svg><span>Salvează imaginea</span></button>
         </div>
         <p class="help">Selectează modul Desen pentru a utiliza Apple Pencil sau degetul pe imagine. În modul Note poți muta marcatorii și edita textul.</p>
       </section>
@@ -972,9 +1043,12 @@
       const loadProjectButton = document.getElementById('loadProject');
       const projectInput = document.getElementById('projectInput');
       const saveProjectDialog = document.getElementById('saveProjectDialog');
+      const exportImageDialog = document.getElementById('exportImageDialog');
       const projectNameInput = document.getElementById('projectNameInput');
       const cancelProjectSaveButton = document.getElementById('cancelProjectSave');
       const confirmProjectSaveButton = document.getElementById('confirmProjectSave');
+      const cancelExportImageButton = document.getElementById('cancelExportImage');
+      const confirmExportImageButton = document.getElementById('confirmExportImage');
       const clearAllDialog = document.getElementById('clearAllDialog');
       const cancelClearAllButton = document.getElementById('cancelClearAll');
       const confirmClearAllButton = document.getElementById('confirmClearAll');
@@ -992,6 +1066,7 @@
       const undo = document.getElementById('undo');
       const clear = document.getElementById('clear');
       const save = document.getElementById('save');
+      const saveImage = document.getElementById('saveImage');
       const drawModeButton = document.getElementById('drawModeBtn');
       const notesModeButton = document.getElementById('notesModeBtn');
       const fullscreenButton = document.getElementById('fullscreenBtn');
@@ -1463,6 +1538,7 @@
           clear.disabled = !ready || strokes.length === 0 || activeTool !== 'draw';
         }
         save.disabled = !ready;
+        saveImage.disabled = !ready;
         fullscreenButton.disabled = !ready;
         removeImageButton.disabled = !ready;
         addNoteButton.disabled = !ready || activeTool !== 'notes';
@@ -1569,6 +1645,176 @@
           ctx.stroke();
         }
         ctx.restore();
+      }
+
+      function drawStrokeOnContext(targetContext, stroke, width, height, widthScale = 1) {
+        if (!targetContext || !stroke || !Array.isArray(stroke.points) || !stroke.points.length) return;
+        const strokeColor = typeof stroke.color === 'string' ? stroke.color : brushColor;
+        const strokeSize = (typeof stroke.size === 'number' ? stroke.size : brushSize) * widthScale;
+        const isErasingStroke = Boolean(stroke.eraser);
+        targetContext.save();
+        targetContext.lineCap = 'round';
+        targetContext.lineJoin = 'round';
+        targetContext.lineWidth = strokeSize;
+        targetContext.strokeStyle = isErasingStroke ? 'rgba(0,0,0,1)' : strokeColor;
+        targetContext.fillStyle = isErasingStroke ? 'rgba(0,0,0,1)' : strokeColor;
+        targetContext.globalCompositeOperation = isErasingStroke ? 'destination-out' : 'source-over';
+        targetContext.beginPath();
+        const first = stroke.points[0];
+        targetContext.moveTo(first.x * width, first.y * height);
+        if (stroke.points.length === 1) {
+          targetContext.arc(first.x * width, first.y * height, Math.max(1, strokeSize / 2), 0, Math.PI * 2);
+          targetContext.fill();
+        } else {
+          for (let index = 1; index < stroke.points.length; index += 1) {
+            const point = stroke.points[index];
+            targetContext.lineTo(point.x * width, point.y * height);
+          }
+          targetContext.stroke();
+        }
+        targetContext.restore();
+      }
+
+      function drawExportMarkers(targetContext, width, height, scaleMultiplier = 1) {
+        if (!interactiveNotes.length) return;
+        const markerRadius = 15.5 * scaleMultiplier;
+        interactiveNotes.forEach((note, index) => {
+          const x = clamp(note.x, 0, 1) * width;
+          const y = clamp(note.y, 0, 1) * height;
+          const isSelected = note.id === selectedNoteId;
+          const gradient = targetContext.createLinearGradient(x - markerRadius, y - markerRadius, x + markerRadius, y + markerRadius);
+          if (isSelected) {
+            gradient.addColorStop(0, '#2f6f51');
+            gradient.addColorStop(1, '#1f4e3d');
+          } else {
+            gradient.addColorStop(0, '#8b5e3c');
+            gradient.addColorStop(1, '#6a3d22');
+          }
+          targetContext.save();
+          targetContext.fillStyle = gradient;
+          targetContext.shadowColor = 'rgba(61, 39, 23, .22)';
+          targetContext.shadowBlur = 10 * scaleMultiplier;
+          targetContext.beginPath();
+          targetContext.arc(x, y, markerRadius, 0, Math.PI * 2);
+          targetContext.fill();
+          targetContext.shadowBlur = 0;
+          targetContext.fillStyle = '#fffdfa';
+          targetContext.font = `${Math.max(10, 12 * scaleMultiplier)}px "Segoe UI", sans-serif`;
+          targetContext.fontWeight = '700';
+          targetContext.textAlign = 'center';
+          targetContext.textBaseline = 'middle';
+          targetContext.fillText(String(index + 1), x, y);
+          if (activeTool === 'notes') {
+            const noteName = getNoteDisplayName(note);
+            targetContext.textAlign = 'left';
+            targetContext.textBaseline = 'alphabetic';
+            targetContext.font = `${Math.max(9, 10 * scaleMultiplier)}px "Segoe UI", sans-serif`;
+            targetContext.fillStyle = 'rgba(47, 41, 34, .92)';
+            targetContext.fillText(noteName, x + markerRadius + (6 * scaleMultiplier), y - markerRadius - (4 * scaleMultiplier));
+          }
+          targetContext.restore();
+        });
+      }
+
+      function getSelectedExportOption(name, fallback) {
+        const selected = document.querySelector(`input[name="${name}"]:checked`);
+        return selected ? selected.value : fallback;
+      }
+
+      function buildExportCanvas(format, scaleValue) {
+        const sourceWidth = photo.naturalWidth || sourceImage?.naturalWidth || 0;
+        const sourceHeight = photo.naturalHeight || sourceImage?.naturalHeight || 0;
+        if (!sourceWidth || !sourceHeight) return null;
+        const exportScale = Number(scaleValue) === 2 ? 2 : 1;
+        const exportWidth = Math.max(1, Math.round(sourceWidth * exportScale));
+        const exportHeight = Math.max(1, Math.round(sourceHeight * exportScale));
+        const exportCanvas = document.createElement('canvas');
+        exportCanvas.width = exportWidth;
+        exportCanvas.height = exportHeight;
+        const exportContext = exportCanvas.getContext('2d');
+        exportContext.clearRect(0, 0, exportWidth, exportHeight);
+        exportContext.drawImage(photo, 0, 0, exportWidth, exportHeight);
+
+        const currentCanvasWidth = canvas.clientWidth || sourceWidth;
+        const widthScale = exportWidth / Math.max(1, currentCanvasWidth);
+        strokes.forEach((stroke) => drawStrokeOnContext(exportContext, stroke, exportWidth, exportHeight, widthScale));
+        drawExportMarkers(exportContext, exportWidth, exportHeight, exportScale);
+
+        return {
+          canvas: exportCanvas,
+          mimeType: format === 'jpeg' ? 'image/jpeg' : 'image/png',
+          quality: format === 'jpeg' ? 0.9 : undefined,
+          extension: format === 'jpeg' ? 'jpg' : 'png'
+        };
+      }
+
+      async function canvasToBlob(canvasElement, mimeType, quality) {
+        return new Promise((resolve) => {
+          canvasElement.toBlob((blob) => resolve(blob), mimeType, quality);
+        });
+      }
+
+      function sanitizeFileName(value) {
+        return String(value || 'proiect').replace(/[\\/:*?"<>|]+/g, '-').trim() || 'proiect';
+      }
+
+      function openExportImageDialog() {
+        if (!sourceImage) return;
+        exportImageDialog.hidden = false;
+        requestAnimationFrame(() => {
+          cancelExportImageButton.focus();
+        });
+      }
+
+      function closeExportImageDialog() {
+        exportImageDialog.hidden = true;
+      }
+
+      async function exportCurrentImage() {
+        if (!sourceImage) return;
+        const format = getSelectedExportOption('exportFormat', 'png');
+        const scaleValue = getSelectedExportOption('exportScale', '1');
+        const exportData = buildExportCanvas(format, scaleValue);
+        if (!exportData) return;
+        const exportBlob = await canvasToBlob(exportData.canvas, exportData.mimeType, exportData.quality);
+        if (!exportBlob) return;
+
+        const imageLabel = projectImages[activeImageIndex]?.name || getProjectImageName(activeImageIndex);
+        const baseName = sanitizeFileName(`${normalizeProjectName(currentProjectName)}-${imageLabel}`);
+        const fileName = `${baseName}.${exportData.extension}`;
+        const file = new File([exportBlob], fileName, { type: exportData.mimeType });
+
+        if (isIPadOSDevice()) {
+          try {
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+              await navigator.share({
+                title: fileName,
+                text: 'Export imagine finală',
+                files: [file]
+              });
+              return;
+            }
+            if (navigator.share) {
+              await navigator.share({
+                title: fileName,
+                text: 'Export imagine finală',
+                files: [file]
+              });
+              return;
+            }
+          } catch (error) {
+            if (error && error.name !== 'AbortError') {
+              console.warn('Web Share API a eșuat pentru exportul imaginii.', error);
+            }
+          }
+        }
+
+        const url = URL.createObjectURL(exportBlob);
+        const link = document.createElement('a');
+        link.download = fileName;
+        link.href = url;
+        link.click();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1500);
       }
 
       function drawStrokeSegment(stroke, fromIndex) {
@@ -3133,6 +3379,11 @@
           closeRemoveImageDialog();
           return;
         }
+        if (!exportImageDialog.hidden && event.key === 'Escape') {
+          event.preventDefault();
+          closeExportImageDialog();
+          return;
+        }
         if (!deleteNoteDialog.hidden && event.key === 'Escape') {
           event.preventDefault();
           closeDeleteNoteDialog();
@@ -3183,6 +3434,7 @@
         clear.addEventListener('click', openClearAllDialog);
       }
       save.addEventListener('click', saveProject);
+      saveImage.addEventListener('click', openExportImageDialog);
       cancelClearAllButton.addEventListener('click', closeClearAllDialog);
       confirmClearAllButton.addEventListener('click', () => {
         closeClearAllDialog();
@@ -3200,6 +3452,15 @@
       removeImageDialog.addEventListener('pointerdown', (event) => {
         if (event.target !== removeImageDialog) return;
         closeRemoveImageDialog();
+      });
+      cancelExportImageButton.addEventListener('click', closeExportImageDialog);
+      confirmExportImageButton.addEventListener('click', async () => {
+        closeExportImageDialog();
+        await exportCurrentImage();
+      });
+      exportImageDialog.addEventListener('pointerdown', (event) => {
+        if (event.target !== exportImageDialog) return;
+        closeExportImageDialog();
       });
       cancelDeleteNoteButton.addEventListener('click', closeDeleteNoteDialog);
       confirmDeleteNoteButton.addEventListener('click', () => {
@@ -3248,6 +3509,18 @@
         if (event.key === 'Escape') {
           event.preventDefault();
           closeRemoveImageDialog();
+        }
+      });
+      cancelExportImageButton.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeExportImageDialog();
+        }
+      });
+      confirmExportImageButton.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeExportImageDialog();
         }
       });
       cancelDeleteNoteButton.addEventListener('keydown', (event) => {
