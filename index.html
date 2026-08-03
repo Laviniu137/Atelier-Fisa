@@ -1256,14 +1256,17 @@
       let autosaveInProgress = false;
       let autosaveMutationCounter = 0;
       let pendingRecoveryResolver = null;
+      let drawingFrameRequest = null;
+      let pendingStrokePoints = [];
       const MIN_ZOOM_LEVEL = 1;
       const MAX_ZOOM_LEVEL = 12;
       const DOUBLE_TAP_ZOOM_LEVEL = 4;
       const AUTOSAVE_DEBOUNCE_MS = 2000;
+      const STROKE_SAMPLE_MIN_DISTANCE_PX = 0.35;
       const databaseName = 'fisa-atelier-offline';
       const databaseStore = 'lucrari';
       const projectVersion = 2;
-      const APP_VERSION = '1.0.0';
+      const APP_VERSION = '1.1.0';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
 
@@ -1829,6 +1832,7 @@
         canvas.width = Math.round(width * ratio);
         canvas.height = Math.round(height * ratio);
         ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        ctx.imageSmoothingEnabled = true;
         redraw();
       }
 
@@ -1850,12 +1854,53 @@
         };
       }
 
+      function getRenderStrokeSize(strokeSize) {
+        const baseSize = Number.isFinite(Number(strokeSize)) ? Number(strokeSize) : brushSize;
+        if (!fullscreenMode || zoomLevel <= 1) {
+          return baseSize;
+        }
+        return Math.max(0.5, baseSize / zoomLevel);
+      }
+
+      function drawSmoothStrokePath(targetContext, points, width, height) {
+        if (!Array.isArray(points) || !points.length) return;
+        const first = points[0];
+        targetContext.beginPath();
+        targetContext.moveTo(first.x * width, first.y * height);
+
+        if (points.length === 1) {
+          return;
+        }
+
+        if (points.length === 2) {
+          const second = points[1];
+          targetContext.lineTo(second.x * width, second.y * height);
+          return;
+        }
+
+        for (let index = 1; index < points.length - 1; index += 1) {
+          const currentPoint = points[index];
+          const nextPoint = points[index + 1];
+          const midpointX = ((currentPoint.x + nextPoint.x) / 2) * width;
+          const midpointY = ((currentPoint.y + nextPoint.y) / 2) * height;
+          targetContext.quadraticCurveTo(
+            currentPoint.x * width,
+            currentPoint.y * height,
+            midpointX,
+            midpointY
+          );
+        }
+
+        const last = points[points.length - 1];
+        targetContext.lineTo(last.x * width, last.y * height);
+      }
+
       function drawStroke(stroke) {
         if (!stroke || stroke.points.length === 0) return;
         const size = getCanvasDrawSize();
         if (!size.width || !size.height) return;
         const strokeColor = typeof stroke.color === 'string' ? stroke.color : brushColor;
-        const strokeSize = typeof stroke.size === 'number' ? stroke.size : brushSize;
+        const strokeSize = getRenderStrokeSize(typeof stroke.size === 'number' ? stroke.size : brushSize);
         const isErasingStroke = Boolean(stroke.eraser);
         ctx.save();
         ctx.lineCap = 'round';
@@ -1864,17 +1909,13 @@
         ctx.strokeStyle = isErasingStroke ? 'rgba(0,0,0,1)' : strokeColor;
         ctx.fillStyle = isErasingStroke ? 'rgba(0,0,0,1)' : strokeColor;
         ctx.globalCompositeOperation = isErasingStroke ? 'destination-out' : 'source-over';
-        ctx.beginPath();
-        const first = stroke.points[0];
-        ctx.moveTo(first.x * size.width, first.y * size.height);
         if (stroke.points.length === 1) {
+          const first = stroke.points[0];
+          ctx.beginPath();
           ctx.arc(first.x * size.width, first.y * size.height, Math.max(1, strokeSize / 2), 0, Math.PI * 2);
           ctx.fill();
         } else {
-          for (let index = 1; index < stroke.points.length; index += 1) {
-            const point = stroke.points[index];
-            ctx.lineTo(point.x * size.width, point.y * size.height);
-          }
+          drawSmoothStrokePath(ctx, stroke.points, size.width, size.height);
           ctx.stroke();
         }
         ctx.restore();
@@ -1892,17 +1933,13 @@
         targetContext.strokeStyle = isErasingStroke ? 'rgba(0,0,0,1)' : strokeColor;
         targetContext.fillStyle = isErasingStroke ? 'rgba(0,0,0,1)' : strokeColor;
         targetContext.globalCompositeOperation = isErasingStroke ? 'destination-out' : 'source-over';
-        targetContext.beginPath();
-        const first = stroke.points[0];
-        targetContext.moveTo(first.x * width, first.y * height);
         if (stroke.points.length === 1) {
+          const first = stroke.points[0];
+          targetContext.beginPath();
           targetContext.arc(first.x * width, first.y * height, Math.max(1, strokeSize / 2), 0, Math.PI * 2);
           targetContext.fill();
         } else {
-          for (let index = 1; index < stroke.points.length; index += 1) {
-            const point = stroke.points[index];
-            targetContext.lineTo(point.x * width, point.y * height);
-          }
+          drawSmoothStrokePath(targetContext, stroke.points, width, height);
           targetContext.stroke();
         }
         targetContext.restore();
@@ -2054,10 +2091,11 @@
         if (!stroke || !Array.isArray(stroke.points) || stroke.points.length < 2) return;
         const size = getCanvasDrawSize();
         if (!size.width || !size.height) return;
-        const safeFrom = clamp(fromIndex, 0, stroke.points.length - 2);
         const strokeColor = typeof stroke.color === 'string' ? stroke.color : brushColor;
-        const strokeSize = typeof stroke.size === 'number' ? stroke.size : brushSize;
+        const strokeSize = getRenderStrokeSize(typeof stroke.size === 'number' ? stroke.size : brushSize);
         const isErasingStroke = Boolean(stroke.eraser);
+        const points = stroke.points;
+        const total = points.length;
         ctx.save();
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
@@ -2065,11 +2103,29 @@
         ctx.strokeStyle = isErasingStroke ? 'rgba(0,0,0,1)' : strokeColor;
         ctx.globalCompositeOperation = isErasingStroke ? 'destination-out' : 'source-over';
         ctx.beginPath();
-        const startPoint = stroke.points[safeFrom];
-        ctx.moveTo(startPoint.x * size.width, startPoint.y * size.height);
-        for (let index = safeFrom + 1; index < stroke.points.length; index += 1) {
-          const point = stroke.points[index];
-          ctx.lineTo(point.x * size.width, point.y * size.height);
+        if (total === 2) {
+          const first = points[0];
+          const second = points[1];
+          ctx.moveTo(first.x * size.width, first.y * size.height);
+          ctx.lineTo(second.x * size.width, second.y * size.height);
+        } else if (total === 3) {
+          const first = points[0];
+          const control = points[1];
+          const end = points[2];
+          const midpointX = ((control.x + end.x) / 2) * size.width;
+          const midpointY = ((control.y + end.y) / 2) * size.height;
+          ctx.moveTo(first.x * size.width, first.y * size.height);
+          ctx.quadraticCurveTo(control.x * size.width, control.y * size.height, midpointX, midpointY);
+        } else {
+          const previous = points[total - 3];
+          const control = points[total - 2];
+          const current = points[total - 1];
+          const startX = ((previous.x + control.x) / 2) * size.width;
+          const startY = ((previous.y + control.y) / 2) * size.height;
+          const endX = ((control.x + current.x) / 2) * size.width;
+          const endY = ((control.y + current.y) / 2) * size.height;
+          ctx.moveTo(startX, startY);
+          ctx.quadraticCurveTo(control.x * size.width, control.y * size.height, endX, endY);
         }
         ctx.stroke();
         ctx.restore();
@@ -2128,6 +2184,53 @@
           x: Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width)),
           y: Math.min(1, Math.max(0, (event.clientY - rect.top) / rect.height))
         };
+      }
+
+      function appendPointToActiveStroke(point) {
+        if (!activeStroke || !point) return false;
+        const points = activeStroke.points;
+        const lastPoint = points[points.length - 1];
+        if (!lastPoint) {
+          points.push(point);
+          return true;
+        }
+
+        const size = getCanvasDrawSize();
+        const width = Math.max(1, size.width);
+        const height = Math.max(1, size.height);
+        const deltaX = (point.x - lastPoint.x) * width;
+        const deltaY = (point.y - lastPoint.y) * height;
+        const minDistanceSquared = STROKE_SAMPLE_MIN_DISTANCE_PX * STROKE_SAMPLE_MIN_DISTANCE_PX;
+        if ((deltaX * deltaX) + (deltaY * deltaY) < minDistanceSquared) {
+          return false;
+        }
+
+        points.push(point);
+        return true;
+      }
+
+      function flushPendingStrokePoints({ cancelAnimation = false } = {}) {
+        if (cancelAnimation && drawingFrameRequest !== null) {
+          window.cancelAnimationFrame(drawingFrameRequest);
+          drawingFrameRequest = null;
+        }
+        if (!activeStroke || !pendingStrokePoints.length) return;
+
+        for (const point of pendingStrokePoints) {
+          if (appendPointToActiveStroke(point)) {
+            drawStrokeSegment(activeStroke, activeStroke.points.length - 2);
+          }
+        }
+
+        pendingStrokePoints = [];
+      }
+
+      function schedulePendingStrokeFlush() {
+        if (drawingFrameRequest !== null) return;
+        drawingFrameRequest = window.requestAnimationFrame(() => {
+          drawingFrameRequest = null;
+          flushPendingStrokePoints();
+        });
       }
 
       function zoomAroundClientPoint(clientX, clientY, nextZoom) {
@@ -2196,6 +2299,11 @@
         canvas.setPointerCapture(event.pointerId);
         activeDrawingPointerId = event.pointerId;
         isDrawing = true;
+        pendingStrokePoints = [];
+        if (drawingFrameRequest !== null) {
+          window.cancelAnimationFrame(drawingFrameRequest);
+          drawingFrameRequest = null;
+        }
         activeStroke = {
           points: [startPoint],
           color: brushColor,
@@ -2213,10 +2321,9 @@
         coalesced.forEach((pointerEvent) => {
           const nextPoint = pointFromEvent(pointerEvent);
           if (!nextPoint) return;
-          const previousIndex = activeStroke.points.length - 1;
-          activeStroke.points.push(nextPoint);
-          drawStrokeSegment(activeStroke, previousIndex);
+          pendingStrokePoints.push(nextPoint);
         });
+        schedulePendingStrokeFlush();
       }
 
       function finishDrawing(event) {
@@ -2232,12 +2339,15 @@
         }
         if (!activeStroke || (event.pointerId !== undefined && event.pointerId !== activeDrawingPointerId)) return;
         event.preventDefault();
+        flushPendingStrokePoints({ cancelAnimation: true });
         releasePointerCapture(canvas, event.pointerId ?? activeDrawingPointerId);
         activeDrawingPointerId = null;
         isDrawing = false;
         strokes.push(activeStroke);
         redoStack = [];
         activeStroke = null;
+        pendingStrokePoints = [];
+        redraw();
         setControls();
         syncBrushControls();
         scheduleSave();
@@ -2484,6 +2594,7 @@
         noteCanvas.width = Math.round(rect.width * ratio);
         noteCanvas.height = Math.round(rect.height * ratio);
         noteCanvasCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        noteCanvasCtx.imageSmoothingEnabled = true;
         renderHandwritingCanvas();
       }
 
@@ -2573,17 +2684,13 @@
         targetContext.lineCap = 'round';
         targetContext.lineJoin = 'round';
         targetContext.globalCompositeOperation = isErasingStroke ? 'destination-out' : 'source-over';
-        targetContext.beginPath();
-        const first = stroke.points[0];
-        targetContext.moveTo(first.x * width, first.y * height);
         if (stroke.points.length === 1) {
+          const first = stroke.points[0];
+          targetContext.beginPath();
           targetContext.arc(first.x * width, first.y * height, Math.max(1, strokeSize / 2), 0, Math.PI * 2);
           targetContext.fill();
         } else {
-          for (let index = 1; index < stroke.points.length; index += 1) {
-            const point = stroke.points[index];
-            targetContext.lineTo(point.x * width, point.y * height);
-          }
+          drawSmoothStrokePath(targetContext, stroke.points, width, height);
           targetContext.stroke();
         }
         targetContext.restore();
@@ -2633,6 +2740,7 @@
         pencilEditorCanvas.width = Math.round(rect.width * ratio);
         pencilEditorCanvas.height = Math.round(rect.height * ratio);
         pencilEditorCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        pencilEditorCtx.imageSmoothingEnabled = true;
         renderPencilEditorCanvas();
       }
 
@@ -2995,6 +3103,11 @@
 
       function resetInteractionState() {
         activeStroke = null;
+        pendingStrokePoints = [];
+        if (drawingFrameRequest !== null) {
+          window.cancelAnimationFrame(drawingFrameRequest);
+          drawingFrameRequest = null;
+        }
         isDrawing = false;
         isDraggingNote = false;
         isPanning = false;
@@ -3226,6 +3339,11 @@
 
       function resetCurrentProject({ persist = true } = {}) {
         imageActivationToken += 1;
+        pendingStrokePoints = [];
+        if (drawingFrameRequest !== null) {
+          window.cancelAnimationFrame(drawingFrameRequest);
+          drawingFrameRequest = null;
+        }
         photo.onload = null;
         photo.onerror = null;
         if (currentObjectUrl && currentObjectUrl.startsWith('blob:')) {
