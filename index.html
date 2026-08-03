@@ -2020,7 +2020,7 @@
           nameField.addEventListener('blur', () => {
             const value = nameField.value.replace(/\s+/g, ' ').trim();
             note.name = value || 'Notă nouă';
-            renderNoteList();
+            nameField.value = note.name;
             scheduleSave();
           });
 
