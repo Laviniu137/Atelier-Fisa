@@ -72,9 +72,8 @@
     .note-list { display: grid; gap: 10px; margin-bottom: 14px; }
     .note-list-item { width: 100%; border: 1px solid #e3ddd3; border-radius: 14px; padding: 12px 13px; background: #fdfcf9; text-align: left; color: #322c23; box-shadow: inset 0 1px 0 rgba(255,255,255,.4); cursor: pointer; }
     .note-list-item.selected { border-color: #8b5e3c; background: #fbf2e8; }
-    .note-list-name { display: block; min-height: 24px; font-size: .95rem; font-weight: 700; color: #2f2922; border-radius: 8px; outline: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .note-list-name[contenteditable="true"] { padding: 4px 8px; border: 1px solid #d5c8b1; background: #fffdf9; }
-    .note-list-name:focus { outline: none; border-color: #8b5e3c; }
+    .note-list-name { display: block; width: 100%; min-height: 32px; padding: 4px 8px; border: 1px solid transparent; border-radius: 8px; background: transparent; font-size: .95rem; font-weight: 700; color: #2f2922; outline: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; appearance: none; -webkit-appearance: none; }
+    .note-list-name:focus { outline: none; border-color: #8b5e3c; background: #fffdf9; }
     .note-list-item.selected .note-list-name { color: #5b3a22; }
     .note-form { display: grid; gap: 10px; }
     .note-form label { color: #655947; font-size: .72rem; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
@@ -121,9 +120,6 @@
       line-height: 1.45;
       margin: 0;
     }
-    body.pencil-writing-mode,
-    body.pencil-writing-mode .notes,
-    body.pencil-writing-mode .note-form,
     body.pencil-writing-mode .handwriting-panel,
     body.pencil-writing-mode #noteCanvas {
       -webkit-user-select: none;
@@ -1851,25 +1847,48 @@
           item.className = `note-list-item${selectedNoteId === note.id ? ' selected' : ''}`;
           item.addEventListener('click', () => selectNote(note.id));
 
-          const nameField = document.createElement('div');
+          const nameField = document.createElement('input');
+          nameField.type = 'text';
           nameField.className = 'note-list-name';
-          nameField.textContent = getNoteDisplayName(note);
-          nameField.contentEditable = selectedNoteId === note.id;
+          nameField.value = getNoteDisplayName(note);
+          nameField.dataset.noteId = note.id;
+          nameField.autocomplete = 'off';
+          nameField.autocapitalize = 'sentences';
+          nameField.spellcheck = false;
+          nameField.readOnly = false;
+          nameField.disabled = false;
           nameField.setAttribute('spellcheck', 'false');
+          nameField.setAttribute('aria-label', `Nume notă ${getNoteDisplayName(note)}`);
+          nameField.addEventListener('pointerdown', (event) => {
+            event.stopPropagation();
+          });
+          nameField.addEventListener('touchstart', (event) => {
+            event.stopPropagation();
+          }, { passive: true });
           nameField.addEventListener('click', (event) => {
             event.stopPropagation();
             selectNote(note.id);
-            if (selectedNoteId === note.id) {
-              window.setTimeout(() => nameField.focus(), 0);
+            window.requestAnimationFrame(() => focusNoteNameInput(note.id, { selectText: true }));
+          });
+          nameField.addEventListener('focus', (event) => {
+            event.stopPropagation();
+            if (selectedNoteId !== note.id) {
+              selectNote(note.id);
+              window.requestAnimationFrame(() => focusNoteNameInput(note.id, { selectText: true }));
             }
           });
           nameField.addEventListener('input', () => {
-            const value = nameField.textContent.replace(/\s+/g, ' ').trim();
-            note.name = value || 'Notă nouă';
+            note.name = nameField.value;
             scheduleSave();
           });
+          nameField.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              nameField.blur();
+            }
+          });
           nameField.addEventListener('blur', () => {
-            const value = nameField.textContent.replace(/\s+/g, ' ').trim();
+            const value = nameField.value.replace(/\s+/g, ' ').trim();
             note.name = value || 'Notă nouă';
             renderNoteList();
             scheduleSave();
@@ -1884,6 +1903,17 @@
         const name = typeof note?.name === 'string' ? note.name.trim() : '';
         if (name) return name;
         return 'Notă nouă';
+      }
+
+      function focusNoteNameInput(noteId, { selectText = false } = {}) {
+        if (!noteList || !noteId) return;
+        const input = noteList.querySelector(`.note-list-name[data-note-id="${noteId}"]`);
+        if (!(input instanceof HTMLInputElement)) return;
+        input.focus({ preventScroll: true });
+        if (selectText) {
+          const length = input.value.length;
+          input.setSelectionRange(0, length);
+        }
       }
 
       function syncSelectedNoteForm() {
