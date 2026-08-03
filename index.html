@@ -370,6 +370,42 @@
     .save-dialog input { width: 100%; padding: 12px 13px; border: 1px solid #e2dbd1; border-radius: 12px; color: #322c23; background: linear-gradient(#fffefa, #fbf8f2); font-size: 15px; }
     .save-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
     .save-dialog-actions button { min-width: 130px; }
+    .autosave-indicator {
+      position: fixed;
+      top: max(12px, calc(env(safe-area-inset-top, 0px) + 8px));
+      right: max(12px, calc(env(safe-area-inset-right, 0px) + 8px));
+      z-index: 2600;
+      padding: 8px 12px;
+      border: 1px solid rgba(136, 119, 91, .24);
+      border-radius: 999px;
+      background: rgba(255, 253, 247, .96);
+      color: #4a4033;
+      font-size: .82rem;
+      font-weight: 700;
+      letter-spacing: .01em;
+      box-shadow: 0 7px 18px rgba(57, 45, 31, .14);
+      pointer-events: none;
+      backdrop-filter: blur(5px);
+      opacity: 0;
+      transform: translateY(-5px);
+      transition: opacity .2s ease, transform .2s ease;
+    }
+    .autosave-indicator[data-visible="true"] {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .autosave-recovery-dialog {
+      width: min(460px, 100%);
+      padding: 20px 18px 16px;
+      border: 1px solid rgba(136, 119, 91, .22);
+      border-radius: 18px;
+      background: #fffdfb;
+      box-shadow: 0 24px 48px rgba(34, 27, 18, .28);
+    }
+    .autosave-recovery-dialog h2 { margin: 0 0 10px; font-size: 1.15rem; color: #2d261f; }
+    .autosave-recovery-dialog p { margin: 0; color: #4f4538; font-size: .95rem; line-height: 1.52; }
+    .autosave-recovery-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+    .autosave-recovery-actions button { min-width: 150px; }
     .unsaved-dialog {
       width: min(460px, 100%);
       padding: 20px 18px 16px;
@@ -824,6 +860,7 @@
   </style>
 </head>
 <body>
+  <div id="autosaveIndicator" class="autosave-indicator" hidden aria-live="polite"></div>
   <div id="saveProjectDialog" class="save-dialog-backdrop" hidden>
     <div class="save-dialog" role="dialog" aria-modal="true" aria-labelledby="saveDialogTitle">
       <h2 id="saveDialogTitle">Salvează proiectul</h2>
@@ -832,6 +869,16 @@
       <div class="save-dialog-actions">
         <button type="button" id="cancelProjectSave">Anulează</button>
         <button type="button" id="confirmProjectSave">Salvează</button>
+      </div>
+    </div>
+  </div>
+  <div id="autosaveRecoveryDialog" class="save-dialog-backdrop" hidden>
+    <div class="autosave-recovery-dialog" role="dialog" aria-modal="true" aria-labelledby="autosaveRecoveryTitle" aria-describedby="autosaveRecoveryDescription">
+      <h2 id="autosaveRecoveryTitle">A fost găsit un proiect salvat automat.</h2>
+      <p id="autosaveRecoveryDescription">Poți continua din ultimul autosave sau poți porni un proiect nou.</p>
+      <div class="autosave-recovery-actions">
+        <button type="button" id="autosaveRecoveryContinue">Continuă proiectul</button>
+        <button type="button" id="autosaveRecoveryStartNew">Începe proiect nou</button>
       </div>
     </div>
   </div>
@@ -1076,7 +1123,11 @@
       const imageInput = document.getElementById('imageInput');
       const loadProjectButton = document.getElementById('loadProject');
       const projectInput = document.getElementById('projectInput');
+      const autosaveIndicator = document.getElementById('autosaveIndicator');
       const saveProjectDialog = document.getElementById('saveProjectDialog');
+      const autosaveRecoveryDialog = document.getElementById('autosaveRecoveryDialog');
+      const autosaveRecoveryContinueButton = document.getElementById('autosaveRecoveryContinue');
+      const autosaveRecoveryStartNewButton = document.getElementById('autosaveRecoveryStartNew');
       const pencilUnsavedDialog = document.getElementById('pencilUnsavedDialog');
       const pencilUnsavedSaveButton = document.getElementById('pencilUnsavedSave');
       const pencilUnsavedDiscardButton = document.getElementById('pencilUnsavedDiscard');
@@ -1159,6 +1210,7 @@
       let currentObjectUrl = null;
       let imageBlob = null;
       let saveTimer = null;
+      let autosaveStatusTimer = null;
       let projectImages = [];
       let activeImageIndex = 0;
       let currentProjectName = 'Proiect nou';
@@ -1216,13 +1268,19 @@
       let suppressPencilContextMenu = false;
       let pendingTransformFrame = null;
       let lastMarkerScreenScale = null;
+      let projectDirty = false;
+      let autosaveInProgress = false;
+      let pendingRecoveryResolver = null;
       const MIN_ZOOM_LEVEL = 1;
       const MAX_ZOOM_LEVEL = 12;
       const DOUBLE_TAP_ZOOM_LEVEL = 4;
+      const AUTOSAVE_DEBOUNCE_MS = 2000;
+      const AUTOSAVE_STATUS_HIDE_MS = 2000;
       const databaseName = 'fisa-atelier-offline';
       const databaseStore = 'lucrari';
       const projectVersion = 2;
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
+      const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
 
       function openDatabase() {
         return new Promise((resolve, reject) => {
@@ -1281,6 +1339,93 @@
             eraser: Boolean(drawSettings.eraser)
           }
         };
+      }
+
+      function showAutosaveStatus(message) {
+        if (!autosaveIndicator) return;
+        autosaveIndicator.hidden = false;
+        autosaveIndicator.textContent = message;
+        autosaveIndicator.dataset.visible = 'true';
+      }
+
+      function hideAutosaveStatus() {
+        if (!autosaveIndicator) return;
+        autosaveIndicator.dataset.visible = 'false';
+        window.setTimeout(() => {
+          if (autosaveIndicator.dataset.visible === 'false') {
+            autosaveIndicator.hidden = true;
+            autosaveIndicator.textContent = '';
+          }
+        }, 220);
+      }
+
+      function markManualProjectExported(timestamp = Date.now()) {
+        try {
+          localStorage.setItem(manualProjectExportedAtStorageKey, String(timestamp));
+        } catch (error) {
+          console.warn('Nu s-a putut salva starea exportului manual.', error);
+        }
+      }
+
+      function getManualProjectExportedAt() {
+        try {
+          const raw = localStorage.getItem(manualProjectExportedAtStorageKey);
+          const value = Number(raw);
+          return Number.isFinite(value) && value > 0 ? value : 0;
+        } catch (error) {
+          return 0;
+        }
+      }
+
+      function markProjectClean() {
+        projectDirty = false;
+        window.clearTimeout(saveTimer);
+      }
+
+      function isContinuousInteractionActive() {
+        return Boolean(
+          isDrawing
+          || activeStroke
+          || isDraggingNote
+          || draggingNoteId
+          || isPanning
+          || panning
+          || activeTouches.size
+          || activePencilEditorStroke
+          || floatingToolbarDragging
+        );
+      }
+
+      function openAutosaveRecoveryDialog() {
+        autosaveRecoveryDialog.hidden = false;
+        requestAnimationFrame(() => {
+          autosaveRecoveryContinueButton.focus();
+        });
+      }
+
+      function closeAutosaveRecoveryDialog() {
+        autosaveRecoveryDialog.hidden = true;
+      }
+
+      function askAutosaveRecoveryChoice() {
+        openAutosaveRecoveryDialog();
+        return new Promise((resolve) => {
+          pendingRecoveryResolver = resolve;
+        });
+      }
+
+      function resolveAutosaveRecoveryChoice(choice) {
+        if (!pendingRecoveryResolver) return;
+        const resolver = pendingRecoveryResolver;
+        pendingRecoveryResolver = null;
+        closeAutosaveRecoveryDialog();
+        resolver(choice);
+      }
+
+      function shouldPromptAutosaveRecovery(work) {
+        const updatedAt = Date.parse(work?.updatedAt || '') || 0;
+        if (!updatedAt) return true;
+        return updatedAt > getManualProjectExportedAt();
       }
 
       function normalizeHandwritingStroke(stroke, fallbackColor = '#2f2a24', fallbackSize = 3) {
@@ -1441,9 +1586,69 @@
         }
       }
 
+      async function readLastWorkFromDatabase() {
+        try {
+          const database = await openDatabase();
+          const transaction = database.transaction(databaseStore, 'readonly');
+          const store = transaction.objectStore(databaseStore);
+          const work = await new Promise((resolve, reject) => {
+            const request = store.get('ultima-lucrare');
+            request.onsuccess = () => resolve(request.result || null);
+            request.onerror = () => reject(request.error);
+          });
+          database.close();
+          return work;
+        } catch (error) {
+          console.warn('Lucrarea anterioară nu a putut fi citită.', error);
+          return null;
+        }
+      }
+
+      async function clearLastWorkFromDatabase() {
+        try {
+          const database = await openDatabase();
+          const transaction = database.transaction(databaseStore, 'readwrite');
+          transaction.objectStore(databaseStore).delete('ultima-lucrare');
+          transaction.oncomplete = () => database.close();
+        } catch (error) {
+          console.warn('Autosave-ul nu a putut fi șters.', error);
+        }
+      }
+
+      async function flushAutosave({ force = false } = {}) {
+        if (!force && !projectDirty) return;
+        if (!force && isContinuousInteractionActive()) {
+          window.clearTimeout(saveTimer);
+          saveTimer = window.setTimeout(() => flushAutosave(), AUTOSAVE_DEBOUNCE_MS);
+          return;
+        }
+        if (autosaveInProgress) {
+          window.clearTimeout(saveTimer);
+          saveTimer = window.setTimeout(() => flushAutosave({ force }), 260);
+          return;
+        }
+
+        autosaveInProgress = true;
+        window.clearTimeout(autosaveStatusTimer);
+        showAutosaveStatus('🟡 Se salvează...');
+        try {
+          await saveLastWork();
+          markProjectClean();
+          showAutosaveStatus('🟢 Salvat automat');
+          autosaveStatusTimer = window.setTimeout(() => {
+            hideAutosaveStatus();
+          }, AUTOSAVE_STATUS_HIDE_MS);
+        } finally {
+          autosaveInProgress = false;
+        }
+      }
+
       function scheduleSave() {
         window.clearTimeout(saveTimer);
-        saveTimer = window.setTimeout(() => saveLastWork(), 350);
+        projectDirty = true;
+        saveTimer = window.setTimeout(() => {
+          flushAutosave();
+        }, AUTOSAVE_DEBOUNCE_MS);
       }
 
       function resetFullscreenLayoutStyles() {
@@ -1544,6 +1749,8 @@
 
         activeImageIndex = 0;
         await activateImageAt(0, { persist: false });
+        markProjectClean();
+        hideAutosaveStatus();
       }
 
       async function restoreProject(project) {
@@ -1552,20 +1759,23 @@
       }
 
       async function restoreLastWork() {
-        try {
-          const database = await openDatabase();
-          const transaction = database.transaction(databaseStore, 'readonly');
-          const request = transaction.objectStore(databaseStore).get('ultima-lucrare');
-          request.onsuccess = async () => {
-            const work = request.result;
-            database.close();
-            if (!work) return;
+        const work = await readLastWorkFromDatabase();
+        if (!work) return;
+
+        if (shouldPromptAutosaveRecovery(work)) {
+          const choice = await askAutosaveRecoveryChoice();
+          if (choice === 'continue') {
             await restoreProject(work);
-          };
-          request.onerror = () => database.close();
-        } catch (error) {
-          console.warn('Lucrarea anterioară nu a putut fi restaurată.', error);
+            return;
+          }
+          await clearLastWorkFromDatabase();
+          resetCurrentProject({ persist: false });
+          markProjectClean();
+          hideAutosaveStatus();
+          return;
         }
+
+        await restoreProject(work);
       }
 
       function setControls() {
@@ -1604,7 +1814,7 @@
           button.setAttribute('aria-label', image.name || getProjectImageName(index));
           button.addEventListener('click', () => {
             if (index === activeImageIndex) return;
-            activateImageAt(index, { persist: true });
+            activateImageAt(index, { persist: false });
           });
 
           const preview = document.createElement('img');
@@ -2042,7 +2252,7 @@
         activeStroke = null;
         setControls();
         syncBrushControls();
-        saveLastWork();
+        scheduleSave();
       }
 
       function createNoteId() {
@@ -3093,7 +3303,9 @@
         imageInput.value = '';
         projectInput.value = '';
         if (persist) {
-          saveLastWork();
+          scheduleSave();
+        } else {
+          markProjectClean();
         }
       }
 
@@ -3195,7 +3407,7 @@
           updateImageTransform();
           setControls();
           if (persist) {
-            saveLastWork();
+            scheduleSave();
           }
         };
         photo.onerror = () => {
@@ -3261,7 +3473,7 @@
         redraw();
         setControls();
         syncBrushControls();
-        saveLastWork();
+        scheduleSave();
       }
 
       function openClearAllDialog() {
@@ -3283,7 +3495,7 @@
         redraw();
         setControls();
         syncBrushControls();
-        saveLastWork();
+        scheduleSave();
       }
 
       function redoLastLine() {
@@ -3293,7 +3505,7 @@
         redraw();
         setControls();
         syncBrushControls();
-        saveLastWork();
+        scheduleSave();
       }
 
       function openSaveProjectDialog() {
@@ -3326,7 +3538,9 @@
                 text: `Salvează proiectul ${chosenName}`,
                 files: [file]
               });
+              markManualProjectExported(Date.now());
               await saveLastWork(project);
+              markProjectClean();
               return;
             }
 
@@ -3336,7 +3550,9 @@
                 text: `Salvează proiectul ${chosenName}`,
                 files: [file]
               });
+              markManualProjectExported(Date.now());
               await saveLastWork(project);
+              markProjectClean();
               return;
             }
           } catch (error) {
@@ -3359,7 +3575,9 @@
             document.body.removeChild(link);
           }
           window.setTimeout(() => URL.revokeObjectURL(fallbackUrl), 15000);
+          markManualProjectExported(Date.now());
           await saveLastWork(project);
+          markProjectClean();
           return;
         }
 
@@ -3370,7 +3588,9 @@
         link.href = url;
         link.click();
         window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+        markManualProjectExported(Date.now());
         await saveLastWork(project);
+        markProjectClean();
       }
 
       async function saveProject() {
@@ -3452,6 +3672,10 @@
         });
       });
       window.addEventListener('keydown', (event) => {
+        if (!autosaveRecoveryDialog.hidden && event.key === 'Escape') {
+          event.preventDefault();
+          return;
+        }
         if (!clearAllDialog.hidden && event.key === 'Escape') {
           event.preventDefault();
           closeClearAllDialog();
@@ -3494,10 +3718,25 @@
           configurePencilEditorCanvas();
         }
       });
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState !== 'hidden') return;
+        if (!projectDirty) return;
+        flushAutosave({ force: true });
+      });
+      window.addEventListener('pagehide', () => {
+        if (!projectDirty) return;
+        flushAutosave({ force: true });
+      });
       removeImageButton.addEventListener('click', openRemoveImageDialog);
       loadProjectButton.addEventListener('click', (event) => {
         event.preventDefault();
         projectInput.click();
+      });
+      autosaveRecoveryContinueButton.addEventListener('click', () => resolveAutosaveRecoveryChoice('continue'));
+      autosaveRecoveryStartNewButton.addEventListener('click', () => resolveAutosaveRecoveryChoice('new'));
+      autosaveRecoveryDialog.addEventListener('pointerdown', (event) => {
+        if (event.target !== autosaveRecoveryDialog) return;
+        event.preventDefault();
       });
       imageInput.addEventListener('change', async (event) => {
         const files = Array.from(event.target.files || []);
