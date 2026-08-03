@@ -92,8 +92,46 @@
     .mode-switcher button { width: 100%; min-height: 44px; }
     .mode-switcher button.active { border-color: #8b5e3c; background: #fbf2e8; color: #5a3a22; }
     .notes { display: flex; flex-direction: column; min-height: 0; padding: clamp(18px, 2.3vw, 25px); }
-    .notes-toolbar { display: flex; gap: 10px; margin-bottom: 12px; }
-    .notes-toolbar button { flex: 1; min-height: 44px; }
+    .notes-toolbar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
+    .notes-toolbar button {
+      width: 100%;
+      min-height: 48px;
+      border-radius: 15px;
+      justify-content: center;
+      transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease, color .16s ease;
+    }
+    #addNote {
+      border-color: #4b4133;
+      background: #4b4133;
+      color: #fffdfa;
+      box-shadow: 0 8px 16px rgba(50, 41, 29, .16);
+    }
+    #addNote:hover:not(:disabled) {
+      border-color: #3a3127;
+      background: #5c4f3e;
+      box-shadow: 0 12px 22px rgba(50, 41, 29, .2);
+    }
+    #addNote:active:not(:disabled) {
+      background: #42382c;
+      transform: translateY(1px) scale(.985);
+    }
+    #deleteSelectedNote {
+      border-color: #f3c7cc;
+      background: #fef2f2;
+      color: #8f1d2d;
+      box-shadow: 0 4px 10px rgba(176, 52, 52, .08);
+    }
+    #deleteSelectedNote svg { color: #be123c; }
+    #deleteSelectedNote:hover:not(:disabled) {
+      border-color: #ec9faa;
+      background: #fee4e8;
+      color: #7f1d1d;
+      box-shadow: 0 8px 18px rgba(176, 52, 52, .14);
+    }
+    #deleteSelectedNote:active:not(:disabled) {
+      background: #fdd8df;
+      transform: translateY(1px) scale(.985);
+    }
     .note-list { display: grid; gap: 10px; margin-bottom: 14px; }
     .note-list-item { width: 100%; border: 1px solid #e3ddd3; border-radius: 14px; padding: 12px 13px; background: #fdfcf9; text-align: left; color: #322c23; box-shadow: inset 0 1px 0 rgba(255,255,255,.4); cursor: pointer; }
     .note-list-item.selected { border-color: #8b5e3c; background: #fbf2e8; }
@@ -711,6 +749,7 @@
       .header-actions { width: 100%; }
       .header-actions button { flex: 1 1 auto; }
       #removeImage { margin-left: 0; }
+      .notes-toolbar { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -750,6 +789,16 @@
       <div class="danger-dialog-actions">
         <button type="button" id="cancelRemoveImage">Anulează</button>
         <button type="button" id="confirmRemoveImage" class="danger-confirm-image-btn">Șterge imaginea</button>
+      </div>
+    </div>
+  </div>
+  <div id="deleteNoteDialog" class="danger-dialog-backdrop" hidden>
+    <div class="danger-dialog" role="dialog" aria-modal="true" aria-labelledby="deleteNoteDialogTitle" aria-describedby="deleteNoteDialogDescription">
+      <h2 id="deleteNoteDialogTitle">Șterge nota</h2>
+      <p id="deleteNoteDialogDescription">Ești sigur că dorești să ștergi această notă? Conținutul text și scrisul de mână asociat vor fi eliminate.</p>
+      <div class="danger-dialog-actions">
+        <button type="button" id="cancelDeleteNote">Anulează</button>
+        <button type="button" id="confirmDeleteNote" class="danger-confirm-image-btn">Șterge nota</button>
       </div>
     </div>
   </div>
@@ -854,8 +903,8 @@
       <section class="notes" aria-labelledby="notesLabel">
         <label class="section-label" id="notesLabel">Notițe interactive</label>
         <div class="notes-toolbar">
-          <button type="button" id="addNote">Adaugă notă</button>
-          <button type="button" id="deleteSelectedNote" disabled>Șterge nota</button>
+          <button type="button" id="addNote"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg><span>Adaugă notă</span></button>
+          <button type="button" id="deleteSelectedNote" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg><span>Șterge nota</span></button>
         </div>
         <div class="note-list" id="noteList" aria-live="polite"></div>
         <div class="note-form">
@@ -932,6 +981,9 @@
       const removeImageDialog = document.getElementById('removeImageDialog');
       const cancelRemoveImageButton = document.getElementById('cancelRemoveImage');
       const confirmRemoveImageButton = document.getElementById('confirmRemoveImage');
+      const deleteNoteDialog = document.getElementById('deleteNoteDialog');
+      const cancelDeleteNoteButton = document.getElementById('cancelDeleteNote');
+      const confirmDeleteNoteButton = document.getElementById('confirmDeleteNote');
       const photo = document.getElementById('photo');
       const canvas = document.getElementById('drawingCanvas');
       const stage = document.getElementById('imageStage');
@@ -2418,6 +2470,18 @@
         scheduleSave();
       }
 
+      function openDeleteNoteDialog() {
+        if (!selectedNoteId) return;
+        deleteNoteDialog.hidden = false;
+        requestAnimationFrame(() => {
+          cancelDeleteNoteButton.focus();
+        });
+      }
+
+      function closeDeleteNoteDialog() {
+        deleteNoteDialog.hidden = true;
+      }
+
       function handleNoteDrag(event) {
         if (!draggingNoteId || event.pointerId !== draggingNotePointerId) return;
         event.preventDefault();
@@ -3145,6 +3209,11 @@
           closeRemoveImageDialog();
           return;
         }
+        if (!deleteNoteDialog.hidden && event.key === 'Escape') {
+          event.preventDefault();
+          closeDeleteNoteDialog();
+          return;
+        }
         if (pencilEditorOpen && event.key === 'Escape') {
           event.preventDefault();
           closePencilEditor({ saveChanges: false });
@@ -3208,6 +3277,15 @@
         if (event.target !== removeImageDialog) return;
         closeRemoveImageDialog();
       });
+      cancelDeleteNoteButton.addEventListener('click', closeDeleteNoteDialog);
+      confirmDeleteNoteButton.addEventListener('click', () => {
+        closeDeleteNoteDialog();
+        deleteSelectedNote();
+      });
+      deleteNoteDialog.addEventListener('pointerdown', (event) => {
+        if (event.target !== deleteNoteDialog) return;
+        closeDeleteNoteDialog();
+      });
       cancelProjectSaveButton.addEventListener('click', closeSaveProjectDialog);
       confirmProjectSaveButton.addEventListener('click', async () => {
         const name = projectNameInput.value;
@@ -3248,8 +3326,20 @@
           closeRemoveImageDialog();
         }
       });
+      cancelDeleteNoteButton.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeDeleteNoteDialog();
+        }
+      });
+      confirmDeleteNoteButton.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeDeleteNoteDialog();
+        }
+      });
       addNoteButton.addEventListener('click', addNote);
-      deleteSelectedNoteButton.addEventListener('click', deleteSelectedNote);
+      deleteSelectedNoteButton.addEventListener('click', openDeleteNoteDialog);
       noteContentTextarea.addEventListener('input', () => {
         const note = interactiveNotes.find((item) => item.id === selectedNoteId);
         if (!note) return;
