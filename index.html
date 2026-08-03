@@ -36,6 +36,30 @@
     .brand-subtitle { margin: 6px 0 0; font-family: "Avenir Next", "Segoe UI", sans-serif; font-size: clamp(1rem, 1.6vw, 1.1rem); font-weight: 550; letter-spacing: .06em; color: #7a7267; text-transform: none; }
     #addImage, #save { border-color: #4b4133; background: #4b4133; color: #fffdfa; box-shadow: 0 7px 16px rgba(50, 41, 29, .18); }
     #addImage:hover:not(:disabled), #save:hover:not(:disabled) { border-color: #342c22; background: #342c22; }
+    #removeImage {
+      margin-left: 10px;
+      border-color: #f3c7cc;
+      background: #fef2f2;
+      color: #8f1d2d;
+      box-shadow: 0 4px 10px rgba(176, 52, 52, .10);
+    }
+    #removeImage svg { color: #be123c; }
+    #removeImage:hover:not(:disabled) {
+      border-color: #ec9faa;
+      background: #fee4e8;
+      color: #7f1d1d;
+      box-shadow: 0 8px 18px rgba(176, 52, 52, .16);
+    }
+    #removeImage:active:not(:disabled) {
+      transform: translateY(1px) scale(.98);
+      background: #fdd8df;
+    }
+    #removeImage:disabled {
+      border-color: #f4d7db;
+      background: #fdf5f6;
+      color: #c9a0a7;
+      box-shadow: none;
+    }
     .layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(360px, .8fr); gap: clamp(20px, 2.5vw, 34px); padding-top: clamp(20px, 3vw, 32px); align-items: stretch; }
     .image-panel, .notes { min-width: 0; border: 1px solid rgba(136, 119, 91, .17); border-radius: 22px; background: rgba(255, 254, 251, .87); box-shadow: 0 15px 38px rgba(62, 49, 31, .09); }
     .image-panel { padding: clamp(15px, 2vw, 22px); }
@@ -353,6 +377,16 @@
       box-shadow: 0 8px 16px rgba(136, 34, 34, .25);
     }
     .danger-confirm-btn:hover:not(:disabled) {
+      border-color: #872323;
+      background: #952929;
+    }
+    .danger-confirm-image-btn {
+      border-color: #a22a2a;
+      background: #b03434;
+      color: #fff;
+      box-shadow: 0 8px 16px rgba(136, 34, 34, .25);
+    }
+    .danger-confirm-image-btn:hover:not(:disabled) {
       border-color: #872323;
       background: #952929;
     }
@@ -676,6 +710,7 @@
       .brand-subtitle { font-size: clamp(.92rem, 4.2vw, 1rem); }
       .header-actions { width: 100%; }
       .header-actions button { flex: 1 1 auto; }
+      #removeImage { margin-left: 0; }
     }
   </style>
 </head>
@@ -705,6 +740,16 @@
       <div class="danger-dialog-actions">
         <button type="button" id="cancelClearAll">Anulează</button>
         <button type="button" id="confirmClearAll" class="danger-confirm-btn">Șterge</button>
+      </div>
+    </div>
+  </div>
+  <div id="removeImageDialog" class="danger-dialog-backdrop" hidden>
+    <div class="danger-dialog" role="dialog" aria-modal="true" aria-labelledby="removeImageDialogTitle" aria-describedby="removeImageDialogDescription">
+      <h2 id="removeImageDialogTitle">Ștergere imagine</h2>
+      <p id="removeImageDialogDescription">Ești sigur că dorești să ștergi această imagine? Vor fi eliminate și toate desenele și notițele asociate.</p>
+      <div class="danger-dialog-actions">
+        <button type="button" id="cancelRemoveImage">Anulează</button>
+        <button type="button" id="confirmRemoveImage" class="danger-confirm-image-btn">Șterge imaginea</button>
       </div>
     </div>
   </div>
@@ -884,6 +929,9 @@
       const clearAllDialog = document.getElementById('clearAllDialog');
       const cancelClearAllButton = document.getElementById('cancelClearAll');
       const confirmClearAllButton = document.getElementById('confirmClearAll');
+      const removeImageDialog = document.getElementById('removeImageDialog');
+      const cancelRemoveImageButton = document.getElementById('cancelRemoveImage');
+      const confirmRemoveImageButton = document.getElementById('confirmRemoveImage');
       const photo = document.getElementById('photo');
       const canvas = document.getElementById('drawingCanvas');
       const stage = document.getElementById('imageStage');
@@ -2705,10 +2753,19 @@
         }
       }
 
-      function confirmRemoveImage() {
+      function openRemoveImageDialog() {
         if (!sourceImage) return;
-        const confirmed = window.confirm('Sigur dorești să ștergi imaginea activă din proiect? Toate notițele, marcatorii și desenele asociate acestei imagini vor fi șterse.');
-        if (!confirmed) return;
+        removeImageDialog.hidden = false;
+        requestAnimationFrame(() => {
+          cancelRemoveImageButton.focus();
+        });
+      }
+
+      function closeRemoveImageDialog() {
+        removeImageDialog.hidden = true;
+      }
+
+      function confirmRemoveImage() {
         if (projectImages.length > 1) {
           projectImages.splice(activeImageIndex, 1);
           activeImageIndex = clamp(activeImageIndex, 0, Math.max(projectImages.length - 1, 0));
@@ -3083,6 +3140,11 @@
           closeClearAllDialog();
           return;
         }
+        if (!removeImageDialog.hidden && event.key === 'Escape') {
+          event.preventDefault();
+          closeRemoveImageDialog();
+          return;
+        }
         if (pencilEditorOpen && event.key === 'Escape') {
           event.preventDefault();
           closePencilEditor({ saveChanges: false });
@@ -3100,7 +3162,7 @@
           configurePencilEditorCanvas();
         }
       });
-      removeImageButton.addEventListener('click', confirmRemoveImage);
+      removeImageButton.addEventListener('click', openRemoveImageDialog);
       loadProjectButton.addEventListener('click', (event) => {
         event.preventDefault();
         projectInput.click();
@@ -3137,6 +3199,15 @@
         if (event.target !== clearAllDialog) return;
         closeClearAllDialog();
       });
+      cancelRemoveImageButton.addEventListener('click', closeRemoveImageDialog);
+      confirmRemoveImageButton.addEventListener('click', () => {
+        closeRemoveImageDialog();
+        confirmRemoveImage();
+      });
+      removeImageDialog.addEventListener('pointerdown', (event) => {
+        if (event.target !== removeImageDialog) return;
+        closeRemoveImageDialog();
+      });
       cancelProjectSaveButton.addEventListener('click', closeSaveProjectDialog);
       confirmProjectSaveButton.addEventListener('click', async () => {
         const name = projectNameInput.value;
@@ -3163,6 +3234,18 @@
         if (event.key === 'Escape') {
           event.preventDefault();
           closeClearAllDialog();
+        }
+      });
+      cancelRemoveImageButton.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeRemoveImageDialog();
+        }
+      });
+      confirmRemoveImageButton.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeRemoveImageDialog();
         }
       });
       addNoteButton.addEventListener('click', addNote);
