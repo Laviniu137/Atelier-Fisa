@@ -1228,7 +1228,6 @@
       let brushSize = 4;
       let isErasing = false;
       let redoStack = [];
-      let activePencilStroke = null;
       let zoomLevel = 1;
       let panOffset = { x: 0, y: 0 };
       let panning = false;
@@ -1268,8 +1267,10 @@
       let suppressPencilContextMenu = false;
       let pendingTransformFrame = null;
       let lastMarkerScreenScale = null;
+      let imageActivationToken = 0;
       let projectDirty = false;
       let autosaveInProgress = false;
+      let autosaveMutationCounter = 0;
       let pendingRecoveryResolver = null;
       const MIN_ZOOM_LEVEL = 1;
       const MAX_ZOOM_LEVEL = 12;
@@ -1469,12 +1470,6 @@
         });
       }
 
-      function dataUrlToFile(dataUrl, name = 'imagine.png') {
-        return fetch(dataUrl)
-          .then((response) => response.blob())
-          .then((blob) => new File([blob], name, { type: blob.type || 'image/png' }));
-      }
-
       function normalizeProjectName(value) {
         const text = String(value ?? '').replace(/\.json$/i, '').trim();
         return text || 'Proiect nou';
@@ -1629,11 +1624,19 @@
         }
 
         autosaveInProgress = true;
+        const saveSnapshotCounter = autosaveMutationCounter;
         window.clearTimeout(autosaveStatusTimer);
         showAutosaveStatus('🟡 Se salvează...');
         try {
           await saveLastWork();
-          markProjectClean();
+          if (autosaveMutationCounter === saveSnapshotCounter) {
+            markProjectClean();
+          } else {
+            projectDirty = true;
+            saveTimer = window.setTimeout(() => {
+              flushAutosave();
+            }, AUTOSAVE_DEBOUNCE_MS);
+          }
           showAutosaveStatus('🟢 Salvat automat');
           autosaveStatusTimer = window.setTimeout(() => {
             hideAutosaveStatus();
@@ -1645,6 +1648,7 @@
 
       function scheduleSave() {
         window.clearTimeout(saveTimer);
+        autosaveMutationCounter += 1;
         projectDirty = true;
         saveTimer = window.setTimeout(() => {
           flushAutosave();
@@ -2207,11 +2211,13 @@
         }
         if (event.pointerType === 'mouse' && event.button !== undefined && event.button !== 0) return;
         event.preventDefault();
+        const startPoint = pointFromEvent(event);
+        if (!startPoint) return;
         canvas.setPointerCapture(event.pointerId);
         activeDrawingPointerId = event.pointerId;
         isDrawing = true;
         activeStroke = {
-          points: [pointFromEvent(event)],
+          points: [startPoint],
           color: brushColor,
           size: brushSize,
           eraser: isErasing
@@ -2225,8 +2231,10 @@
         event.preventDefault();
         const coalesced = typeof event.getCoalescedEvents === 'function' ? event.getCoalescedEvents() : [event];
         coalesced.forEach((pointerEvent) => {
+          const nextPoint = pointFromEvent(pointerEvent);
+          if (!nextPoint) return;
           const previousIndex = activeStroke.points.length - 1;
-          activeStroke.points.push(pointFromEvent(pointerEvent));
+          activeStroke.points.push(nextPoint);
           drawStrokeSegment(activeStroke, previousIndex);
         });
       }
@@ -2399,14 +2407,6 @@
         if (!fullscreenDrawingToolbar || !fullscreenToolbarToggle) return;
         if (fullscreenDrawingToolbar.contains(event.target) || fullscreenToolbarToggle.contains(event.target)) return;
         setFloatingToolbarOpen(false);
-      }
-
-      function escapeHtml(value) {
-        return String(value)
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;');
       }
 
       function renderNoteList() {
@@ -3015,7 +3015,6 @@
 
       function resetInteractionState() {
         activeStroke = null;
-        activePencilStroke = null;
         isDrawing = false;
         isDraggingNote = false;
         isPanning = false;
@@ -3187,7 +3186,6 @@
               panOffset.y = center.y - worldY * nextZoom;
               zoomLevel = nextZoom;
               updateImageTransform();
-              scheduleSave();
             }
             return;
           }
@@ -3198,10 +3196,10 @@
         panOffset.x = panOrigin.x + (event.clientX - panStart.x);
         panOffset.y = panOrigin.y + (event.clientY - panStart.y);
         updateImageTransform();
-        scheduleSave();
       }
 
       function handleStagePointerUp(event) {
+        const hadPanInteraction = isPanning || panning;
         if (event.pointerType === 'touch') {
           activeTouches.delete(event.pointerId);
           if (activeTouches.size < 2) {
@@ -3216,6 +3214,9 @@
         panning = false;
         panStart = null;
         panOrigin = null;
+        if (hadPanInteraction) {
+          scheduleSave();
+        }
       }
 
       function getPointerDistance(pointA, pointB) {
@@ -3244,6 +3245,9 @@
       }
 
       function resetCurrentProject({ persist = true } = {}) {
+        imageActivationToken += 1;
+        photo.onload = null;
+        photo.onerror = null;
         if (currentObjectUrl && currentObjectUrl.startsWith('blob:')) {
           URL.revokeObjectURL(currentObjectUrl);
         }
@@ -3255,7 +3259,6 @@
         imageBlob = null;
         currentObjectUrl = null;
         activeStroke = null;
-        activePencilStroke = null;
         strokes = [];
         interactiveNotes = [];
         projectImages = [];
@@ -3345,6 +3348,7 @@
       }
 
       async function activateImageAt(index, { persist = true } = {}) {
+        const activationToken = ++imageActivationToken;
         if (!projectImages.length) {
           resetCurrentProject({ persist });
           return;
@@ -3356,6 +3360,8 @@
         if (sourceImage && projectImages[previousIndex] && previousIndex !== targetIndex) {
           await saveCurrentImageState();
         }
+
+        if (activationToken !== imageActivationToken) return;
 
         activeImageIndex = targetIndex;
         const currentImage = projectImages[activeImageIndex];
@@ -3375,8 +3381,20 @@
           resetCurrentProject({ persist });
           return;
         }
-        currentObjectUrl = URL.createObjectURL(blob);
+        if (activationToken !== imageActivationToken) return;
+
+        const nextObjectUrl = URL.createObjectURL(blob);
+        if (activationToken !== imageActivationToken) {
+          URL.revokeObjectURL(nextObjectUrl);
+          return;
+        }
+
+        currentObjectUrl = nextObjectUrl;
         photo.onload = () => {
+          if (activationToken !== imageActivationToken) {
+            URL.revokeObjectURL(nextObjectUrl);
+            return;
+          }
           sourceImage = photo;
           imageBlob = blob;
           strokes = cloneProjectData(Array.isArray(currentImage.strokes) ? currentImage.strokes : []);
@@ -3411,6 +3429,10 @@
           }
         };
         photo.onerror = () => {
+          if (activationToken !== imageActivationToken) {
+            URL.revokeObjectURL(nextObjectUrl);
+            return;
+          }
           console.warn('Imaginea activă nu a putut fi afișată.');
           resetCurrentProject({ persist });
         };
@@ -3453,7 +3475,6 @@
 
       function clearCurrentImageData() {
         activeStroke = null;
-        activePencilStroke = null;
         redoStack = [];
         strokes = [];
         interactiveNotes = [];
@@ -3868,7 +3889,6 @@
         const note = interactiveNotes.find((item) => item.id === selectedNoteId);
         if (!note) return;
         note.content = noteContentTextarea.value;
-        renderNoteList();
         scheduleSave();
       });
       textModeButton.addEventListener('click', () => {
