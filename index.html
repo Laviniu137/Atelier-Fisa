@@ -30,8 +30,10 @@
     .app { max-width: 1380px; margin: 0 auto; padding: clamp(18px, 3vw, 42px); }
     header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 20px 18px 24px; border: 1px solid rgba(136, 119, 91, .16); border-radius: 20px; background: rgba(255, 254, 251, .76); box-shadow: 0 12px 32px rgba(63, 51, 35, .08); backdrop-filter: blur(10px); }
     .header-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
-    h1 { position: relative; margin: 0; padding-left: 16px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.38rem, 2.8vw, 2rem); font-weight: 600; letter-spacing: -.035em; color: #332d23; }
-    h1::before { position: absolute; left: 0; top: .16em; bottom: .16em; width: 4px; border-radius: 4px; background: #876c47; content: ""; }
+    .brand-block { position: relative; padding-left: 16px; min-width: 0; }
+    .brand-block::before { position: absolute; left: 0; top: .16em; bottom: .22em; width: 4px; border-radius: 4px; background: #876c47; content: ""; }
+    .brand-title { margin: 0; font-family: "Cormorant Garamond", "Times New Roman", Georgia, serif; font-size: clamp(2.5rem, 3.9vw, 3rem); line-height: 1; font-weight: 700; letter-spacing: .01em; color: #2f291f; }
+    .brand-subtitle { margin: 6px 0 0; font-family: "Avenir Next", "Segoe UI", sans-serif; font-size: clamp(1rem, 1.6vw, 1.1rem); font-weight: 550; letter-spacing: .06em; color: #7a7267; text-transform: none; }
     #addImage, #save { border-color: #4b4133; background: #4b4133; color: #fffdfa; box-shadow: 0 7px 16px rgba(50, 41, 29, .18); }
     #addImage:hover:not(:disabled), #save:hover:not(:disabled) { border-color: #342c22; background: #342c22; }
     .layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(360px, .8fr); gap: clamp(20px, 2.5vw, 34px); padding-top: clamp(20px, 3vw, 32px); align-items: stretch; }
@@ -662,6 +664,8 @@
     @media (orientation: portrait), (max-width: 800px) {
       .app { padding: 16px; }
       header { align-items: stretch; flex-direction: column; padding: 18px; }
+      .brand-title { font-size: clamp(2.15rem, 8.5vw, 2.7rem); }
+      .brand-subtitle { font-size: clamp(.95rem, 3.6vw, 1.06rem); }
       #addImage { width: 100%; }
       .layout { grid-template-columns: 1fr; gap: 20px; padding-top: 20px; }
       .canvas-shell { min-height: min(58vh, 580px); }
@@ -671,7 +675,8 @@
     @media (max-width: 520px) {
       .toolbar { grid-template-columns: 1fr; }
       .canvas-shell { min-height: 310px; }
-      h1 { font-size: 1.4rem; }
+      .brand-title { font-size: clamp(2rem, 11vw, 2.45rem); }
+      .brand-subtitle { font-size: clamp(.92rem, 4.2vw, 1rem); }
       .header-actions { width: 100%; }
       .header-actions button { flex: 1 1 auto; }
     }
@@ -709,7 +714,10 @@
   <div id="fullscreenOverlay" class="fullscreen-overlay" hidden></div>
   <main class="app">
     <header>
-      <h1>Notițe interactive pe imagine</h1>
+      <div class="brand-block" aria-label="La-Tâmplar Mobilă la comandă">
+        <h1 class="brand-title">La-Tâmplar</h1>
+        <p class="brand-subtitle">Mobilă la comandă</p>
+      </div>
       <div class="header-actions">
         <button type="button" id="loadProject"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg><span>Încarcă proiect</span></button>
         <button type="button" id="addImage"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="M7 8l5-5 5 5"></path><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"></path></svg><span>Adaugă imagine</span></button>
