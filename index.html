@@ -146,6 +146,16 @@
     .note-list { display: grid; gap: 10px; margin-bottom: 14px; }
     .note-list-item { width: 100%; border: 1px solid #e3ddd3; border-radius: 14px; padding: 12px 13px; background: #fdfcf9; text-align: left; color: #322c23; box-shadow: inset 0 1px 0 rgba(255,255,255,.4); cursor: pointer; }
     .note-list-item.selected { border-color: #8b5e3c; background: #fbf2e8; }
+    .note-list-title-row { display: flex; align-items: center; gap: 8px; min-height: 32px; }
+    .note-list-index {
+      min-width: 2ch;
+      color: #7a705f;
+      font-size: .92rem;
+      font-weight: 800;
+      letter-spacing: .01em;
+      text-align: right;
+      user-select: none;
+    }
     .note-list-name { display: block; width: 100%; min-height: 32px; padding: 4px 8px; border: 1px solid transparent; border-radius: 8px; background: transparent; font-size: .95rem; font-weight: 700; color: #2f2922; outline: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; appearance: none; -webkit-appearance: none; }
     .note-list-name:focus { outline: none; border-color: #8b5e3c; background: #fffdf9; }
     .note-list-item.selected .note-list-name { color: #5b3a22; }
@@ -2169,11 +2179,18 @@
           noteList.appendChild(empty);
           return;
         }
-        interactiveNotes.forEach((note) => {
+        interactiveNotes.forEach((note, index) => {
           const item = document.createElement('div');
           item.className = `note-list-item${selectedNoteId === note.id ? ' selected' : ''}`;
           item.dataset.noteId = note.id;
           item.addEventListener('click', () => selectNote(note.id));
+
+          const titleRow = document.createElement('div');
+          titleRow.className = 'note-list-title-row';
+
+          const noteIndex = document.createElement('span');
+          noteIndex.className = 'note-list-index';
+          noteIndex.textContent = `${index + 1}.`;
 
           const nameField = document.createElement('input');
           nameField.type = 'text';
@@ -2186,7 +2203,7 @@
           nameField.readOnly = false;
           nameField.disabled = false;
           nameField.setAttribute('spellcheck', 'false');
-          nameField.setAttribute('aria-label', `Nume notă ${getNoteDisplayName(note)}`);
+          nameField.setAttribute('aria-label', `Nota ${index + 1} ${getNoteDisplayName(note)}`);
           nameField.addEventListener('pointerdown', (event) => {
             event.stopPropagation();
           });
@@ -2220,7 +2237,9 @@
             scheduleSave();
           });
 
-          item.appendChild(nameField);
+          titleRow.appendChild(noteIndex);
+          titleRow.appendChild(nameField);
+          item.appendChild(titleRow);
           noteList.appendChild(item);
         });
       }
