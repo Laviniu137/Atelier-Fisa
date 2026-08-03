@@ -1342,6 +1342,24 @@
         };
       }
 
+      function isValidProjectImageEntry(image) {
+        return Boolean(image && typeof image.dataUrl === 'string' && image.dataUrl.trim());
+      }
+
+      function sanitizeProjectImagesCollection() {
+        if (!Array.isArray(projectImages)) {
+          projectImages = [];
+          activeImageIndex = 0;
+          return;
+        }
+        projectImages = projectImages.filter(isValidProjectImageEntry);
+        if (!projectImages.length) {
+          activeImageIndex = 0;
+          return;
+        }
+        activeImageIndex = clamp(activeImageIndex, 0, projectImages.length - 1);
+      }
+
       function showAutosaveStatus(message) {
         if (!autosaveIndicator) return;
         autosaveIndicator.hidden = false;
@@ -1529,6 +1547,7 @@
       }
 
       async function buildProjectPayload() {
+        sanitizeProjectImagesCollection();
         await saveCurrentImageState();
         const payload = {
           version: projectVersion,
@@ -1746,6 +1765,7 @@
             eraser: false
           }
         }));
+        sanitizeProjectImagesCollection();
         if (!projectImages.length) {
           resetCurrentProject({ persist: false });
           return;
@@ -1800,15 +1820,9 @@
 
       function renderImageThumbnails() {
         if (!thumbnailStrip) return;
+        sanitizeProjectImagesCollection();
         thumbnailStrip.innerHTML = '';
-
-        if (!projectImages.length) {
-          const placeholder = document.createElement('div');
-          placeholder.className = 'image-thumb';
-          placeholder.innerHTML = '<img alt="" style="opacity:.2; object-fit:cover;" src="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22 viewBox=%220 0 80 80%22%3E%3Crect width=%2280%22 height=%2280%22 fill=%22%23efe7dc%22/%3E%3Cpath d=%22M20 50l12-12 10 10 18-22 12 20v14H20z%22 fill=%22%23d3c5b5%22/%3E%3C/svg%3E">';
-          thumbnailStrip.appendChild(placeholder);
-          return;
-        }
+        if (!projectImages.length) return;
 
         projectImages.forEach((image, index) => {
           const button = document.createElement('button');
@@ -3325,6 +3339,11 @@
       }
 
       function confirmRemoveImage() {
+        sanitizeProjectImagesCollection();
+        if (!projectImages.length) {
+          resetCurrentProject();
+          return;
+        }
         if (projectImages.length > 1) {
           projectImages.splice(activeImageIndex, 1);
           activeImageIndex = clamp(activeImageIndex, 0, Math.max(projectImages.length - 1, 0));
@@ -3349,6 +3368,7 @@
 
       async function activateImageAt(index, { persist = true } = {}) {
         const activationToken = ++imageActivationToken;
+        sanitizeProjectImagesCollection();
         if (!projectImages.length) {
           resetCurrentProject({ persist });
           return;
@@ -3467,6 +3487,7 @@
             }
           };
           projectImages.push(imageEntry);
+          sanitizeProjectImagesCollection();
           activeImageIndex = projectImages.length - 1;
           await activateImageAt(activeImageIndex, { persist: shouldPersist });
           resolve();
