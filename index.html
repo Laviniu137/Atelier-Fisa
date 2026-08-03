@@ -51,8 +51,8 @@
     .note-marker:active { cursor: grabbing; }
     .note-marker.selected { background: linear-gradient(140deg, #2f6f51, #1f4e3d); transform: translate(-50%, -50%) scale(calc(var(--note-marker-screen-scale, 1) * 1.03)); }
     .empty { max-width: 290px; padding: 28px; color: #7c7265; text-align: center; font-size: .95rem; line-height: 1.6; }
-    .toolbar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
-    .toolbar button { width: 100%; padding-inline: 12px; }
+    .toolbar { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin-top: 18px; }
+    .toolbar button { width: 100%; max-width: 420px; margin-inline: auto; padding-inline: 16px; }
     .fullscreen-inline { display: flex; gap: 10px; margin: 12px 0 8px; flex-wrap: wrap; }
     .fullscreen-inline button { flex: 1; min-height: 44px; }
     .image-gallery { display: flex; align-items: center; gap: 10px; margin-top: 14px; padding-top: 4px; }
@@ -67,7 +67,6 @@
     .mode-switcher { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 12px 0 8px; }
     .mode-switcher button { width: 100%; min-height: 44px; }
     .mode-switcher button.active { border-color: #8b5e3c; background: #fbf2e8; color: #5a3a22; }
-    #clear { background: #f5f0e8; }
     .notes { display: flex; flex-direction: column; min-height: 0; padding: clamp(18px, 2.3vw, 25px); }
     .notes-toolbar { display: flex; gap: 10px; margin-bottom: 12px; }
     .notes-toolbar button { flex: 1; min-height: 44px; }
@@ -670,10 +669,8 @@
       .layout { grid-template-columns: 1fr; gap: 20px; padding-top: 20px; }
       .canvas-shell { min-height: min(58vh, 580px); }
       #notes { min-height: 300px; }
-      .toolbar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     }
     @media (max-width: 520px) {
-      .toolbar { grid-template-columns: 1fr; }
       .canvas-shell { min-height: 310px; }
       .brand-title { font-size: clamp(2rem, 11vw, 2.45rem); }
       .brand-subtitle { font-size: clamp(.92rem, 4.2vw, 1rem); }
@@ -803,9 +800,7 @@
             </div>
           </div>
         </div>
-        <div class="toolbar" aria-label="Instrumente desen">
-          <button type="button" id="undo" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10a6 6 0 0 1 6 6v1"></path></svg><span>Înapoi</span></button>
-          <button type="button" id="clear" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg><span>Șterge tot</span></button>
+        <div class="toolbar" aria-label="Acțiune principală">
           <button type="button" id="save" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg><span>Salvează</span></button>
         </div>
         <p class="help">Selectează modul Desen pentru a utiliza Apple Pencil sau degetul pe imagine. În modul Note poți muta marcatorii și edita textul.</p>
@@ -1412,8 +1407,12 @@
 
       function setControls() {
         const ready = Boolean(sourceImage);
-        undo.disabled = !ready || strokes.length === 0 || activeTool !== 'draw';
-        clear.disabled = !ready || strokes.length === 0 || activeTool !== 'draw';
+        if (undo) {
+          undo.disabled = !ready || strokes.length === 0 || activeTool !== 'draw';
+        }
+        if (clear) {
+          clear.disabled = !ready || strokes.length === 0 || activeTool !== 'draw';
+        }
         save.disabled = !ready;
         fullscreenButton.disabled = !ready;
         removeImageButton.disabled = !ready;
@@ -3122,8 +3121,12 @@
       });
       drawModeButton.addEventListener('click', () => setActiveTool('draw'));
       notesModeButton.addEventListener('click', () => setActiveTool('notes'));
-      undo.addEventListener('click', undoLastLine);
-      clear.addEventListener('click', openClearAllDialog);
+      if (undo) {
+        undo.addEventListener('click', undoLastLine);
+      }
+      if (clear) {
+        clear.addEventListener('click', openClearAllDialog);
+      }
       save.addEventListener('click', saveProject);
       cancelClearAllButton.addEventListener('click', closeClearAllDialog);
       confirmClearAllButton.addEventListener('click', () => {
