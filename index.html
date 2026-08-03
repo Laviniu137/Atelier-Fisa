@@ -45,9 +45,9 @@
     #drawingCanvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
     .note-layer { position: absolute; inset: 0; pointer-events: none; }
     .image-stage { touch-action: none; }
-    .note-marker { position: absolute; display: grid; place-items: center; width: 31px; height: 31px; transform: translate(-50%, -50%); border: 0; border-radius: 999px; background: linear-gradient(140deg, #8b5e3c, #6a3d22); color: #fffdfa; font-weight: 800; font-size: .78rem; box-shadow: 0 6px 14px rgba(61, 39, 23, .22); cursor: grab; pointer-events: auto; touch-action: none; -webkit-tap-highlight-color: transparent; }
+    .note-marker { position: absolute; display: grid; place-items: center; width: 31px; height: 31px; transform: translate(-50%, -50%) scale(var(--note-marker-screen-scale, 1)); transform-origin: center; border: 0; border-radius: 999px; background: linear-gradient(140deg, #8b5e3c, #6a3d22); color: #fffdfa; font-weight: 800; font-size: .78rem; box-shadow: 0 6px 14px rgba(61, 39, 23, .22); cursor: grab; pointer-events: auto; touch-action: none; -webkit-tap-highlight-color: transparent; }
     .note-marker:active { cursor: grabbing; }
-    .note-marker.selected { background: linear-gradient(140deg, #2f6f51, #1f4e3d); transform: translate(-50%, -50%) scale(1.03); }
+    .note-marker.selected { background: linear-gradient(140deg, #2f6f51, #1f4e3d); transform: translate(-50%, -50%) scale(calc(var(--note-marker-screen-scale, 1) * 1.03)); }
     .empty { max-width: 290px; padding: 28px; color: #7c7265; text-align: center; font-size: .95rem; line-height: 1.6; }
     .toolbar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
     .toolbar button { width: 100%; padding-inline: 12px; }
@@ -1001,6 +1001,10 @@
       let floatingToolbarMoved = false;
       let ignoreToolbarToggleClick = false;
       let suppressPencilContextMenu = false;
+      let pendingTransformFrame = null;
+      const MIN_ZOOM_LEVEL = 1;
+      const MAX_ZOOM_LEVEL = 12;
+      const DOUBLE_TAP_ZOOM_LEVEL = 4;
       const databaseName = 'fisa-atelier-offline';
       const databaseStore = 'lucrari';
       const projectVersion = 2;
@@ -1300,18 +1304,23 @@
       }
 
       function updateImageTransform() {
-        if (!sourceImage) {
-          stage.style.transform = '';
-          stage.style.transformOrigin = '0 0';
-          return;
-        }
-        if (!fullscreenMode) {
-          stage.style.transform = '';
-          stage.style.transformOrigin = '0 0';
-          return;
-        }
-        stage.style.transform = `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`;
-        stage.style.transformOrigin = '0 0';
+        if (pendingTransformFrame !== null) return;
+        pendingTransformFrame = window.requestAnimationFrame(() => {
+          pendingTransformFrame = null;
+          if (!sourceImage || !fullscreenMode) {
+            stage.style.transform = '';
+            stage.style.transformOrigin = '0 0';
+          } else {
+            stage.style.transform = `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`;
+            stage.style.transformOrigin = '0 0';
+          }
+          const markerScale = fullscreenMode ? (1 / Math.max(zoomLevel, 1)) : 1;
+          if (noteLayer) {
+            noteLayer.querySelectorAll('.note-marker').forEach((marker) => {
+              marker.style.setProperty('--note-marker-screen-scale', String(markerScale));
+            });
+          }
+        });
       }
 
       async function applyProjectState(project) {
@@ -1451,18 +1460,27 @@
       }
 
       function configureCanvas() {
-        const rect = photo.getBoundingClientRect();
-        if (!rect.width || !rect.height) return;
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        if (!width || !height) return;
         const ratio = Math.min(window.devicePixelRatio || 1, 2);
-        canvas.width = Math.round(rect.width * ratio);
-        canvas.height = Math.round(rect.height * ratio);
+        canvas.width = Math.round(width * ratio);
+        canvas.height = Math.round(height * ratio);
         ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
         redraw();
       }
 
+      function getCanvasDrawSize() {
+        return {
+          width: canvas.clientWidth || canvas.width || 0,
+          height: canvas.clientHeight || canvas.height || 0
+        };
+      }
+
       function drawStroke(stroke) {
         if (!stroke || stroke.points.length === 0) return;
-        const rect = photo.getBoundingClientRect();
+        const size = getCanvasDrawSize();
+        if (!size.width || !size.height) return;
         const strokeColor = typeof stroke.color === 'string' ? stroke.color : brushColor;
         const strokeSize = typeof stroke.size === 'number' ? stroke.size : brushSize;
         const isErasingStroke = Boolean(stroke.eraser);
@@ -1475,23 +1493,48 @@
         ctx.globalCompositeOperation = isErasingStroke ? 'destination-out' : 'source-over';
         ctx.beginPath();
         const first = stroke.points[0];
-        ctx.moveTo(first.x * rect.width, first.y * rect.height);
+        ctx.moveTo(first.x * size.width, first.y * size.height);
         if (stroke.points.length === 1) {
-          ctx.arc(first.x * rect.width, first.y * rect.height, Math.max(1, strokeSize / 2), 0, Math.PI * 2);
+          ctx.arc(first.x * size.width, first.y * size.height, Math.max(1, strokeSize / 2), 0, Math.PI * 2);
           ctx.fill();
         } else {
           for (let index = 1; index < stroke.points.length; index += 1) {
             const point = stroke.points[index];
-            ctx.lineTo(point.x * rect.width, point.y * rect.height);
+            ctx.lineTo(point.x * size.width, point.y * size.height);
           }
           ctx.stroke();
         }
         ctx.restore();
       }
 
+      function drawStrokeSegment(stroke, fromIndex) {
+        if (!stroke || !Array.isArray(stroke.points) || stroke.points.length < 2) return;
+        const size = getCanvasDrawSize();
+        if (!size.width || !size.height) return;
+        const safeFrom = clamp(fromIndex, 0, stroke.points.length - 2);
+        const strokeColor = typeof stroke.color === 'string' ? stroke.color : brushColor;
+        const strokeSize = typeof stroke.size === 'number' ? stroke.size : brushSize;
+        const isErasingStroke = Boolean(stroke.eraser);
+        ctx.save();
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = strokeSize;
+        ctx.strokeStyle = isErasingStroke ? 'rgba(0,0,0,1)' : strokeColor;
+        ctx.globalCompositeOperation = isErasingStroke ? 'destination-out' : 'source-over';
+        ctx.beginPath();
+        const startPoint = stroke.points[safeFrom];
+        ctx.moveTo(startPoint.x * size.width, startPoint.y * size.height);
+        for (let index = safeFrom + 1; index < stroke.points.length; index += 1) {
+          const point = stroke.points[index];
+          ctx.lineTo(point.x * size.width, point.y * size.height);
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+
       function redraw() {
-        const rect = photo.getBoundingClientRect();
-        ctx.clearRect(0, 0, rect.width, rect.height);
+        const size = getCanvasDrawSize();
+        ctx.clearRect(0, 0, size.width, size.height);
         strokes.forEach(drawStroke);
         if (activeStroke) drawStroke(activeStroke);
       }
@@ -1522,6 +1565,8 @@
       }
 
       function pointFromEvent(event) {
+        const point = clientPointToImageCoordinates(event.clientX, event.clientY);
+        if (point) return point;
         const rect = canvas.getBoundingClientRect();
         return {
           x: Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width)),
@@ -1529,8 +1574,65 @@
         };
       }
 
+      function zoomAroundClientPoint(clientX, clientY, nextZoom) {
+        const rect = stage.getBoundingClientRect();
+        const targetZoom = clamp(nextZoom, MIN_ZOOM_LEVEL, MAX_ZOOM_LEVEL);
+        const pointerX = clientX - rect.left;
+        const pointerY = clientY - rect.top;
+        const baseX = (pointerX - panOffset.x) / zoomLevel;
+        const baseY = (pointerY - panOffset.y) / zoomLevel;
+        panOffset.x = pointerX - baseX * targetZoom;
+        panOffset.y = pointerY - baseY * targetZoom;
+        zoomLevel = targetZoom;
+        updateImageTransform();
+      }
+
+      function toggleDoubleTapZoom(clientX, clientY) {
+        if (zoomLevel <= MIN_ZOOM_LEVEL + 0.01) {
+          zoomAroundClientPoint(clientX, clientY, DOUBLE_TAP_ZOOM_LEVEL);
+        } else {
+          zoomLevel = MIN_ZOOM_LEVEL;
+          panOffset = { x: 0, y: 0 };
+          updateImageTransform();
+        }
+        scheduleSave();
+      }
+
+      function registerTouchPointer(event) {
+        const touchPoint = { x: event.clientX, y: event.clientY };
+        activeTouches.set(event.pointerId, touchPoint);
+        if (activeTouches.size === 1) {
+          const now = Date.now();
+          const isDoubleTap = lastTapPoint && now - lastTapTime < 280 && Math.hypot(touchPoint.x - lastTapPoint.x, touchPoint.y - lastTapPoint.y) < 28;
+          if (isDoubleTap) {
+            lastTapTime = 0;
+            lastTapPoint = null;
+            toggleDoubleTapZoom(touchPoint.x, touchPoint.y);
+            return;
+          }
+          lastTapTime = now;
+          lastTapPoint = touchPoint;
+          return;
+        }
+        if (activeTouches.size >= 2) {
+          const points = Array.from(activeTouches.values());
+          pinchStartDistance = Math.max(8, getPointerDistance(points[0], points[1]));
+          pinchStartZoom = zoomLevel;
+          pinchCenter = getPointerMidpoint(points[0], points[1]);
+          panOrigin = { ...panOffset };
+          isPanning = false;
+          panning = false;
+        }
+      }
+
       function beginDrawing(event) {
         if (!sourceImage || activeTool !== 'draw' || event.altKey) return;
+        if (event.pointerType === 'touch') {
+          if (!fullscreenMode) return;
+          event.preventDefault();
+          registerTouchPointer(event);
+          return;
+        }
         if (event.pointerType === 'mouse' && event.button !== undefined && event.button !== 0) return;
         event.preventDefault();
         canvas.setPointerCapture(event.pointerId);
@@ -1542,18 +1644,33 @@
           size: brushSize,
           eraser: isErasing
         };
-        redraw();
+        drawStroke(activeStroke);
       }
 
       function continueDrawing(event) {
-        if (!activeStroke) return;
+        if (event.pointerType === 'touch' && activeTouches.has(event.pointerId)) return;
+        if (!activeStroke || event.pointerId !== activeDrawingPointerId) return;
         event.preventDefault();
-        activeStroke.points.push(pointFromEvent(event));
-        redraw();
+        const coalesced = typeof event.getCoalescedEvents === 'function' ? event.getCoalescedEvents() : [event];
+        coalesced.forEach((pointerEvent) => {
+          const previousIndex = activeStroke.points.length - 1;
+          activeStroke.points.push(pointFromEvent(pointerEvent));
+          drawStrokeSegment(activeStroke, previousIndex);
+        });
       }
 
       function finishDrawing(event) {
-        if (!activeStroke) return;
+        if (event.pointerType === 'touch') {
+          activeTouches.delete(event.pointerId);
+          if (activeTouches.size < 2) {
+            pinchStartDistance = 0;
+            pinchStartZoom = zoomLevel;
+            pinchCenter = null;
+            panOrigin = { ...panOffset };
+          }
+          return;
+        }
+        if (!activeStroke || (event.pointerId !== undefined && event.pointerId !== activeDrawingPointerId)) return;
         event.preventDefault();
         releasePointerCapture(canvas, event.pointerId ?? activeDrawingPointerId);
         activeDrawingPointerId = null;
@@ -1561,7 +1678,6 @@
         strokes.push(activeStroke);
         redoStack = [];
         activeStroke = null;
-        redraw();
         setControls();
         syncBrushControls();
         saveLastWork();
@@ -2098,6 +2214,7 @@
         const topPx = frame.imageOffsetY + clamp(note.y, 0, 1) * frame.photoRect.height;
         marker.style.left = `${(leftPx / frame.stageRect.width) * 100}%`;
         marker.style.top = `${(topPx / frame.stageRect.height) * 100}%`;
+        marker.style.setProperty('--note-marker-screen-scale', String(1 / Math.max(zoomLevel, 1)));
       }
 
       function findNoteMarkerById(noteId) {
@@ -2371,7 +2488,7 @@
       }
 
       function resetZoomAndPan() {
-        zoomLevel = 1;
+        zoomLevel = MIN_ZOOM_LEVEL;
         panOffset = { x: 0, y: 0 };
         updateImageTransform();
         scheduleSave();
@@ -2381,32 +2498,9 @@
         if (!sourceImage) return;
         if (event.target === canvas) return;
         if (event.pointerType === 'touch') {
-          const touchPoint = { x: event.clientX, y: event.clientY };
-          activeTouches.set(event.pointerId, touchPoint);
-          if (activeTouches.size === 1 && fullscreenMode) {
-            const now = Date.now();
-            const isDoubleTap = lastTapPoint && now - lastTapTime < 280 && Math.hypot(touchPoint.x - lastTapPoint.x, touchPoint.y - lastTapPoint.y) < 28;
-            if (isDoubleTap) {
-              lastTapTime = 0;
-              lastTapPoint = null;
-              resetZoomAndPan();
-              return;
-            }
-            lastTapTime = now;
-            lastTapPoint = touchPoint;
-            event.preventDefault();
-            isPanning = true;
-            panning = true;
-            panStart = { x: event.clientX, y: event.clientY };
-            panOrigin = { ...panOffset };
-          } else if (activeTouches.size === 2) {
-            const points = Array.from(activeTouches.values());
-            pinchStartDistance = getPointerDistance(points[0], points[1]);
-            pinchStartZoom = zoomLevel;
-            pinchCenter = getPointerMidpoint(points[0], points[1]);
-            isPanning = false;
-            panning = false;
-          }
+          if (!fullscreenMode) return;
+          event.preventDefault();
+          registerTouchPointer(event);
           return;
         }
         if (!fullscreenMode && !event.altKey) return;
@@ -2426,23 +2520,18 @@
             const distance = getPointerDistance(points[0], points[1]);
             if (pinchStartDistance > 0) {
               event.preventDefault();
-              const nextZoom = clamp(pinchStartZoom * (distance / pinchStartDistance), 0.6, 3);
               const center = getPointerMidpoint(points[0], points[1]);
-              const zoomRatio = nextZoom / zoomLevel;
-              panOffset.x = (panOffset.x - center.x) * zoomRatio + center.x;
-              panOffset.y = (panOffset.y - center.y) * zoomRatio + center.y;
+              const nextZoom = clamp(pinchStartZoom * (distance / pinchStartDistance), MIN_ZOOM_LEVEL, MAX_ZOOM_LEVEL);
+              const worldX = (pinchCenter.x - panOrigin.x) / pinchStartZoom;
+              const worldY = (pinchCenter.y - panOrigin.y) / pinchStartZoom;
+              panOffset.x = center.x - worldX * nextZoom;
+              panOffset.y = center.y - worldY * nextZoom;
               zoomLevel = nextZoom;
               updateImageTransform();
               scheduleSave();
             }
             return;
           }
-          if (!isPanning && !panning) return;
-          event.preventDefault();
-          panOffset.x = panOrigin.x + (event.clientX - panStart.x);
-          panOffset.y = panOrigin.y + (event.clientY - panStart.y);
-          updateImageTransform();
-          scheduleSave();
           return;
         }
         if (!isPanning && !panning) return;
@@ -2460,6 +2549,7 @@
             pinchStartDistance = 0;
             pinchStartZoom = zoomLevel;
             pinchCenter = null;
+            panOrigin = { ...panOffset };
           }
         }
         if (!isPanning && !panning) return;
@@ -2486,7 +2576,7 @@
         const baseX = (pointerX - panOffset.x) / zoomLevel;
         const baseY = (pointerY - panOffset.y) / zoomLevel;
         const scaleFactor = event.deltaY < 0 ? 1.08 : 0.92;
-        const nextZoom = clamp(zoomLevel * scaleFactor, 0.6, 3);
+        const nextZoom = clamp(zoomLevel * scaleFactor, MIN_ZOOM_LEVEL, MAX_ZOOM_LEVEL);
         panOffset.x = pointerX - baseX * nextZoom;
         panOffset.y = pointerY - baseY * nextZoom;
         zoomLevel = nextZoom;
