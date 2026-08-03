@@ -1456,6 +1456,7 @@
       }
 
       function configureCanvas() {
+        syncCanvasViewportToPhoto();
         const width = canvas.clientWidth;
         const height = canvas.clientHeight;
         if (!width || !height) return;
@@ -1464,6 +1465,17 @@
         canvas.height = Math.round(height * ratio);
         ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
         redraw();
+      }
+
+      function syncCanvasViewportToPhoto() {
+        if (!canvas || !photo || !sourceImage) return;
+        const width = photo.clientWidth;
+        const height = photo.clientHeight;
+        if (!width || !height) return;
+        canvas.style.left = `${photo.offsetLeft}px`;
+        canvas.style.top = `${photo.offsetTop}px`;
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
       }
 
       function getCanvasDrawSize() {
@@ -1560,7 +1572,20 @@
         }
       }
 
+      function pointFromCanvasEvent(eventLike) {
+        const rect = canvas.getBoundingClientRect();
+        if (!rect.width || !rect.height || !canvas.width || !canvas.height) return null;
+        const x = (eventLike.clientX - rect.left) * (canvas.width / rect.width);
+        const y = (eventLike.clientY - rect.top) * (canvas.height / rect.height);
+        return {
+          x: clamp(x / canvas.width, 0, 1),
+          y: clamp(y / canvas.height, 0, 1)
+        };
+      }
+
       function pointFromEvent(event) {
+        const canvasPoint = pointFromCanvasEvent(event);
+        if (canvasPoint) return canvasPoint;
         const point = clientPointToImageCoordinates(event.clientX, event.clientY);
         if (point) return point;
         const rect = canvas.getBoundingClientRect();
@@ -1867,14 +1892,12 @@
           }, { passive: true });
           nameField.addEventListener('click', (event) => {
             event.stopPropagation();
-            selectNote(note.id);
-            window.requestAnimationFrame(() => focusNoteNameInput(note.id, { selectText: true }));
+            selectNote(note.id, { renderList: false });
           });
           nameField.addEventListener('focus', (event) => {
             event.stopPropagation();
             if (selectedNoteId !== note.id) {
-              selectNote(note.id);
-              window.requestAnimationFrame(() => focusNoteNameInput(note.id, { selectText: true }));
+              selectNote(note.id, { renderList: false });
             }
           });
           nameField.addEventListener('input', () => {
@@ -1903,17 +1926,6 @@
         const name = typeof note?.name === 'string' ? note.name.trim() : '';
         if (name) return name;
         return 'Notă nouă';
-      }
-
-      function focusNoteNameInput(noteId, { selectText = false } = {}) {
-        if (!noteList || !noteId) return;
-        const input = noteList.querySelector(`.note-list-name[data-note-id="${noteId}"]`);
-        if (!(input instanceof HTMLInputElement)) return;
-        input.focus({ preventScroll: true });
-        if (selectText) {
-          const length = input.value.length;
-          input.setSelectionRange(0, length);
-        }
       }
 
       function syncSelectedNoteForm() {
@@ -2309,10 +2321,18 @@
         });
       }
 
-      function selectNote(noteId) {
+      function selectNote(noteId, options = {}) {
+        const { renderList = true } = options;
         selectedNoteId = noteId;
         renderNotes();
-        renderNoteList();
+        if (renderList) {
+          renderNoteList();
+        } else {
+          Array.from(noteList.querySelectorAll('.note-list-item')).forEach((item, index) => {
+            const note = interactiveNotes[index];
+            item.classList.toggle('selected', Boolean(note && note.id === selectedNoteId));
+          });
+        }
         syncSelectedNoteForm();
         setControls();
       }
