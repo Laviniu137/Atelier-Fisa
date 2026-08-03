@@ -1,0 +1,82 @@
+﻿{
+    "version":  2,
+    "updatedAt":  "2026-08-03T14:48:05.9532771+03:00",
+    "projectName":  "Fixture Load",
+    "images":  [
+                   {
+                       "id":  "img-1",
+                       "name":  "Imagine A",
+                       "type":  "image/png",
+                       "dataUrl":  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2XQAAAAASUVORK5CYII=",
+                       "strokes":  [
+
+                                   ],
+                       "notes":  [
+
+                                 ],
+                       "zoom":  1,
+                       "pan":  {
+                                   "x":  0,
+                                   "y":  0
+                               },
+                       "activeTool":  "draw",
+                       "selectedNoteId":  null,
+                       "selectedNoteMode":  "text",
+                       "drawSettings":  {
+                                            "color":  "#000000",
+                                            "size":  4,
+                                            "eraser":  false
+                                        }
+                   },
+                   {
+                       "id":  "img-2",
+                       "name":  "Imagine B",
+                       "type":  "image/png",
+                       "dataUrl":  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2XQAAAAASUVORK5CYII=",
+                       "strokes":  [
+
+                                   ],
+                       "notes":  [
+
+                                 ],
+                       "zoom":  1,
+                       "pan":  {
+                                   "x":  0,
+                                   "y":  0
+                               },
+                       "activeTool":  "draw",
+                       "selectedNoteId":  null,
+                       "selectedNoteMode":  "text",
+                       "drawSettings":  {
+                                            "color":  "#000000",
+                                            "size":  4,
+                                            "eraser":  false
+                                        }
+                   },
+                   {
+                       "id":  "img-3",
+                       "name":  "Imagine C",
+                       "type":  "image/png",
+                       "dataUrl":  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2XQAAAAASUVORK5CYII=",
+                       "strokes":  [
+
+                                   ],
+                       "notes":  [
+
+                                 ],
+                       "zoom":  1,
+                       "pan":  {
+                                   "x":  0,
+                                   "y":  0
+                               },
+                       "activeTool":  "draw",
+                       "selectedNoteId":  null,
+                       "selectedNoteMode":  "text",
+                       "drawSettings":  {
+                                            "color":  "#000000",
+                                            "size":  4,
+                                            "eraser":  false
+                                        }
+                   }
+               ]
+}
