@@ -370,6 +370,19 @@
     .save-dialog input { width: 100%; padding: 12px 13px; border: 1px solid #e2dbd1; border-radius: 12px; color: #322c23; background: linear-gradient(#fffefa, #fbf8f2); font-size: 15px; }
     .save-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
     .save-dialog-actions button { min-width: 130px; }
+    .unsaved-dialog {
+      width: min(460px, 100%);
+      padding: 20px 18px 16px;
+      border: 1px solid rgba(136, 119, 91, .22);
+      border-radius: 18px;
+      background: #fffdfb;
+      box-shadow: 0 24px 48px rgba(34, 27, 18, .28);
+    }
+    .unsaved-dialog h2 { margin: 0 0 10px; font-size: 1.2rem; color: #2d261f; }
+    .unsaved-dialog p { margin: 0; color: #4f4538; font-size: .95rem; line-height: 1.52; }
+    .unsaved-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+    .unsaved-dialog-actions button { min-width: 120px; }
+    #pencilUnsavedDialog { z-index: 2700; }
     .export-dialog {
       width: min(500px, 100%);
       padding: 20px 18px 16px;
@@ -822,6 +835,17 @@
       </div>
     </div>
   </div>
+  <div id="pencilUnsavedDialog" class="save-dialog-backdrop" hidden>
+    <div class="unsaved-dialog" role="dialog" aria-modal="true" aria-labelledby="pencilUnsavedDialogTitle" aria-describedby="pencilUnsavedDialogDescription">
+      <h2 id="pencilUnsavedDialogTitle">Ai modificări nesalvate.</h2>
+      <p id="pencilUnsavedDialogDescription">Dorești să salvezi înainte de închidere?</p>
+      <div class="unsaved-dialog-actions">
+        <button type="button" id="pencilUnsavedSave">Salvează</button>
+        <button type="button" id="pencilUnsavedDiscard">Nu salva</button>
+        <button type="button" id="pencilUnsavedCancel">Anulează</button>
+      </div>
+    </div>
+  </div>
   <div id="exportImageDialog" class="save-dialog-backdrop" hidden>
     <div class="export-dialog" role="dialog" aria-modal="true" aria-labelledby="exportImageDialogTitle">
       <h2 id="exportImageDialogTitle">Export imagine</h2>
@@ -1053,6 +1077,10 @@
       const loadProjectButton = document.getElementById('loadProject');
       const projectInput = document.getElementById('projectInput');
       const saveProjectDialog = document.getElementById('saveProjectDialog');
+      const pencilUnsavedDialog = document.getElementById('pencilUnsavedDialog');
+      const pencilUnsavedSaveButton = document.getElementById('pencilUnsavedSave');
+      const pencilUnsavedDiscardButton = document.getElementById('pencilUnsavedDiscard');
+      const pencilUnsavedCancelButton = document.getElementById('pencilUnsavedCancel');
       const exportImageDialog = document.getElementById('exportImageDialog');
       const projectNameInput = document.getElementById('projectNameInput');
       const cancelProjectSaveButton = document.getElementById('cancelProjectSave');
@@ -1177,6 +1205,7 @@
       let pencilEditorColor = '#2f2a24';
       let pencilEditorSize = 3;
       let pencilEditorEraser = false;
+      let pencilEditorBaselineSignature = '[]';
       let floatingToolbarOpen = false;
       let floatingToolbarPosition = { x: 22, y: 112 };
       let floatingToolbarDragging = false;
@@ -2427,6 +2456,38 @@
         }
       }
 
+      function getPencilEditorSignature(strokesCollection = pencilEditorStrokes) {
+        return JSON.stringify(strokesCollection);
+      }
+
+      function hasPencilEditorUnsavedChanges() {
+        if (!pencilEditorOpen) return false;
+        if (activePencilEditorStroke && Array.isArray(activePencilEditorStroke.points) && activePencilEditorStroke.points.length > 0) {
+          return true;
+        }
+        return getPencilEditorSignature() !== pencilEditorBaselineSignature;
+      }
+
+      function openPencilUnsavedDialog() {
+        pencilUnsavedDialog.hidden = false;
+        requestAnimationFrame(() => {
+          pencilUnsavedCancelButton.focus();
+        });
+      }
+
+      function closePencilUnsavedDialog() {
+        pencilUnsavedDialog.hidden = true;
+      }
+
+      function attemptPencilEditorCloseFromIndirectAction() {
+        if (!pencilEditorOpen) return;
+        if (!hasPencilEditorUnsavedChanges()) {
+          closePencilEditor({ saveChanges: false });
+          return;
+        }
+        openPencilUnsavedDialog();
+      }
+
       function pointFromPencilEditorEvent(event) {
         const rect = pencilEditorCanvas.getBoundingClientRect();
         return {
@@ -2481,6 +2542,7 @@
         dismissKeyboardAndSelection();
         pencilEditorTargetNoteId = note.id;
         pencilEditorStrokes = cloneHandwritingStrokes(note.handwriting || []);
+        pencilEditorBaselineSignature = getPencilEditorSignature(pencilEditorStrokes);
         pencilEditorRedoStack = [];
         activePencilEditorStroke = null;
         activePencilEditorPointerId = null;
@@ -2502,11 +2564,13 @@
           note.handwriting = cloneHandwritingStrokes(pencilEditorStrokes);
           scheduleSave();
         }
+        closePencilUnsavedDialog();
         pencilEditorOpen = false;
         pencilEditorOverlay.hidden = true;
         activePencilEditorStroke = null;
         activePencilEditorPointerId = null;
         pencilEditorTargetNoteId = null;
+        pencilEditorBaselineSignature = '[]';
         setPencilInteractionLock(selectedNoteMode === 'pencil');
         renderHandwritingPreview();
         syncBrushControls();
@@ -2516,7 +2580,7 @@
       function handlePencilEditorBackdropPointerDown(event) {
         if (!pencilEditorOpen) return;
         if (event.target !== pencilEditorOverlay) return;
-        closePencilEditor({ saveChanges: false });
+        event.preventDefault();
       }
 
       function setSelectedNoteMode(mode, options = {}) {
@@ -3408,9 +3472,14 @@
           closeDeleteNoteDialog();
           return;
         }
+        if (!pencilUnsavedDialog.hidden && event.key === 'Escape') {
+          event.preventDefault();
+          closePencilUnsavedDialog();
+          return;
+        }
         if (pencilEditorOpen && event.key === 'Escape') {
           event.preventDefault();
-          closePencilEditor({ saveChanges: false });
+          attemptPencilEditorCloseFromIndirectAction();
           return;
         }
         if (!fullscreenMode) return;
@@ -3625,6 +3694,13 @@
       });
       pencilEditorSaveButton.addEventListener('click', () => closePencilEditor({ saveChanges: true }));
       pencilEditorCancelButton.addEventListener('click', () => closePencilEditor({ saveChanges: false }));
+      pencilUnsavedSaveButton.addEventListener('click', () => closePencilEditor({ saveChanges: true }));
+      pencilUnsavedDiscardButton.addEventListener('click', () => closePencilEditor({ saveChanges: false }));
+      pencilUnsavedCancelButton.addEventListener('click', closePencilUnsavedDialog);
+      pencilUnsavedDialog.addEventListener('pointerdown', (event) => {
+        if (event.target !== pencilUnsavedDialog) return;
+        event.preventDefault();
+      });
       pencilEditorCanvas.addEventListener('pointerdown', beginPencilEditorStroke, { passive: false });
       pencilEditorCanvas.addEventListener('pointermove', continuePencilEditorStroke, { passive: false });
       pencilEditorCanvas.addEventListener('pointerup', finishPencilEditorStroke, { passive: false });
