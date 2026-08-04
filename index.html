@@ -32,92 +32,52 @@
       max-width: none;
       width: 100%;
       margin: 0 auto;
-      padding: clamp(20px, 2.8vw, 40px);
+      padding: clamp(16px, 2vw, 26px);
       display: grid;
-      gap: 18px;
+      gap: 10px;
     }
     .project-manager-header {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
-      gap: 26px;
-      align-items: start;
-      padding: clamp(40px, 4vw, 48px);
+      gap: 16px;
+      align-items: center;
+      padding: clamp(18px, 2vw, 24px);
       border: 1px solid rgba(163, 148, 124, .2);
       border-radius: 24px;
       background: #fcfaf6;
-      box-shadow: 0 14px 32px rgba(72, 57, 37, .08);
-    }
-    .project-manager-title-block {
-      min-width: 0;
-      display: grid;
-      gap: 12px;
-    }
-    .project-manager-title {
-      margin: 0;
-      font-family: "Cormorant Garamond", "Times New Roman", Georgia, serif;
-      font-size: clamp(2.35rem, 4.2vw, 3.2rem);
-      line-height: 1;
-      font-weight: 700;
-      color: #2f291f;
-    }
-    .project-manager-subtitle {
-      margin: 0;
-      color: #6f6454;
-      font-size: 1rem;
-      letter-spacing: .01em;
-      line-height: 1.5;
-      max-width: 720px;
+      box-shadow: 0 8px 18px rgba(72, 57, 37, .06);
     }
     .project-manager-brand {
       display: grid;
-      gap: 8px;
+      gap: 2px;
+      min-width: 0;
     }
     .project-manager-brand .brand-block {
       width: fit-content;
     }
-    .project-manager-stats {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-      max-width: 660px;
+    .project-manager-brand .brand-title {
+      font-size: clamp(2.1rem, 3.3vw, 2.9rem);
+      line-height: 1;
     }
-    .project-manager-stat-card {
-      border: 1px solid rgba(169, 151, 126, .24);
-      border-radius: 16px;
-      background: #fffdf9;
-      padding: 14px 14px 12px;
-      display: grid;
-      gap: 4px;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .85);
-    }
-    .project-manager-stat-value {
-      font-size: 1.22rem;
-      color: #332b20;
-      font-weight: 740;
-      letter-spacing: -.01em;
-      line-height: 1.2;
-    }
-    .project-manager-stat-label {
-      font-size: .8rem;
-      color: #756a59;
-      text-transform: none;
-      letter-spacing: .01em;
+    .project-manager-brand .brand-subtitle {
+      margin-top: 6px;
+      font-size: clamp(.96rem, 1.1vw, 1.08rem);
+      letter-spacing: .04em;
     }
     .project-manager-actions {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       align-items: center;
       justify-content: flex-end;
       flex-wrap: nowrap;
-      margin-top: 2px;
     }
     .project-manager-actions button {
-      min-height: 52px;
-      border-radius: 16px;
-      padding: 12px 18px;
-      font-size: .94rem;
+      min-height: 48px;
+      border-radius: 14px;
+      padding: 10px 16px;
+      font-size: .9rem;
       font-weight: 680;
-      box-shadow: 0 8px 18px rgba(68, 53, 33, .08);
+      box-shadow: 0 4px 12px rgba(68, 53, 33, .07);
       border-color: rgba(156, 140, 116, .32);
       background: linear-gradient(180deg, #ffffff, #f7f2e8);
       color: #42382d;
@@ -136,56 +96,15 @@
       border-color: rgba(97, 82, 63, .75);
       background: linear-gradient(180deg, #655646, #4f4134);
     }
-    .project-manager-controls {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .project-search-wrap,
-    .project-sort-wrap {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .project-search-wrap {
-      min-width: min(440px, 100%);
-      flex: 1 1 360px;
-      justify-content: flex-end;
-    }
-    #projectSearchInput,
-    #projectSortSelect {
-      height: 46px;
-      border: 1px solid #ddd2c0;
-      border-radius: 14px;
-      background: #fffdf9;
-      color: #3f3429;
-      font-size: .92rem;
-      padding: 0 14px;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8);
-    }
-    #projectSearchInput {
-      width: min(440px, 100%);
-    }
-    #projectSearchInput::placeholder {
-      color: #8a7d6b;
-    }
-    #projectSortSelect {
-      min-width: 210px;
-      padding-right: 34px;
-      appearance: none;
-      background-image: linear-gradient(45deg, transparent 50%, #7d6f5d 50%), linear-gradient(135deg, #7d6f5d 50%, transparent 50%);
-      background-position: calc(100% - 18px) calc(50% - 3px), calc(100% - 12px) calc(50% - 3px);
-      background-size: 6px 6px, 6px 6px;
-      background-repeat: no-repeat;
-    }
-    .project-sort-label,
-    .project-search-label {
-      color: #6b5f4f;
-      font-size: .82rem;
-      font-weight: 690;
-      letter-spacing: .02em;
+    .project-manager-page-title {
+      margin: 2px 0 0;
+      font-family: "Cormorant Garamond", "Times New Roman", Georgia, serif;
+      font-size: clamp(2rem, 2.8vw, 2.45rem);
+      line-height: 1.04;
+      font-weight: 700;
+      color: #2f291f;
+      letter-spacing: .005em;
+      padding: 0 2px;
     }
     .project-grid {
       display: grid;
@@ -1154,8 +1073,8 @@
       .project-manager-view { padding: 14px; gap: 14px; }
       .project-manager-header {
         grid-template-columns: 1fr;
-        padding: 24px;
-        gap: 18px;
+        padding: 14px;
+        gap: 10px;
       }
       .project-manager-actions {
         width: 100%;
@@ -1163,17 +1082,7 @@
       }
       .project-manager-actions button {
         flex: 1 1 auto;
-        min-height: 54px;
-      }
-      .project-manager-controls {
-        justify-content: stretch;
-      }
-      .project-search-wrap {
-        flex: 1 1 100%;
-        min-width: 100%;
-      }
-      #projectSearchInput {
-        width: 100%;
+        min-height: 50px;
       }
       .project-grid { grid-template-columns: 1fr; }
       header { align-items: stretch; flex-direction: column; padding: 18px; }
@@ -1186,7 +1095,6 @@
     }
     @media (max-width: 520px) {
       .toolbar { grid-template-columns: 1fr; }
-      .project-manager-stats { grid-template-columns: 1fr; }
       .canvas-shell { min-height: 310px; }
       .brand-title { font-size: clamp(2rem, 11vw, 2.45rem); }
       .brand-subtitle { font-size: clamp(.92rem, 4.2vw, 1rem); }
@@ -1194,14 +1102,6 @@
       .header-actions button { flex: 1 1 auto; }
       #removeImage { margin-left: 0; }
       .notes-toolbar { grid-template-columns: 1fr; }
-    }
-    @media (min-width: 768px) and (max-width: 1180px) {
-      .project-manager-stats {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-      .project-manager-actions button {
-        min-height: 56px;
-      }
     }
     .app-footer {
       margin-top: 12px;
@@ -1214,29 +1114,11 @@
 </head>
 <body>
   <main id="projectManagerView" class="project-manager-view">
-    <section class="project-manager-header" aria-labelledby="projectManagerTitle">
-      <div class="project-manager-title-block">
-        <div class="project-manager-brand">
-          <div class="brand-block" aria-label="La-Tâmplar Mobilă la comandă">
-            <h1 class="brand-title">La-Tâmplar</h1>
-            <p class="brand-subtitle">Mobilă la comandă</p>
-          </div>
-        </div>
-        <h2 id="projectManagerTitle" class="project-manager-title">Proiectele mele</h2>
-        <p class="project-manager-subtitle">Administrează toate proiectele tale într-un singur loc.</p>
-        <div class="project-manager-stats" aria-label="Statistici proiecte">
-          <article class="project-manager-stat-card">
-            <div id="projectStatProjects" class="project-manager-stat-value">0</div>
-            <div class="project-manager-stat-label">📁 Proiecte</div>
-          </article>
-          <article class="project-manager-stat-card">
-            <div id="projectStatImages" class="project-manager-stat-value">0</div>
-            <div class="project-manager-stat-label">📷 Imagini</div>
-          </article>
-          <article class="project-manager-stat-card">
-            <div id="projectStatNotes" class="project-manager-stat-value">0</div>
-            <div class="project-manager-stat-label">📝 Note</div>
-          </article>
+    <section class="project-manager-header" aria-label="Branding și acțiuni proiecte">
+      <div class="project-manager-brand">
+        <div class="brand-block" aria-label="La-Tâmplar Mobilă la comandă">
+          <h1 class="brand-title">La-Tâmplar</h1>
+          <p class="brand-subtitle">Mobilă la comandă</p>
         </div>
       </div>
       <div class="project-manager-actions">
@@ -1245,20 +1127,7 @@
       </div>
     </section>
     <section>
-      <div class="project-manager-controls" aria-label="Căutare și sortare proiecte">
-        <div class="project-search-wrap">
-          <span class="project-search-label">🔍</span>
-          <input id="projectSearchInput" type="search" placeholder="Caută proiect..." autocomplete="off">
-        </div>
-        <div class="project-sort-wrap">
-          <label class="project-sort-label" for="projectSortSelect">Sortare:</label>
-          <select id="projectSortSelect">
-            <option value="updatedAt" selected>Ultima modificare</option>
-            <option value="name">Nume A-Z</option>
-            <option value="createdAt">Data creare</option>
-          </select>
-        </div>
-      </div>
+      <h2 id="projectManagerTitle" class="project-manager-page-title">Proiectele mele</h2>
       <div id="projectCards" class="project-grid" aria-live="polite"></div>
       <div id="projectEmptyState" class="project-empty" hidden>
         Nu există proiecte încă. Creează un proiect nou sau importă un fișier existent.
@@ -1540,11 +1409,6 @@
       const projectManagerView = document.getElementById('projectManagerView');
       const projectCards = document.getElementById('projectCards');
       const projectEmptyState = document.getElementById('projectEmptyState');
-      const projectSearchInput = document.getElementById('projectSearchInput');
-      const projectSortSelect = document.getElementById('projectSortSelect');
-      const projectStatProjects = document.getElementById('projectStatProjects');
-      const projectStatImages = document.getElementById('projectStatImages');
-      const projectStatNotes = document.getElementById('projectStatNotes');
       const newProjectButton = document.getElementById('pmNewProject');
       const managerImportProjectButton = document.getElementById('pmImportProject');
       const appMain = document.querySelector('main.app');
@@ -1652,8 +1516,6 @@
       let activeProjectId = null;
       let pendingProjectNameAction = null;
       let pendingDeleteProjectId = null;
-      let managerSearchQuery = '';
-      let managerSortBy = 'updatedAt';
       let interactiveNotes = [];
       let selectedNoteId = null;
       let draggingNoteId = null;
@@ -2231,47 +2093,14 @@
 
       async function renderProjectCards() {
         const records = await readAllProjectRecords();
-
-        const totalProjects = records.length;
-        const totalImages = records.reduce((sum, record) => {
-          if (Number.isFinite(Number(record?.stats?.images))) {
-            return sum + Number(record.stats.images);
-          }
-          return sum + (Array.isArray(record?.payload?.images) ? record.payload.images.length : 0);
-        }, 0);
-        const totalNotes = records.reduce((sum, record) => {
-          if (Number.isFinite(Number(record?.stats?.notes))) {
-            return sum + Number(record.stats.notes);
-          }
-          return sum + countProjectNotes(Array.isArray(record?.payload?.images) ? record.payload.images : []);
-        }, 0);
-        projectStatProjects.textContent = String(totalProjects);
-        projectStatImages.textContent = String(totalImages);
-        projectStatNotes.textContent = String(totalNotes);
-
-        const normalizedQuery = String(managerSearchQuery || '').trim().toLowerCase();
-        const filteredRecords = normalizedQuery
-          ? records.filter((record) => String(record?.name || record?.payload?.projectName || '').toLowerCase().includes(normalizedQuery))
-          : records.slice();
-
-        filteredRecords.sort((first, second) => {
-          if (managerSortBy === 'name') {
-            const firstName = String(first?.name || '').toLocaleLowerCase('ro-RO');
-            const secondName = String(second?.name || '').toLocaleLowerCase('ro-RO');
-            return firstName.localeCompare(secondName, 'ro-RO');
-          }
-          if (managerSortBy === 'createdAt') {
-            return Date.parse(second?.createdAt || second?.updatedAt || '') - Date.parse(first?.createdAt || first?.updatedAt || '');
-          }
+        const filteredRecords = records.slice().sort((first, second) => {
           return Date.parse(second?.updatedAt || '') - Date.parse(first?.updatedAt || '');
         });
 
         projectCards.innerHTML = '';
         projectEmptyState.hidden = filteredRecords.length > 0;
         if (!filteredRecords.length) {
-          projectEmptyState.textContent = normalizedQuery
-            ? 'Nu există proiecte care să corespundă căutării.'
-            : 'Nu există proiecte încă. Creează un proiect nou sau importă un fișier existent.';
+          projectEmptyState.textContent = 'Nu există proiecte încă. Creează un proiect nou sau importă un fișier existent.';
           return;
         }
 
@@ -4920,14 +4749,6 @@
       managerImportProjectButton.addEventListener('click', (event) => {
         event.preventDefault();
         projectInput.click();
-      });
-      projectSearchInput.addEventListener('input', () => {
-        managerSearchQuery = projectSearchInput.value || '';
-        renderProjectCards();
-      });
-      projectSortSelect.addEventListener('change', () => {
-        managerSortBy = projectSortSelect.value || 'updatedAt';
-        renderProjectCards();
       });
       backToProjectsButton.addEventListener('click', async (event) => {
         event.preventDefault();
