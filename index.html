@@ -1110,45 +1110,55 @@
       align-items: center;
       justify-content: flex-start;
       gap: 8px;
-      width: auto;
-      min-width: min-content;
+      width: fit-content;
       max-width: min(96vw, 760px);
-      padding: 7px 9px;
+      height: 86px;
+      padding: 8px 10px;
       border: 1px solid var(--panel-line);
-      border-radius: 999px;
+      border-radius: 16px;
       background: var(--panel-fill);
       color: var(--panel-text);
-      box-shadow: 0 16px 30px rgba(2, 6, 13, .28), inset 0 1px 0 rgba(255, 255, 255, .16);
-      backdrop-filter: blur(24px) saturate(160%);
-      overflow-x: auto;
-      scrollbar-width: none;
+      box-shadow: 0 10px 20px rgba(2, 6, 13, .24), inset 0 1px 0 rgba(255, 255, 255, .14);
+      backdrop-filter: blur(16px) saturate(140%);
+      overflow: hidden;
     }
-    .fullscreen-drawing-toolbar-shell::-webkit-scrollbar { display: none; }
     .drawing-toolbar-row {
       display: flex;
-      align-items: center;
+      align-items: stretch;
       justify-content: flex-start;
       gap: 8px;
       flex-wrap: nowrap;
-      width: auto;
-      min-width: max-content;
+      width: fit-content;
       max-width: 100%;
     }
     .drawing-tool-group {
       display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 0;
-      background: transparent;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 5px;
+      padding: 6px 8px;
       min-width: 0;
       flex: 0 0 auto;
+      border: 1px solid rgba(255, 255, 255, .14);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, .04);
     }
     .drawing-tool-group-row {
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 6px;
       flex-wrap: nowrap;
       width: auto;
+      min-height: 34px;
+    }
+    .tool-label {
+      display: block;
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      line-height: 1;
+      color: rgba(236, 243, 255, .86);
     }
     .quick-colors { display: flex; align-items: center; gap: 5px; flex-wrap: nowrap; }
     .quick-color-button {
@@ -1287,11 +1297,13 @@
 
     @media (max-width: 860px) {
       .fullscreen-drawing-toolbar-shell {
+        height: 82px;
         padding: 6px 8px;
         gap: 6px;
-        border-radius: 18px;
+        border-radius: 14px;
       }
       .drawing-toolbar-row { gap: 6px; }
+      .drawing-tool-group { padding: 5px 7px; }
       .drawing-tool-group-row { gap: 4px; }
       .drawing-tool-button { width: 32px; height: 32px; min-width: 32px; min-height: 32px; border-radius: 9px; }
       #fullscreenColorPicker { width: 28px; height: 28px; min-width: 28px; min-height: 28px; }
