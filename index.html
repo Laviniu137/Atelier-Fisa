@@ -20,6 +20,7 @@
     :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #29261f; background: #edeae4; }
     * { box-sizing: border-box; }
     body { min-width: 320px; margin: 0; background: radial-gradient(circle at 0% 0%, #f8f5ee 0, transparent 38%), linear-gradient(135deg, #ebe8e1 0%, #f5f2ec 55%, #e9e4db 100%); }
+    #projectManagerView[hidden], #editorView[hidden] { display: none !important; }
     button, textarea { font: inherit; }
     button { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; border: 1px solid #d8d1c6; border-radius: 13px; background: #fdfcf9; color: #423d33; padding: 11px 17px; font-size: .92rem; font-weight: 650; letter-spacing: -.01em; box-shadow: 0 1px 2px rgba(55, 46, 34, .05); transition: transform .16s ease, box-shadow .16s ease, background .16s ease, border-color .16s ease; -webkit-tap-highlight-color: transparent; }
     button svg { width: 19px; height: 19px; flex: 0 0 auto; stroke: currentColor; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
@@ -1179,7 +1180,7 @@
   </style>
 </head>
 <body>
-  <main id="projectManagerView" class="project-manager-view">
+  <div id="projectManagerView" class="project-manager-view">
     <section class="project-manager-header" aria-label="Branding și acțiuni proiecte">
       <div class="project-manager-brand">
         <div class="brand-block" aria-label="La-Tâmplar Mobilă la comandă">
@@ -1203,7 +1204,7 @@
         Nu există proiecte încă. Creează un proiect nou sau importă un fișier existent.
       </div>
     </section>
-  </main>
+  </div>
   <div id="saveProjectDialog" class="save-dialog-backdrop" hidden>
     <div class="save-dialog" role="dialog" aria-modal="true" aria-labelledby="saveDialogTitle">
       <h2 id="saveDialogTitle">Salvează proiectul</h2>
@@ -1307,7 +1308,8 @@
     </div>
   </div>
   <div id="fullscreenOverlay" class="fullscreen-overlay" hidden></div>
-  <main class="app" hidden>
+  <div id="editorView" hidden>
+  <main class="app">
     <header>
       <div class="editor-project-block" aria-live="polite">
         <p class="editor-project-label">📁 Proiect:</p>
@@ -1443,6 +1445,7 @@
       <span id="appVersion">v1.0.0</span>
     </footer>
   </main>
+  </div>
 
   <div id="pencilEditorOverlay" class="pencil-editor-overlay" hidden>
     <div class="pencil-editor-dialog" role="dialog" aria-modal="true" aria-label="Editor Apple Pencil">
@@ -1478,6 +1481,7 @@
   <script>
     (() => {
       const projectManagerView = document.getElementById('projectManagerView');
+      const editorView = document.getElementById('editorView');
       const projectCards = document.getElementById('projectCards');
       const projectEmptyState = document.getElementById('projectEmptyState');
       const editorProjectNameLabel = document.getElementById('editorProjectName');
@@ -1660,7 +1664,7 @@
       const projectStore = 'projects';
       const metaStore = 'meta';
       const projectVersion = 2;
-      const APP_VERSION = '1.1.3';
+      const APP_VERSION = '1.2.1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
       const activeProjectMetaKey = 'active-project-id';
@@ -2187,14 +2191,22 @@
         if (fullscreenMode) {
           setFullscreenMode(false);
         }
-        appMain.hidden = true;
+        if (editorView) {
+          editorView.hidden = true;
+          editorView.setAttribute('aria-hidden', 'true');
+        }
         projectManagerView.hidden = false;
+        projectManagerView.setAttribute('aria-hidden', 'false');
         document.title = 'Proiectele mele | La-Tamplar';
       }
 
       function showEditor() {
         projectManagerView.hidden = true;
-        appMain.hidden = false;
+        projectManagerView.setAttribute('aria-hidden', 'true');
+        if (editorView) {
+          editorView.hidden = false;
+          editorView.setAttribute('aria-hidden', 'false');
+        }
         syncEditorProjectHeader();
         document.title = `${currentProjectName} | Notite interactive pe imagine`;
       }
@@ -2365,6 +2377,13 @@
         }
         await setActiveProjectId(null);
         resetCurrentProject({ persist: false });
+        showProjectManager();
+      }
+
+      async function navigateToProjectManagerFromEditor() {
+        if (projectDirty) {
+          await flushAutosave({ force: true });
+        }
         showProjectManager();
       }
 
@@ -4866,11 +4885,7 @@
       });
       backToProjectsButton.addEventListener('click', async (event) => {
         event.preventDefault();
-        if (projectDirty) {
-          await flushAutosave({ force: true });
-        }
-        await renderProjectCards();
-        showProjectManager();
+        await navigateToProjectManagerFromEditor();
       });
       removeImageButton.addEventListener('click', openRemoveImageDialog);
       loadProjectButton.addEventListener('click', (event) => {
