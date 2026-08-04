@@ -1027,7 +1027,7 @@
     body.fullscreen-mode #fullscreenBtn { display: none; }
     body.fullscreen-mode .fullscreen-close-btn { display: inline-flex; }
     body.fullscreen-mode .fullscreen-toolbar-toggle { display: inline-flex; }
-    body.fullscreen-mode .fullscreen-drawing-toolbar { display: flex; }
+    body.fullscreen-mode .fullscreen-drawing-toolbar { display: none; }
     .fullscreen-close-btn {
       position: fixed;
       top: calc(env(safe-area-inset-top, 0px) + 18px);
@@ -1097,16 +1097,17 @@
       top: 188px;
       z-index: 1600;
       display: none;
-      align-items: center;
-      gap: 18px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 12px 14px;
       transform: translateY(8px) scale(.96);
       transform-origin: left top;
       opacity: 0;
       pointer-events: none;
-      width: clamp(460px, 54vw, 740px);
+      width: min(94vw, 760px);
       max-width: calc(100vw - 26px);
       min-height: 112px;
-      padding: 16px 18px;
+      padding: 14px 15px;
       border: 1px solid var(--panel-line);
       border-radius: 24px;
       background: var(--panel-fill);
@@ -1114,21 +1115,34 @@
       box-shadow: 0 20px 40px rgba(2, 6, 13, .34), inset 0 1px 0 rgba(255, 255, 255, .16);
       backdrop-filter: blur(28px) saturate(170%);
       transition: opacity .16s ease, transform .16s ease;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      grid-auto-flow: row;
     }
     .fullscreen-drawing-toolbar.is-open {
       opacity: 1;
       pointer-events: auto;
       transform: translateY(0) scale(1);
+      display: flex;
     }
     .drawing-tool-group {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 9px;
       padding: 0 2px;
       background: transparent;
       min-width: 0;
+      width: 100%;
+      flex: 1 1 220px;
     }
-    .drawing-tool-group-row { display: flex; align-items: center; gap: 10px; }
+    .drawing-tool-group-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      row-gap: 8px;
+      width: 100%;
+      flex-wrap: wrap;
+    }
     .tool-label {
       margin-left: 2px;
       color: rgba(231, 238, 247, .84);
@@ -1144,7 +1158,7 @@
       background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, .22), rgba(255, 255, 255, 0));
       margin: 2px 4px;
     }
-    .quick-colors { display: flex; align-items: center; gap: 10px; }
+    .quick-colors { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .quick-color-button {
       width: 34px;
       height: 34px;
@@ -1182,6 +1196,8 @@
     #fullscreenColorPicker::-webkit-color-swatch-wrapper { padding: 0; }
     #fullscreenColorPicker::-webkit-color-swatch { border: 0; border-radius: 9px; }
     #fullscreenBrushSize {
+      flex: 1 1 132px;
+      min-width: 112px;
       width: 132px;
       height: 4px;
       margin: 0;
@@ -1225,6 +1241,7 @@
     }
     #fullscreenBrushSizeValue {
       min-width: 52px;
+      flex-shrink: 0;
       color: rgba(246, 251, 255, .96);
       font-size: .75rem;
       font-weight: 700;
@@ -1281,11 +1298,12 @@
     }
     @media (max-width: 820px) {
       .fullscreen-drawing-toolbar {
-        width: min(92vw, 560px);
-        padding: 9px 11px;
-        gap: 9px;
+        width: min(92vw, 620px);
+        padding: 10px 12px;
+        gap: 10px 12px;
         border-radius: 20px;
         max-width: calc(100vw - 20px);
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       }
       .drawing-tool-group-row { gap: 6px; }
       .tool-label { font-size: .58rem; letter-spacing: .11em; }
@@ -1295,6 +1313,14 @@
       #fullscreenBrushSizeValue { min-width: 44px; font-size: .74rem; }
       .quick-color-button { width: 30px; height: 30px; min-width: 30px; min-height: 30px; }
       .fullscreen-toolbar-toggle { width: 52px; height: 52px; min-width: 52px; min-height: 52px; border-radius: 16px; }
+    }
+    @media (max-width: 640px) {
+      .fullscreen-drawing-toolbar {
+        grid-template-columns: 1fr;
+        width: min(94vw, 560px);
+      }
+      .drawing-tool-group { width: 100%; }
+      .drawing-tool-divider { display: none; }
     }
     @media (min-width: 820px) and (max-width: 1366px) {
       .app { padding: clamp(16px, 1.8vw, 26px); }
@@ -1912,11 +1938,14 @@
       const AUTOSAVE_DEBOUNCE_MS = 2000;
       const STROKE_SAMPLE_MIN_DISTANCE_PX = 0.35;
       const databaseName = 'fisa-atelier-offline';
+      const databaseVersion = 3;
       const legacyAutosaveStore = 'lucrari';
       const projectStore = 'projects';
       const metaStore = 'meta';
+      const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.3.8';
+      const APP_VERSION = '1.4.0';
+      const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
       const activeProjectMetaKey = 'active-project-id';
@@ -1935,7 +1964,7 @@
 
       function openDatabase() {
         return new Promise((resolve, reject) => {
-          const request = indexedDB.open(databaseName, 2);
+          const request = indexedDB.open(databaseName, databaseVersion);
           request.onupgradeneeded = () => {
             const db = request.result;
             if (!db.objectStoreNames.contains(legacyAutosaveStore)) {
@@ -1946,6 +1975,9 @@
             }
             if (!db.objectStoreNames.contains(metaStore)) {
               db.createObjectStore(metaStore, { keyPath: 'key' });
+            }
+            if (!db.objectStoreNames.contains(projectBackupStore)) {
+              db.createObjectStore(projectBackupStore, { keyPath: 'id' });
             }
           };
           request.onsuccess = () => resolve(request.result);
@@ -2070,7 +2102,7 @@
         }
       }
 
-      async function saveProjectRecord(record) {
+      async function persistProjectRecord(record) {
         if (!record || !record.id) return;
         const database = await openDatabase();
         try {
@@ -2080,6 +2112,23 @@
           await transactionAsPromise(transaction);
         } finally {
           database.close();
+        }
+      }
+
+      async function saveProjectRecord(record) {
+        if (!record || !record.id) return;
+        const existingRecord = await readProjectRecord(record.id);
+        if (existingRecord && JSON.stringify(existingRecord) !== JSON.stringify(record)) {
+          await createProjectBackup(existingRecord, 'save');
+        }
+        try {
+          await persistProjectRecord(record);
+        } catch (error) {
+          console.warn('Salvarea proiectului a eșuat; se restaurează backup-ul.', error);
+          if (existingRecord) {
+            await persistProjectRecord(existingRecord);
+          }
+          throw error;
         }
       }
 
@@ -2110,26 +2159,151 @@
         }
       }
 
-      async function migrateLegacyAutosaveIfNeeded() {
-        const alreadyMigrated = await getMetaValue(legacyMigrationMetaKey);
-        if (alreadyMigrated) return;
+      async function createProjectBackup(record, reason = 'migration') {
+        if (!record || !record.id) return null;
+        const backupEntry = {
+          id: `${record.id}-backup-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+          projectId: record.id,
+          projectName: normalizeProjectName(record.name || record?.payload?.projectName || 'Proiect nou'),
+          createdAt: new Date().toISOString(),
+          reason,
+          sourceVersion: Number(record?.payload?.version || record?.version || projectVersion),
+          record: cloneProjectData(record)
+        };
 
-        const existingProjects = await readAllProjectRecords();
-        if (existingProjects.length) {
-          await setMetaValue(legacyMigrationMetaKey, true);
+        try {
+          const database = await openDatabase();
+          try {
+            const transaction = database.transaction(projectBackupStore, 'readwrite');
+            const store = transaction.objectStore(projectBackupStore);
+            await requestAsPromise(store.put(backupEntry));
+            await transactionAsPromise(transaction);
+          } finally {
+            database.close();
+          }
+        } catch (error) {
+          console.warn('Backup-ul proiectului nu a putut fi salvat.', error);
+        }
+
+        try {
+          localStorage.setItem(`fisa-atelier-backup-${record.id}`, JSON.stringify(backupEntry));
+        } catch (error) {
+          console.warn('Backup-ul proiectului nu a putut fi păstrat în localStorage.', error);
+        }
+
+        return backupEntry;
+      }
+
+      async function restoreProjectBackup(projectId) {
+        if (!projectId) return null;
+        try {
+          const backupPayload = localStorage.getItem(`fisa-atelier-backup-${projectId}`);
+          if (backupPayload) {
+            const backupEntry = JSON.parse(backupPayload);
+            if (backupEntry?.record) {
+              await saveProjectRecord(cloneProjectData(backupEntry.record));
+              return backupEntry.record;
+            }
+          }
+        } catch (error) {
+          console.warn('Backup-ul proiectului nu a putut fi restaurat din localStorage.', error);
+        }
+
+        try {
+          const database = await openDatabase();
+          try {
+            const transaction = database.transaction(projectBackupStore, 'readonly');
+            const store = transaction.objectStore(projectBackupStore);
+            const entries = await requestAsPromise(store.getAll());
+            const relevant = Array.isArray(entries)
+              ? entries.filter((entry) => entry?.projectId === projectId).sort((first, second) => Date.parse(second?.createdAt || '0') - Date.parse(first?.createdAt || '0'))
+              : [];
+            if (relevant[0]?.record) {
+              await saveProjectRecord(cloneProjectData(relevant[0].record));
+              return relevant[0].record;
+            }
+          } finally {
+            database.close();
+          }
+        } catch (error) {
+          console.warn('Backup-ul proiectului nu a putut fi restaurat din IndexedDB.', error);
+        }
+
+        return null;
+      }
+
+      async function migrateStoredProjectsIfNeeded() {
+        const alreadyMigrated = await getMetaValue(projectMigrationMetaKey);
+        if (alreadyMigrated === String(projectVersion)) {
           return;
         }
 
-        const legacyProject = await readLegacyLastWorkFromDatabase();
-        if (legacyProject && (Array.isArray(legacyProject.images) ? legacyProject.images.length : Boolean(legacyProject.image?.dataUrl))) {
-          const normalizedPayload = normalizeIncomingProject(legacyProject);
-          const record = buildProjectRecordFromPayload(normalizedPayload, {
-            name: legacyProject?.projectName || legacyProject?.name || 'Proiect recuperat'
-          });
-          await saveProjectRecord(record);
-          await setActiveProjectId(record.id);
+        const existingProjects = await readAllProjectRecords();
+        for (const record of existingProjects) {
+          const normalizedPayload = normalizeIncomingProject(record?.payload || record);
+          const fallbackName = normalizeProjectName(record?.name || normalizedPayload?.projectName || 'Proiect nou');
+          const nextPayload = {
+            ...normalizedPayload,
+            projectName: fallbackName,
+            updatedAt: normalizedPayload.updatedAt || record?.updatedAt || new Date().toISOString()
+          };
+          const nextRecord = {
+            ...(record || {}),
+            id: record?.id || createProjectId(),
+            name: fallbackName,
+            createdAt: record?.createdAt || nextPayload.updatedAt || new Date().toISOString(),
+            updatedAt: record?.updatedAt || nextPayload.updatedAt || new Date().toISOString(),
+            thumbnail: getProjectThumbnail(nextPayload.images),
+            stats: {
+              images: Array.isArray(nextPayload.images) ? nextPayload.images.length : 0,
+              notes: countProjectNotes(Array.isArray(nextPayload.images) ? nextPayload.images : [])
+            },
+            payload: nextPayload
+          };
+
+          const needsMigration = Boolean(
+            !record
+            || Number(record?.payload?.version || record?.version || 0) < projectVersion
+            || record?.name !== fallbackName
+            || !record?.payload
+            || !Array.isArray(record?.payload?.images)
+            || record?.thumbnail !== nextRecord.thumbnail
+            || record?.stats?.images !== nextRecord.stats.images
+            || record?.stats?.notes !== nextRecord.stats.notes
+          );
+
+          if (!needsMigration) {
+            continue;
+          }
+
+          try {
+            const backupEntry = await createProjectBackup(record, 'migration');
+            await saveProjectRecord(nextRecord);
+            if (backupEntry && activeProjectId === record?.id) {
+              currentProjectUpdatedAt = nextRecord.updatedAt || null;
+            }
+          } catch (error) {
+            console.warn('Migrarea proiectului a eșuat, se restaurează backup-ul.', error);
+            await restoreProjectBackup(record?.id);
+          }
         }
-        await setMetaValue(legacyMigrationMetaKey, true);
+
+        const legacyProject = await readLegacyLastWorkFromDatabase();
+        if (legacyProject && (!existingProjects.length || (!existingProjects.some((record) => record?.payload?.projectName === legacyProject?.projectName && Array.isArray(record?.payload?.images)))) ) {
+          try {
+            const normalizedPayload = normalizeIncomingProject(legacyProject);
+            const record = buildProjectRecordFromPayload(normalizedPayload, {
+              name: legacyProject?.projectName || legacyProject?.name || 'Proiect recuperat'
+            });
+            await createProjectBackup(record, 'legacy-autosave');
+            await saveProjectRecord(record);
+            await setActiveProjectId(record.id);
+          } catch (error) {
+            console.warn('Recuperarea din autosave-ul vechi a eșuat.', error);
+          }
+        }
+
+        await setMetaValue(projectMigrationMetaKey, String(projectVersion));
       }
 
       function blobToDataUrl(blob) {
@@ -2187,7 +2361,21 @@
       }
 
       function isValidProjectImageEntry(image) {
-        return Boolean(image && typeof image.dataUrl === 'string' && image.dataUrl.trim());
+        if (!image || typeof image !== 'object') return false;
+        const hasDataUrl = typeof image.dataUrl === 'string' && image.dataUrl.trim();
+        const hasState = Boolean(
+          image.id
+          || image.name
+          || (Array.isArray(image.strokes) && image.strokes.length)
+          || (Array.isArray(image.notes) && image.notes.length)
+          || image.activeTool
+          || image.selectedNoteId
+          || image.selectedNoteMode
+          || image.pan
+          || image.zoom !== undefined
+          || image.drawSettings
+        );
+        return hasDataUrl || hasState;
       }
 
       function sanitizeProjectImagesCollection() {
@@ -3012,7 +3200,7 @@
       }
 
       async function initializeProjectManagerStartup() {
-        await migrateLegacyAutosaveIfNeeded();
+        await migrateStoredProjectsIfNeeded();
         const storedActiveProjectId = await getStoredActiveProjectId();
         if (storedActiveProjectId) {
           activeProjectId = storedActiveProjectId;
@@ -3861,6 +4049,8 @@
         floatingToolbarOpen = Boolean(isOpen);
         fullscreenToolbarToggle.classList.toggle('is-active', floatingToolbarOpen);
         fullscreenDrawingToolbar.classList.toggle('is-open', floatingToolbarOpen);
+        fullscreenDrawingToolbar.hidden = !fullscreenMode || !floatingToolbarOpen;
+        fullscreenDrawingToolbar.style.display = !fullscreenMode || !floatingToolbarOpen ? 'none' : 'flex';
         fullscreenToolbarToggle.setAttribute('aria-expanded', floatingToolbarOpen ? 'true' : 'false');
         if (floatingToolbarOpen) {
           positionFloatingToolbar();
@@ -4648,6 +4838,7 @@
         if (fullscreenDrawingToolbar) {
           fullscreenDrawingToolbar.hidden = !enabled;
           fullscreenDrawingToolbar.classList.remove('is-open');
+          fullscreenDrawingToolbar.style.display = enabled ? 'none' : 'none';
         }
         if (enabled) {
           previousFullscreenTool = activeTool;
@@ -4685,6 +4876,8 @@
           setFloatingToolbarOpen(false);
           if (fullscreenDrawingToolbar) {
             fullscreenDrawingToolbar.hidden = true;
+            fullscreenDrawingToolbar.classList.remove('is-open');
+            fullscreenDrawingToolbar.style.display = 'none';
           }
           if (fullscreenToolbarToggle) {
             fullscreenToolbarToggle.hidden = true;
@@ -4941,8 +5134,53 @@
 
         activeImageIndex = targetIndex;
         const currentImage = projectImages[activeImageIndex];
-        if (!currentImage || !currentImage.dataUrl) {
+        const hasImageState = Boolean(currentImage && (
+          currentImage.dataUrl
+          || (Array.isArray(currentImage.strokes) && currentImage.strokes.length)
+          || (Array.isArray(currentImage.notes) && currentImage.notes.length)
+          || currentImage.drawSettings
+          || currentImage.zoom !== undefined
+          || currentImage.pan
+        ));
+
+        if (!currentImage || !hasImageState) {
           resetCurrentProject({ persist });
+          return;
+        }
+
+        if (!currentImage.dataUrl) {
+          sourceImage = null;
+          imageBlob = null;
+          currentObjectUrl = null;
+          strokes = cloneProjectData(Array.isArray(currentImage.strokes) ? currentImage.strokes : []);
+          interactiveNotes = normalizeNotesCollection(cloneProjectData(Array.isArray(currentImage.notes) ? currentImage.notes : []));
+          selectedNoteId = interactiveNotes.find((note) => note.id === currentImage.selectedNoteId)?.id || interactiveNotes[0]?.id || null;
+          activeTool = currentImage.activeTool === 'notes' ? 'notes' : 'draw';
+          selectedNoteMode = currentImage.selectedNoteMode === 'pencil' ? 'pencil' : 'text';
+          const savedSettings = currentImage.drawSettings && typeof currentImage.drawSettings === 'object' ? currentImage.drawSettings : {};
+          brushColor = typeof savedSettings.color === 'string' && savedSettings.color ? savedSettings.color : '#000000';
+          lastPenSize = Number.isFinite(Number(savedSettings.lastPenSize)) ? clamp(Number(savedSettings.lastPenSize), 1, 20) : 4;
+          lastEraserSize = Number.isFinite(Number(savedSettings.lastEraserSize)) ? clamp(Number(savedSettings.lastEraserSize), 1, 20) : 8;
+          isErasing = Boolean(savedSettings.eraser);
+          brushSize = isErasing ? lastEraserSize : lastPenSize;
+          redoStack = [];
+          zoomLevel = typeof currentImage.zoom === 'number' ? currentImage.zoom : 1;
+          panOffset = currentImage.pan && typeof currentImage.pan.x === 'number' && typeof currentImage.pan.y === 'number'
+            ? { x: currentImage.pan.x, y: currentImage.pan.y }
+            : { x: 0, y: 0 };
+          emptyState.hidden = true;
+          stage.hidden = false;
+          noteLayer.hidden = !interactiveNotes.length;
+          restoreActiveImagePresentationAfterLoad(activationToken);
+          renderNoteList();
+          renderImageThumbnails();
+          syncSelectedNoteForm();
+          syncBrushControls();
+          setActiveTool(activeTool);
+          setSelectedNoteMode(selectedNoteMode);
+          if (persist) {
+            scheduleSave();
+          }
           return;
         }
         if (currentObjectUrl && currentObjectUrl.startsWith('blob:')) {
