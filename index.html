@@ -96,15 +96,33 @@
       border-color: rgba(97, 82, 63, .75);
       background: linear-gradient(180deg, #655646, #4f4134);
     }
+    .project-manager-content {
+      padding: 24px 32px 0;
+    }
+    .project-manager-heading {
+      margin: 0 0 20px;
+    }
     .project-manager-page-title {
-      margin: 2px 0 0;
+      margin: 0;
       font-family: "Cormorant Garamond", "Times New Roman", Georgia, serif;
-      font-size: clamp(2rem, 2.8vw, 2.45rem);
-      line-height: 1.04;
+      font-size: clamp(2.25rem, 2.8vw, 2.5rem);
+      line-height: 1.06;
       font-weight: 700;
       color: #2f291f;
-      letter-spacing: .005em;
-      padding: 0 2px;
+      letter-spacing: .004em;
+    }
+    .project-manager-subtitle {
+      margin: 8px 0 0;
+      color: #6f6455;
+      font-size: .88rem;
+      font-weight: 520;
+      letter-spacing: .015em;
+    }
+    .project-manager-divider {
+      margin-top: 12px;
+      height: 1px;
+      width: 100%;
+      background: rgba(120, 102, 78, .2);
     }
     .project-grid {
       display: grid;
@@ -1108,6 +1126,15 @@
     @media (orientation: portrait), (max-width: 800px) {
       .app { padding: 16px; }
       .project-manager-view { padding: 14px; gap: 14px; }
+      .project-manager-content {
+        padding: 20px 16px 0;
+      }
+      .project-manager-heading {
+        margin-bottom: 16px;
+      }
+      .project-manager-page-title {
+        font-size: clamp(2rem, 8vw, 2.25rem);
+      }
       .project-manager-header {
         grid-template-columns: 1fr;
         padding: 14px;
@@ -1165,8 +1192,12 @@
         <button type="button" id="pmNewProject"><span>➕ Proiect nou</span></button>
       </div>
     </section>
-    <section>
-      <h2 id="projectManagerTitle" class="project-manager-page-title">Proiectele mele</h2>
+    <section class="project-manager-content">
+      <div class="project-manager-heading">
+        <h2 id="projectManagerTitle" class="project-manager-page-title">📁 Proiectele mele</h2>
+        <p class="project-manager-subtitle">Toate proiectele salvate local.</p>
+        <div class="project-manager-divider" aria-hidden="true"></div>
+      </div>
       <div id="projectCards" class="project-grid" aria-live="polite"></div>
       <div id="projectEmptyState" class="project-empty" hidden>
         Nu există proiecte încă. Creează un proiect nou sau importă un fișier existent.
@@ -1629,7 +1660,7 @@
       const projectStore = 'projects';
       const metaStore = 'meta';
       const projectVersion = 2;
-      const APP_VERSION = '1.1.1';
+      const APP_VERSION = '1.1.3';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
       const activeProjectMetaKey = 'active-project-id';
