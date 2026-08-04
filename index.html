@@ -1098,26 +1098,24 @@
       top: 188px;
       z-index: 1600;
       display: none;
-      flex-wrap: wrap;
-      align-items: flex-start;
-      gap: 12px 14px;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
       transform: translateY(8px) scale(.96);
       transform-origin: left top;
       opacity: 0;
       pointer-events: none;
-      width: min(94vw, 760px);
-      max-width: calc(100vw - 26px);
-      min-height: 112px;
-      padding: 14px 15px;
+      width: min(92vw, 440px);
+      max-width: calc(100vw - 24px);
+      min-height: auto;
+      padding: 10px 11px;
       border: 1px solid var(--panel-line);
-      border-radius: 24px;
+      border-radius: 20px;
       background: var(--panel-fill);
       color: var(--panel-text);
       box-shadow: 0 20px 40px rgba(2, 6, 13, .34), inset 0 1px 0 rgba(255, 255, 255, .16);
       backdrop-filter: blur(28px) saturate(170%);
       transition: opacity .16s ease, transform .16s ease;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-      grid-auto-flow: row;
     }
     .fullscreen-drawing-toolbar.is-open {
       opacity: 1;
@@ -1125,24 +1123,45 @@
       transform: translateY(0) scale(1);
       display: flex;
     }
+    .drawing-toolbar-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      flex-wrap: wrap;
+      width: 100%;
+    }
     .drawing-tool-group {
       display: flex;
       flex-direction: column;
-      gap: 9px;
-      padding: 0 2px;
+      gap: 7px;
+      padding: 0;
       background: transparent;
       min-width: 0;
-      width: 100%;
+      flex: 0 1 auto;
+    }
+    .drawing-tool-group.color-group {
+      min-width: 0;
       flex: 1 1 220px;
+    }
+    .drawing-tool-group.edit-group {
+      min-width: 0;
+      flex: 0 1 190px;
+    }
+    .drawing-tool-group.size-group {
+      min-width: 0;
+      flex: 1 1 180px;
+    }
+    .drawing-tool-group.actions-group {
+      min-width: 0;
+      flex: 0 0 auto;
     }
     .drawing-tool-group-row {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
-      row-gap: 8px;
+      row-gap: 6px;
       width: 100%;
-      flex-wrap: wrap;
     }
     .tool-label {
       margin-left: 2px;
@@ -1317,9 +1336,9 @@
     }
     @media (max-width: 640px) {
       .fullscreen-drawing-toolbar {
-        grid-template-columns: 1fr;
-        width: min(94vw, 560px);
+        width: min(94vw, 430px);
       }
+      .drawing-toolbar-row { flex-direction: column; }
       .drawing-tool-group { width: 100%; }
       .drawing-tool-divider { display: none; }
     }
@@ -1614,53 +1633,57 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-1 10-10a2.2 2.2 0 0 0 0-3.1l-.1-.1a2.2 2.2 0 0 0-3.1 0L5 15.7 4 20z"></path><path d="m13.4 7.4 3.2 3.2"></path></svg>
         </button>
         <div class="fullscreen-drawing-toolbar" id="fullscreenDrawingToolbar" hidden>
-          <div class="drawing-tool-group color-group">
-            <span class="tool-label">Desen</span>
-            <div class="drawing-tool-group-row">
-              <input id="fullscreenColorPicker" type="color" value="#000000" aria-label="Alege culoarea creionului" title="Culoare personalizată">
-              <div class="quick-colors" aria-label="Culori rapide">
-                <button type="button" class="quick-color-button is-selected" data-color="#000000" style="--swatch:#000000" title="Negru" aria-label="Negru"></button>
-                <button type="button" class="quick-color-button" data-color="#e53935" style="--swatch:#e53935" title="Roșu" aria-label="Roșu"></button>
-                <button type="button" class="quick-color-button" data-color="#1e88e5" style="--swatch:#1e88e5" title="Albastru" aria-label="Albastru"></button>
-                <button type="button" class="quick-color-button" data-color="#43a047" style="--swatch:#43a047" title="Verde" aria-label="Verde"></button>
-                <button type="button" class="quick-color-button" data-color="#f9c74f" style="--swatch:#f9c74f" title="Galben" aria-label="Galben"></button>
-                <button type="button" class="quick-color-button" data-color="#fb8c00" style="--swatch:#fb8c00" title="Portocaliu" aria-label="Portocaliu"></button>
+          <div class="drawing-toolbar-row">
+            <div class="drawing-tool-group color-group">
+              <span class="tool-label">Desen</span>
+              <div class="drawing-tool-group-row">
+                <input id="fullscreenColorPicker" type="color" value="#000000" aria-label="Alege culoarea creionului" title="Culoare personalizată">
+                <div class="quick-colors" aria-label="Culori rapide">
+                  <button type="button" class="quick-color-button is-selected" data-color="#000000" style="--swatch:#000000" title="Negru" aria-label="Negru"></button>
+                  <button type="button" class="quick-color-button" data-color="#e53935" style="--swatch:#e53935" title="Roșu" aria-label="Roșu"></button>
+                  <button type="button" class="quick-color-button" data-color="#1e88e5" style="--swatch:#1e88e5" title="Albastru" aria-label="Albastru"></button>
+                  <button type="button" class="quick-color-button" data-color="#43a047" style="--swatch:#43a047" title="Verde" aria-label="Verde"></button>
+                  <button type="button" class="quick-color-button" data-color="#f9c74f" style="--swatch:#f9c74f" title="Galben" aria-label="Galben"></button>
+                  <button type="button" class="quick-color-button" data-color="#fb8c00" style="--swatch:#fb8c00" title="Portocaliu" aria-label="Portocaliu"></button>
+                </div>
               </div>
             </div>
-            <div class="drawing-tool-group-row">
-              <label class="tool-label" for="fullscreenBrushSize">Grosime</label>
-              <input id="fullscreenBrushSize" type="range" min="1" max="20" step="1" value="4">
-              <span id="fullscreenBrushSizeValue">4 px</span>
+            <div class="drawing-tool-group edit-group">
+              <span class="tool-label">Editare</span>
+              <div class="drawing-tool-group-row">
+                <button type="button" id="fullscreenLineBtn" class="drawing-tool-button" aria-label="Linie" title="Linie" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5"></path></svg>
+                </button>
+                <button type="button" id="fullscreenEraserBtn" class="drawing-tool-button" aria-label="Radieră" title="Radieră">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.2 15.4 11 7.2a2.2 2.2 0 0 0-3.1 0L3.8 11.3a2.2 2.2 0 0 0 0 3.1l3.3 3.3a2.2 2.2 0 0 0 1.5.6H17"></path><path d="M13 20h8"></path></svg>
+                </button>
+                <button type="button" id="fullscreenUndoBtn" class="drawing-tool-button" aria-label="Anulează ultima linie" title="Undo">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10a6 6 0 0 1 6 6v1"></path></svg>
+                </button>
+                <button type="button" id="fullscreenRedoBtn" class="drawing-tool-button" aria-label="Refă ultima linie" title="Redo">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5"></path><path d="M20 9H10a6 6 0 0 0-6 6v1"></path></svg>
+                </button>
+              </div>
             </div>
           </div>
-          <span class="drawing-tool-divider" aria-hidden="true"></span>
-          <div class="drawing-tool-group edit-group">
-            <span class="tool-label">Editare</span>
-            <div class="drawing-tool-group-row">
-              <button type="button" id="fullscreenLineBtn" class="drawing-tool-button" aria-label="Linie" title="Linie" aria-pressed="false">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5"></path></svg>
-              </button>
-              <button type="button" id="fullscreenEraserBtn" class="drawing-tool-button" aria-label="Radieră" title="Radieră">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.2 15.4 11 7.2a2.2 2.2 0 0 0-3.1 0L3.8 11.3a2.2 2.2 0 0 0 0 3.1l3.3 3.3a2.2 2.2 0 0 0 1.5.6H17"></path><path d="M13 20h8"></path></svg>
-              </button>
-              <button type="button" id="fullscreenUndoBtn" class="drawing-tool-button" aria-label="Anulează ultima linie" title="Undo">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10a6 6 0 0 1 6 6v1"></path></svg>
-              </button>
-              <button type="button" id="fullscreenRedoBtn" class="drawing-tool-button" aria-label="Refă ultima linie" title="Redo">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5"></path><path d="M20 9H10a6 6 0 0 0-6 6v1"></path></svg>
-              </button>
+          <div class="drawing-toolbar-row">
+            <div class="drawing-tool-group size-group">
+              <span class="tool-label">Grosime</span>
+              <div class="drawing-tool-group-row">
+                <input id="fullscreenBrushSize" type="range" min="1" max="20" step="1" value="4">
+                <span id="fullscreenBrushSizeValue">4 px</span>
+              </div>
             </div>
-          </div>
-          <span class="drawing-tool-divider" aria-hidden="true"></span>
-          <div class="drawing-tool-group actions-group">
-            <span class="tool-label">Acțiuni</span>
-            <div class="drawing-tool-group-row">
-              <button type="button" id="fullscreenClearBtn" class="drawing-tool-button danger" aria-label="Șterge desenul" title="Șterge desenul">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg>
-              </button>
-              <button type="button" id="fullscreenCloseToolbarBtn" class="drawing-tool-button danger fullscreen-toolbar-close-fallback" aria-label="Închide ecran complet" title="Închide ecran complet">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6 6 18"></path></svg>
-              </button>
+            <div class="drawing-tool-group actions-group">
+              <span class="tool-label">Ștergere</span>
+              <div class="drawing-tool-group-row">
+                <button type="button" id="fullscreenClearBtn" class="drawing-tool-button danger" aria-label="Șterge desenul" title="Șterge desenul">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg>
+                </button>
+                <button type="button" id="fullscreenCloseToolbarBtn" class="drawing-tool-button danger fullscreen-toolbar-close-fallback" aria-label="Închide ecran complet" title="Închide ecran complet">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6 6 18"></path></svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1945,7 +1968,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.4.0';
+      const APP_VERSION = '1.4.2';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -3256,19 +3279,47 @@
         });
       }
 
-      function clearLineToolPreview() {
+      function finalizeLineDraft() {
+        if (!activeStroke || activeStroke.type !== 'line' || !Array.isArray(activeStroke.points) || activeStroke.points.length < 2) {
+          lineDraftStartPoint = null;
+          lineDraftCurrentPoint = null;
+          activeStroke = null;
+          redraw();
+          return false;
+        }
+
+        strokes.push({
+          points: activeStroke.points.map((point) => ({ ...point })),
+          color: activeStroke.color,
+          size: activeStroke.size,
+          eraser: Boolean(activeStroke.eraser),
+          type: 'line'
+        });
+        redoStack = [];
         lineDraftStartPoint = null;
         lineDraftCurrentPoint = null;
+        activeStroke = null;
+        redraw();
+        setControls();
+        syncBrushControls();
+        scheduleSave();
+        return true;
+      }
+
+      function clearLineToolPreview() {
         if (activeStroke && activeStroke.type === 'line') {
-          activeStroke = null;
+          finalizeLineDraft();
+          return;
         }
+        lineDraftStartPoint = null;
+        lineDraftCurrentPoint = null;
         redraw();
       }
 
       function setActiveDrawMode(mode) {
         const nextMode = mode === 'line' ? 'line' : 'freehand';
         if (nextMode === 'line' && activeDrawMode === 'line' && lineDraftStartPoint) {
-          clearLineToolPreview();
+          finalizeLineDraft();
           syncBrushControls();
           return;
         }
@@ -3828,21 +3879,19 @@
               return;
             }
             const endPoint = lineDraftCurrentPoint || touchPoint;
-            strokes.push({
-              points: [lineDraftStartPoint, endPoint],
-              color: brushColor,
-              size: brushSize,
-              eraser: isErasing,
-              type: 'line'
-            });
-            redoStack = [];
-            lineDraftStartPoint = null;
-            lineDraftCurrentPoint = null;
-            activeStroke = null;
-            redraw();
-            setControls();
-            syncBrushControls();
-            scheduleSave();
+            lineDraftCurrentPoint = endPoint;
+            if (activeStroke && activeStroke.type === 'line') {
+              activeStroke.points[1] = endPoint;
+            } else {
+              activeStroke = {
+                points: [lineDraftStartPoint, endPoint],
+                color: brushColor,
+                size: brushSize,
+                eraser: isErasing,
+                type: 'line'
+              };
+            }
+            finalizeLineDraft();
             return;
           }
           registerTouchPointer(event);
@@ -3863,27 +3912,25 @@
               eraser: isErasing,
               type: 'line'
             };
-            activeDrawingPointerId = null;
+            activeDrawingPointerId = event.pointerId;
             isDrawing = false;
             redraw();
             return;
           }
           const endPoint = lineDraftCurrentPoint || startPoint;
-          strokes.push({
-            points: [lineDraftStartPoint, endPoint],
-            color: brushColor,
-            size: brushSize,
-            eraser: isErasing,
-            type: 'line'
-          });
-          redoStack = [];
-          lineDraftStartPoint = null;
-          lineDraftCurrentPoint = null;
-          activeStroke = null;
-          redraw();
-          setControls();
-          syncBrushControls();
-          scheduleSave();
+          lineDraftCurrentPoint = endPoint;
+          if (activeStroke && activeStroke.type === 'line') {
+            activeStroke.points[1] = endPoint;
+          } else {
+            activeStroke = {
+              points: [lineDraftStartPoint, endPoint],
+              color: brushColor,
+              size: brushSize,
+              eraser: isErasing,
+              type: 'line'
+            };
+          }
+          finalizeLineDraft();
           return;
         }
         canvas.setPointerCapture(event.pointerId);
@@ -3948,9 +3995,16 @@
         if (event.pointerId !== undefined && event.pointerId !== activeDrawingPointerId) return;
         event.preventDefault();
         if (activeDrawMode === 'line') {
+          if (activeStroke && activeStroke.type === 'line' && activeStroke.points.length >= 2) {
+            finalizeLineDraft();
+          } else {
+            lineDraftStartPoint = null;
+            lineDraftCurrentPoint = null;
+            activeStroke = null;
+            redraw();
+          }
           activeDrawingPointerId = null;
           isDrawing = false;
-          redraw();
           return;
         }
         if (!activeStroke) return;
