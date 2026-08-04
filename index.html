@@ -1307,6 +1307,7 @@
       </div>
     </div>
   </div>
+  <input class="sr-only" id="projectInput" type="file" accept="application/json,.json,.atf,.jsd">
   <div id="fullscreenOverlay" class="fullscreen-overlay" hidden></div>
   <div id="editorView" hidden>
   <main class="app">
@@ -1321,7 +1322,6 @@
         <button type="button" id="addImage"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="M7 8l5-5 5 5"></path><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"></path></svg><span>Adaugă imagine</span></button>
         <button type="button" id="removeImage" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg><span>Șterge imaginea</span></button>
         <input class="sr-only" id="imageInput" type="file" accept="image/*" multiple>
-        <input class="sr-only" id="projectInput" type="file" accept="application/json,.json,.atf,.jsd">
       </div>
     </header>
 
@@ -1652,6 +1652,7 @@
       let pendingRecoveryResolver = null;
       let drawingFrameRequest = null;
       let pendingStrokePoints = [];
+      let projectManagerNeedsRefresh = false;
       const MIN_ZOOM_LEVEL = 1;
       const MAX_ZOOM_LEVEL = 12;
       const DOUBLE_TAP_ZOOM_LEVEL = 4;
@@ -1662,7 +1663,7 @@
       const projectStore = 'projects';
       const metaStore = 'meta';
       const projectVersion = 2;
-      const APP_VERSION = '1.2.3';
+      const APP_VERSION = '1.2.4';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
       const activeProjectMetaKey = 'active-project-id';
@@ -2209,6 +2210,12 @@
         document.title = `${currentProjectName} | Notite interactive pe imagine`;
       }
 
+      async function refreshProjectManagerIfNeeded() {
+        if (!projectManagerNeedsRefresh) return;
+        await renderProjectCards();
+        projectManagerNeedsRefresh = false;
+      }
+
       async function renderProjectCards() {
         const records = await readAllProjectRecords();
         const filteredRecords = records.slice().sort((first, second) => {
@@ -2354,6 +2361,7 @@
         const payload = normalizeIncomingProject({ projectName, images: [] });
         const record = buildProjectRecordFromPayload(payload, { name: projectName });
         await saveProjectRecord(record);
+        projectManagerNeedsRefresh = true;
         await setActiveProjectId(record.id);
         showEditor();
         await applyProjectState(record.payload);
@@ -2374,6 +2382,7 @@
           await flushAutosave({ force: true });
         }
         showProjectManager();
+        await refreshProjectManagerIfNeeded();
       }
 
       function openDeleteProjectDialog(projectId) {
@@ -2565,6 +2574,9 @@
 
           if (!projectManagerView.hidden) {
             await renderProjectCards();
+            projectManagerNeedsRefresh = false;
+          } else {
+            projectManagerNeedsRefresh = true;
           }
         } catch (error) {
           console.warn('Lucrarea nu a putut fi salvată local.', error);
@@ -2712,6 +2724,7 @@
           activeProjectId = storedActiveProjectId;
         }
         await renderProjectCards();
+        projectManagerNeedsRefresh = false;
         showProjectManager();
       }
 
@@ -2781,21 +2794,23 @@
         redraw();
       }
 
-      function restoreActiveImagePresentation() {
+      function restoreActiveImagePresentation(activationToken = imageActivationToken) {
+        if (activationToken !== imageActivationToken) return;
         if (!sourceImage || stage.hidden) return;
         configureCanvas();
         configureNoteCanvas();
-        redraw();
         renderNotes();
         updateImageTransform();
         setControls();
       }
 
-      function restoreActiveImagePresentationAfterLoad() {
+      function restoreActiveImagePresentationAfterLoad(activationToken = imageActivationToken) {
         requestAnimationFrame(() => {
-          restoreActiveImagePresentation();
+          if (activationToken !== imageActivationToken) return;
+          restoreActiveImagePresentation(activationToken);
           requestAnimationFrame(() => {
-            restoreActiveImagePresentation();
+            if (activationToken !== imageActivationToken) return;
+            restoreActiveImagePresentation(activationToken);
           });
         });
       }
@@ -4488,7 +4503,7 @@
             emptyState.hidden = true;
             stage.hidden = false;
             noteLayer.hidden = !interactiveNotes.length;
-            restoreActiveImagePresentationAfterLoad();
+            restoreActiveImagePresentationAfterLoad(activationToken);
             renderNoteList();
             renderImageThumbnails();
             syncSelectedNoteForm();
@@ -4721,7 +4736,12 @@
           normalizedPayload.projectName = importedName;
           const record = buildProjectRecordFromPayload(normalizedPayload, { name: importedName });
           await saveProjectRecord(record);
-          await renderProjectCards();
+          if (!projectManagerView.hidden) {
+            await renderProjectCards();
+            projectManagerNeedsRefresh = false;
+          } else {
+            projectManagerNeedsRefresh = true;
+          }
           if (openAfterImport) {
             await openProjectById(record.id);
           }
