@@ -283,8 +283,45 @@
       line-height: 1.6;
       font-size: .95rem;
     }
-    header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 20px 18px 24px; border: 1px solid rgba(136, 119, 91, .16); border-radius: 20px; background: rgba(255, 254, 251, .76); box-shadow: 0 12px 32px rgba(63, 51, 35, .08); backdrop-filter: blur(10px); }
-    .header-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
+    .app > header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 16px 18px 16px 20px; border: 1px solid rgba(136, 119, 91, .16); border-radius: 20px; background: rgba(255, 254, 251, .76); box-shadow: 0 12px 32px rgba(63, 51, 35, .08); backdrop-filter: blur(10px); min-height: 94px; }
+    .editor-project-block {
+      min-width: 0;
+      display: grid;
+      gap: 4px;
+      align-content: center;
+      flex: 1 1 auto;
+      max-width: 48%;
+    }
+    .editor-project-label {
+      margin: 0;
+      color: #6e6457;
+      font-size: .76rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .editor-project-name {
+      margin: 0;
+      color: #2f291f;
+      font-family: "Cormorant Garamond", "Times New Roman", Georgia, serif;
+      font-size: clamp(1.45rem, 2.1vw, 1.95rem);
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: .01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .editor-project-meta {
+      margin: 0;
+      color: #8b7f6f;
+      font-size: .82rem;
+      font-weight: 540;
+      letter-spacing: .01em;
+      line-height: 1.25;
+    }
+    .editor-project-meta[hidden] { display: none; }
+    .header-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 10px; flex: 0 1 auto; }
     .brand-block { position: relative; padding-left: 16px; min-width: 0; }
     .brand-block::before { position: absolute; left: 0; top: .16em; bottom: .22em; width: 4px; border-radius: 4px; background: #876c47; content: ""; }
     .brand-title { margin: 0; font-family: "Cormorant Garamond", "Times New Roman", Georgia, serif; font-size: clamp(2.5rem, 3.9vw, 3rem); line-height: 1; font-weight: 700; letter-spacing: .01em; color: #2f291f; }
@@ -1085,7 +1122,9 @@
         min-height: 50px;
       }
       .project-grid { grid-template-columns: 1fr; }
-      header { align-items: stretch; flex-direction: column; padding: 18px; }
+      .app > header { align-items: stretch; flex-direction: column; padding: 14px; gap: 12px; min-height: unset; }
+      .editor-project-block { max-width: 100%; }
+      .editor-project-name { font-size: clamp(1.35rem, 6vw, 1.8rem); white-space: normal; }
       .brand-title { font-size: clamp(2.15rem, 8.5vw, 2.7rem); }
       .brand-subtitle { font-size: clamp(.95rem, 3.6vw, 1.06rem); }
       #addImage { width: 100%; }
@@ -1239,9 +1278,10 @@
   <div id="fullscreenOverlay" class="fullscreen-overlay" hidden></div>
   <main class="app" hidden>
     <header>
-      <div class="brand-block" aria-label="La-Tâmplar Mobilă la comandă">
-        <h1 class="brand-title">La-Tâmplar</h1>
-        <p class="brand-subtitle">Mobilă la comandă</p>
+      <div class="editor-project-block" aria-live="polite">
+        <p class="editor-project-label">📁 Proiect:</p>
+        <h1 id="editorProjectName" class="editor-project-name">Proiect nou</h1>
+        <p id="editorProjectMeta" class="editor-project-meta" hidden>Ultima modificare: -</p>
       </div>
       <div class="header-actions">
         <button type="button" id="backToProjects"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path><path d="M9 12h12"></path></svg><span>Proiectele mele</span></button>
@@ -1409,6 +1449,8 @@
       const projectManagerView = document.getElementById('projectManagerView');
       const projectCards = document.getElementById('projectCards');
       const projectEmptyState = document.getElementById('projectEmptyState');
+      const editorProjectNameLabel = document.getElementById('editorProjectName');
+      const editorProjectMetaLabel = document.getElementById('editorProjectMeta');
       const newProjectButton = document.getElementById('pmNewProject');
       const managerImportProjectButton = document.getElementById('pmImportProject');
       const appMain = document.querySelector('main.app');
@@ -1513,6 +1555,7 @@
       let projectImages = [];
       let activeImageIndex = 0;
       let currentProjectName = 'Proiect nou';
+      let currentProjectUpdatedAt = null;
       let activeProjectId = null;
       let pendingProjectNameAction = null;
       let pendingDeleteProjectId = null;
@@ -1586,7 +1629,7 @@
       const projectStore = 'projects';
       const metaStore = 'meta';
       const projectVersion = 2;
-      const APP_VERSION = '1.2.0';
+      const APP_VERSION = '1.1.1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
       const activeProjectMetaKey = 'active-project-id';
@@ -1993,6 +2036,7 @@
 
       function setProjectName(name) {
         currentProjectName = normalizeProjectName(name);
+        syncEditorProjectHeader();
         if (!projectManagerView.hidden) {
           document.title = 'Proiectele mele | La-Tamplar';
         } else {
@@ -2076,6 +2120,38 @@
         }).format(new Date(timestamp));
       }
 
+      function formatProjectMetaDate(dateLike) {
+        const timestamp = Date.parse(String(dateLike || ''));
+        if (!timestamp) return '';
+        const value = new Date(timestamp);
+        const datePart = new Intl.DateTimeFormat('ro-RO', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        }).format(value);
+        const timePart = new Intl.DateTimeFormat('ro-RO', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        }).format(value);
+        return `${datePart} • ${timePart}`;
+      }
+
+      function syncEditorProjectHeader() {
+        if (editorProjectNameLabel) {
+          editorProjectNameLabel.textContent = currentProjectName || 'Proiect nou';
+        }
+        if (!editorProjectMetaLabel) return;
+        const prettyDate = formatProjectMetaDate(currentProjectUpdatedAt);
+        if (!prettyDate) {
+          editorProjectMetaLabel.hidden = true;
+          editorProjectMetaLabel.textContent = '';
+          return;
+        }
+        editorProjectMetaLabel.hidden = false;
+        editorProjectMetaLabel.textContent = `Ultima modificare: ${prettyDate}`;
+      }
+
       function showProjectManager() {
         if (fullscreenMode) {
           setFullscreenMode(false);
@@ -2088,6 +2164,7 @@
       function showEditor() {
         projectManagerView.hidden = true;
         appMain.hidden = false;
+        syncEditorProjectHeader();
         document.title = `${currentProjectName} | Notite interactive pe imagine`;
       }
 
@@ -2234,6 +2311,7 @@
         const record = await readProjectRecord(projectId);
         if (!record || !record.payload) return;
         await setActiveProjectId(record.id);
+        currentProjectUpdatedAt = record.updatedAt || record?.payload?.updatedAt || null;
         setProjectName(record.name || record.payload.projectName || 'Proiect nou');
         await applyProjectState(record.payload);
         showEditor();
@@ -2307,6 +2385,7 @@
               };
               await saveProjectRecord(renamedRecord);
               if (record.id === activeProjectId) {
+                currentProjectUpdatedAt = renamedRecord.updatedAt || null;
                 setProjectName(nextName);
               }
               await renderProjectCards();
@@ -2464,6 +2543,7 @@
           });
 
           await saveProjectRecord(record);
+          currentProjectUpdatedAt = record.updatedAt || null;
           setProjectName(currentName);
 
           if (!projectManagerView.hidden) {
@@ -2582,12 +2662,14 @@
 
       async function applyProjectState(project) {
         const normalizedProject = normalizeIncomingProject(project);
+        currentProjectUpdatedAt = normalizedProject.updatedAt || project?.updatedAt || null;
         setProjectName(normalizedProject.projectName || project?.projectName || project?.name || 'Proiect nou');
 
         projectImages = normalizedProject.images.map((image) => cloneProjectImageState(image));
         sanitizeProjectImagesCollection();
         if (!projectImages.length) {
           resetCurrentProject({ persist: false });
+          currentProjectUpdatedAt = normalizedProject.updatedAt || project?.updatedAt || null;
           setProjectName(normalizedProject.projectName);
           return;
         }
@@ -4198,6 +4280,7 @@
         if (photo.src && photo.src.startsWith('blob:')) {
           photo.removeAttribute('src');
         }
+        currentProjectUpdatedAt = null;
         setProjectName('Proiect nou');
         sourceImage = null;
         imageBlob = null;
