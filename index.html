@@ -430,9 +430,42 @@
     .image-thumb.is-active::after { position: absolute; inset: 7px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, .86); content: ''; pointer-events: none; }
     .thumbnail-add-btn { flex: 0 0 auto; min-width: 104px; min-height: 84px; padding: 8px 10px; border-style: dashed; border-color: rgba(163, 129, 88, .3); background: linear-gradient(180deg, #fbf7f1 0%, #f4eadf 100%); color: #4f4131; border-radius: 14px; box-shadow: inset 0 1px 0 rgba(255,255,255,.5); transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
     .thumbnail-add-btn:hover:not(:disabled) { transform: translateY(-1px); border-color: rgba(163, 129, 88, .5); box-shadow: 0 8px 16px rgba(62, 49, 31, .08); }
-    .mode-switcher { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 8px 0 6px; padding: 4px; border: 1px solid rgba(214, 203, 186, .75); border-radius: 999px; background: rgba(245, 239, 229, .9); }
-    .mode-switcher button { width: 100%; min-height: 36px; border: 0; border-radius: 999px; background: transparent; color: #756b5f; box-shadow: none; transition: all .18s ease; }
-    .mode-switcher button.active { border-color: transparent; background: linear-gradient(180deg, #ffffff 0%, #efe5d8 100%); color: #4e3b2a; box-shadow: 0 4px 10px rgba(73, 56, 38, .1); }
+    .mode-switcher {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+      margin: 8px 0 6px;
+      padding: 4px;
+      border: 1px solid rgba(214, 203, 186, .75);
+      border-radius: 18px;
+      background: linear-gradient(180deg, #f8f4eb 0%, #f2ebdf 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
+    }
+    .mode-switcher button {
+      width: 100%;
+      min-height: 40px;
+      border: 0;
+      border-radius: 14px;
+      background: transparent;
+      color: #6c5848;
+      box-shadow: none;
+      font-weight: 700;
+      letter-spacing: .01em;
+      transition: all .18s ease;
+    }
+    .mode-switcher button:hover:not(.active) {
+      background: rgba(255, 255, 255, .55);
+      color: #4c3a2b;
+      transform: translateY(-1px);
+    }
+    .mode-switcher button.active {
+      border-color: transparent;
+      background: linear-gradient(135deg, #5a4332 0%, #473224 100%);
+      color: #fffdf8;
+      box-shadow: 0 6px 12px rgba(62, 42, 27, .22);
+      font-weight: 800;
+      transform: translateY(-1px);
+    }
     .notes { display: flex; flex-direction: column; min-height: 0; padding: clamp(16px, 2vw, 22px); }
     .notes-title {
       display: flex;
@@ -1054,32 +1087,32 @@
     }
 
     .fullscreen-drawing-toolbar {
-      --panel-line: rgba(255, 255, 255, .16);
-      --panel-fill: linear-gradient(165deg, rgba(29, 35, 46, .78), rgba(14, 18, 24, .66));
-      --panel-text: rgba(242, 247, 255, .96);
-      --panel-muted: rgba(214, 225, 245, .74);
-      --panel-highlight: rgba(108, 211, 255, .72);
+      --panel-line: rgba(255, 255, 255, .22);
+      --panel-fill: linear-gradient(145deg, rgba(34, 41, 53, .92), rgba(18, 24, 31, .78));
+      --panel-text: rgba(247, 251, 255, .97);
+      --panel-muted: rgba(221, 230, 242, .84);
+      --panel-highlight: rgba(108, 211, 255, .78);
       position: fixed;
       left: 24px;
       top: 188px;
       z-index: 1600;
       display: none;
       align-items: center;
-      gap: 14px;
+      gap: 18px;
       transform: translateY(8px) scale(.96);
       transform-origin: left top;
       opacity: 0;
       pointer-events: none;
-      width: clamp(430px, 52vw, 700px);
+      width: clamp(460px, 54vw, 740px);
       max-width: calc(100vw - 26px);
-      min-height: 96px;
-      padding: 12px 16px;
+      min-height: 112px;
+      padding: 16px 18px;
       border: 1px solid var(--panel-line);
-      border-radius: 22px;
+      border-radius: 24px;
       background: var(--panel-fill);
       color: var(--panel-text);
-      box-shadow: 0 16px 34px rgba(3, 6, 12, .28), inset 0 1px 0 rgba(255, 255, 255, .12);
-      backdrop-filter: blur(22px) saturate(150%);
+      box-shadow: 0 20px 40px rgba(2, 6, 13, .34), inset 0 1px 0 rgba(255, 255, 255, .16);
+      backdrop-filter: blur(28px) saturate(170%);
       transition: opacity .16s ease, transform .16s ease;
     }
     .fullscreen-drawing-toolbar.is-open {
@@ -1090,67 +1123,67 @@
     .drawing-tool-group {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
       padding: 0 2px;
       background: transparent;
       min-width: 0;
     }
-    .drawing-tool-group-row { display: flex; align-items: center; gap: 8px; }
+    .drawing-tool-group-row { display: flex; align-items: center; gap: 10px; }
     .tool-label {
       margin-left: 2px;
-      color: rgba(225, 231, 242, .8);
-      font-size: .64rem;
-      font-weight: 620;
-      letter-spacing: .16em;
+      color: rgba(231, 238, 247, .84);
+      font-size: .66rem;
+      font-weight: 680;
+      letter-spacing: .18em;
       text-transform: uppercase;
       user-select: none;
     }
     .drawing-tool-divider {
       width: 1px;
       align-self: stretch;
-      background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, .16), rgba(255, 255, 255, 0));
-      margin: 2px 2px;
+      background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, .22), rgba(255, 255, 255, 0));
+      margin: 2px 4px;
     }
-    .quick-colors { display: flex; align-items: center; gap: 8px; }
+    .quick-colors { display: flex; align-items: center; gap: 10px; }
     .quick-color-button {
-      width: 26px;
-      height: 26px;
-      min-width: 26px;
-      min-height: 26px;
+      width: 34px;
+      height: 34px;
+      min-width: 34px;
+      min-height: 34px;
       padding: 0;
       border: 1.5px solid rgba(255, 255, 255, .42);
       border-radius: 999px;
       background: var(--swatch);
-      box-shadow: inset 0 0 0 1px rgba(5, 10, 16, .24), 0 2px 6px rgba(0, 0, 0, .16);
+      box-shadow: inset 0 0 0 1px rgba(5, 10, 16, .24), 0 3px 8px rgba(0, 0, 0, .18);
       transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
     }
     .quick-color-button:hover:not(:disabled) {
-      transform: translateY(-1px);
-      border-color: rgba(255, 255, 255, .8);
-      box-shadow: inset 0 0 0 1px rgba(5, 10, 16, .24), 0 5px 10px rgba(0, 0, 0, .16);
+      transform: translateY(-2px) scale(1.04);
+      border-color: rgba(255, 255, 255, .9);
+      box-shadow: inset 0 0 0 1px rgba(5, 10, 16, .24), 0 8px 16px rgba(0, 0, 0, .22);
     }
     .quick-color-button.is-selected {
       border-color: rgba(255, 255, 255, .98);
-      box-shadow: inset 0 0 0 1px rgba(9, 13, 20, .28), 0 0 0 2px rgba(255, 255, 255, .88), 0 0 10px rgba(126, 217, 255, .28);
-      transform: translateY(-1px) scale(1.02);
+      box-shadow: inset 0 0 0 1px rgba(9, 13, 20, .28), 0 0 0 3px rgba(255, 255, 255, .9), 0 0 12px rgba(126, 217, 255, .3);
+      transform: translateY(-2px) scale(1.1);
     }
     #fullscreenColorPicker {
-      width: 40px;
-      height: 40px;
-      min-width: 40px;
-      min-height: 40px;
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      min-height: 44px;
       padding: 0;
-      border: 1px solid rgba(255, 255, 255, .3);
-      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, .32);
+      border-radius: 14px;
       background: rgba(255, 255, 255, .08);
       overflow: hidden;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 4px 10px rgba(0, 0, 0, .16);
     }
     #fullscreenColorPicker::-webkit-color-swatch-wrapper { padding: 0; }
     #fullscreenColorPicker::-webkit-color-swatch { border: 0; border-radius: 9px; }
     #fullscreenBrushSize {
-      width: 118px;
-      height: 3px;
+      width: 132px;
+      height: 4px;
       margin: 0;
       -webkit-appearance: none;
       appearance: none;
@@ -1158,83 +1191,85 @@
       background: linear-gradient(to right, rgba(111, 208, 255, .95), rgba(255, 255, 255, .36));
       outline: none;
       transition: all .16s ease;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,.16);
     }
     #fullscreenBrushSize::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 16px;
-      height: 16px;
-      border: 2px solid rgba(255, 255, 255, .9);
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, .95);
       border-radius: 999px;
       background: #f4fbff;
-      box-shadow: 0 4px 10px rgba(8, 14, 24, .28);
+      box-shadow: 0 5px 12px rgba(8, 14, 24, .3);
       cursor: pointer;
       transition: transform .16s ease;
     }
     #fullscreenBrushSize:hover::-webkit-slider-thumb {
-      transform: scale(1.04);
+      transform: scale(1.08);
     }
     #fullscreenBrushSize::-moz-range-track {
-      height: 3px;
+      height: 4px;
       border-radius: 999px;
       background: linear-gradient(to right, rgba(111, 208, 255, .95), rgba(255, 255, 255, .36));
     }
     #fullscreenBrushSize::-moz-range-thumb {
-      width: 16px;
-      height: 16px;
-      border: 2px solid rgba(255, 255, 255, .9);
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, .95);
       border-radius: 999px;
       background: #f4fbff;
-      box-shadow: 0 4px 10px rgba(8, 14, 24, .28);
+      box-shadow: 0 5px 12px rgba(8, 14, 24, .3);
       cursor: pointer;
       transition: transform .16s ease;
     }
     #fullscreenBrushSizeValue {
-      min-width: 46px;
-      color: rgba(246, 251, 255, .95);
-      font-size: .74rem;
+      min-width: 52px;
+      color: rgba(246, 251, 255, .96);
+      font-size: .75rem;
       font-weight: 700;
       letter-spacing: .02em;
       text-align: center;
-      padding: 4px 7px;
-      border: 1px solid rgba(255,255,255,.15);
+      padding: 5px 8px;
+      border: 1px solid rgba(255,255,255,.16);
       border-radius: 999px;
-      background: rgba(255,255,255,.08);
+      background: rgba(255,255,255,.1);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
     }
     .drawing-tool-button {
-      width: 46px;
-      height: 46px;
-      min-width: 46px;
-      min-height: 46px;
+      width: 50px;
+      height: 50px;
+      min-width: 50px;
+      min-height: 50px;
       padding: 0;
-      border: 1px solid rgba(255, 255, 255, .24);
-      border-radius: 13px;
-      background: linear-gradient(165deg, rgba(255, 255, 255, .14), rgba(255, 255, 255, .04));
+      border: 1px solid rgba(255, 255, 255, .25);
+      border-radius: 14px;
+      background: linear-gradient(165deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, .05));
       color: rgba(236, 243, 255, .94);
-      box-shadow: 0 4px 10px rgba(0, 0, 0, .16);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, .18);
       transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease, color .16s ease;
     }
     .drawing-tool-button svg { width: 20px; height: 20px; stroke-width: 2; }
     .drawing-tool-button:hover:not(:disabled) {
-      transform: translateY(-1px);
-      border-color: rgba(255, 255, 255, .42);
-      box-shadow: 0 7px 14px rgba(0, 0, 0, .2);
-      background: linear-gradient(165deg, rgba(255, 255, 255, .2), rgba(255, 255, 255, .08));
+      transform: translateY(-2px) scale(1.03);
+      border-color: rgba(255, 255, 255, .52);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, .24);
+      background: linear-gradient(165deg, rgba(255, 255, 255, .24), rgba(255, 255, 255, .1));
     }
     .drawing-tool-button:active:not(:disabled) { transform: translateY(1px) scale(.97); }
     .drawing-tool-button.active {
-      border-color: rgba(173, 227, 255, .75);
-      background: linear-gradient(165deg, rgba(127, 220, 255, .26), rgba(86, 177, 237, .2));
-      box-shadow: inset 0 0 0 1px rgba(228, 246, 255, .3), 0 0 0 1px rgba(255,255,255,.12), 0 8px 14px rgba(54, 120, 152, .2);
+      border-color: rgba(173, 227, 255, .8);
+      background: linear-gradient(165deg, rgba(127, 220, 255, .28), rgba(86, 177, 237, .24));
+      box-shadow: inset 0 0 0 1px rgba(228, 246, 255, .34), 0 0 0 1px rgba(255,255,255,.14), 0 10px 18px rgba(54, 120, 152, .25);
     }
     .drawing-tool-button.active svg { color: #f7fdff; }
     .drawing-tool-button.danger {
-      border-color: rgba(255, 126, 126, .42);
-      background: linear-gradient(165deg, rgba(255, 138, 138, .22), rgba(255, 120, 120, .12));
+      border-color: rgba(255, 126, 126, .44);
+      background: linear-gradient(165deg, rgba(255, 138, 138, .24), rgba(255, 120, 120, .14));
     }
     .drawing-tool-button.danger:hover:not(:disabled) {
-      border-color: rgba(255, 126, 126, .5);
-      box-shadow: 0 7px 14px rgba(0, 0, 0, .18);
+      border-color: rgba(255, 126, 126, .56);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, .24);
     }
     .drawing-tool-button:disabled { opacity: .44; box-shadow: none; }
     .fullscreen-toolbar-close-fallback { display: none; }
@@ -1252,11 +1287,11 @@
       }
       .drawing-tool-group-row { gap: 6px; }
       .tool-label { font-size: .58rem; letter-spacing: .11em; }
-      .drawing-tool-button { width: 44px; height: 44px; min-width: 44px; min-height: 44px; border-radius: 11px; }
-      #fullscreenColorPicker { width: 36px; height: 36px; min-width: 36px; min-height: 36px; }
-      #fullscreenBrushSize { width: 98px; }
+      .drawing-tool-button { width: 46px; height: 46px; min-width: 46px; min-height: 46px; border-radius: 12px; }
+      #fullscreenColorPicker { width: 40px; height: 40px; min-width: 40px; min-height: 40px; }
+      #fullscreenBrushSize { width: 104px; }
       #fullscreenBrushSizeValue { min-width: 44px; font-size: .74rem; }
-      .quick-color-button { width: 24px; height: 24px; min-width: 24px; min-height: 24px; }
+      .quick-color-button { width: 30px; height: 30px; min-width: 30px; min-height: 30px; }
       .fullscreen-toolbar-toggle { width: 52px; height: 52px; min-width: 52px; min-height: 52px; border-radius: 16px; }
     }
     @media (min-width: 820px) and (max-width: 1366px) {
