@@ -1260,6 +1260,22 @@
       </div>
     </div>
   </div>
+  <div id="exportProjectDialog" class="save-dialog-backdrop" hidden>
+    <div class="export-dialog" role="dialog" aria-modal="true" aria-labelledby="exportProjectDialogTitle">
+      <h2 id="exportProjectDialogTitle">Export proiect</h2>
+      <fieldset class="export-section">
+        <legend>Format proiect</legend>
+        <div class="export-options">
+          <label class="export-option"><input type="radio" name="projectExportFormat" value="atf" checked> 📦 Exportă proiect (.atf)</label>
+          <label class="export-option"><input type="radio" name="projectExportFormat" value="json"> 📄 Exportă proiect (.json)</label>
+        </div>
+      </fieldset>
+      <div class="export-dialog-actions">
+        <button type="button" id="cancelExportProject">Anulează</button>
+        <button type="button" id="confirmExportProject">Exportă</button>
+      </div>
+    </div>
+  </div>
   <div id="clearAllDialog" class="danger-dialog-backdrop" hidden>
     <div class="danger-dialog" role="dialog" aria-modal="true" aria-labelledby="clearAllDialogTitle" aria-describedby="clearAllDialogDescription">
       <h2 id="clearAllDialogTitle">Ștergere proiect</h2>
@@ -1503,11 +1519,14 @@
       const pencilUnsavedDiscardButton = document.getElementById('pencilUnsavedDiscard');
       const pencilUnsavedCancelButton = document.getElementById('pencilUnsavedCancel');
       const exportImageDialog = document.getElementById('exportImageDialog');
+      const exportProjectDialog = document.getElementById('exportProjectDialog');
       const projectNameInput = document.getElementById('projectNameInput');
       const cancelProjectSaveButton = document.getElementById('cancelProjectSave');
       const confirmProjectSaveButton = document.getElementById('confirmProjectSave');
       const cancelExportImageButton = document.getElementById('cancelExportImage');
       const confirmExportImageButton = document.getElementById('confirmExportImage');
+      const cancelExportProjectButton = document.getElementById('cancelExportProject');
+      const confirmExportProjectButton = document.getElementById('confirmExportProject');
       const clearAllDialog = document.getElementById('clearAllDialog');
       const cancelClearAllButton = document.getElementById('cancelClearAll');
       const confirmClearAllButton = document.getElementById('confirmClearAll');
@@ -1653,6 +1672,7 @@
       let drawingFrameRequest = null;
       let pendingStrokePoints = [];
       let projectManagerNeedsRefresh = false;
+      let pendingProjectExportContext = null;
       const MIN_ZOOM_LEVEL = 1;
       const MAX_ZOOM_LEVEL = 12;
       const DOUBLE_TAP_ZOOM_LEVEL = 4;
@@ -1663,7 +1683,7 @@
       const projectStore = 'projects';
       const metaStore = 'meta';
       const projectVersion = 2;
-      const APP_VERSION = '1.2.4';
+      const APP_VERSION = '1.2.5';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
       const activeProjectMetaKey = 'active-project-id';
@@ -2055,6 +2075,22 @@
         return text || 'Proiect nou';
       }
 
+      function isLikelyAtelierProjectFile(project) {
+        if (!project || typeof project !== 'object') return false;
+        if (project.format === 'atelier-fisa-project') return true;
+
+        const hasLegacyImage = Boolean(project.image && typeof project.image === 'object' && typeof project.image.dataUrl === 'string' && project.image.dataUrl.trim());
+        if (hasLegacyImage) return true;
+
+        const hasImagesArray = Array.isArray(project.images);
+        const hasProjectIdentity = typeof project.projectName === 'string' || typeof project.name === 'string';
+        const hasStateKeys = Number.isFinite(Number(project.activeImageIndex)) || typeof project.updatedAt === 'string' || Number.isFinite(Number(project.version));
+        if (hasImagesArray && (hasProjectIdentity || hasStateKeys)) return true;
+
+        const hasLegacyState = Array.isArray(project.notes) || Boolean(project.drawing && typeof project.drawing === 'object') || Boolean(project.ui && typeof project.ui === 'object');
+        return hasLegacyState;
+      }
+
       function isIPadOSDevice() {
         const userAgent = navigator.userAgent || '';
         const isIOS = /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -2064,8 +2100,12 @@
       function getProjectFileName(value = currentProjectName, extension = 'atf') {
         const baseName = normalizeProjectName(value);
         const normalizedExtension = String(extension || 'atf').trim().toLowerCase().replace('.', '');
-        const safeExtension = normalizedExtension === 'jsd' ? 'jsd' : 'atf';
+        const safeExtension = normalizedExtension === 'json' ? 'json' : (normalizedExtension === 'jsd' ? 'jsd' : 'atf');
         return `${baseName}.${safeExtension}`;
+      }
+
+      function getProjectExportMimeType(extension) {
+        return extension === 'json' ? 'application/json' : 'application/x.atelier-fisa+json';
       }
 
       function setProjectName(name) {
@@ -2281,7 +2321,8 @@
             { action: 'open', label: 'Deschide', icon: '📂' },
             { action: 'rename', label: 'Redenumește', icon: '✏️' },
             { action: 'duplicate', label: 'Duplică', icon: '📄' },
-            { action: 'export-project', label: 'Exportă proiect (.atf)', icon: '📤' },
+            { action: 'export-project-atf', label: 'Exportă proiect (.atf)', icon: '📦' },
+            { action: 'export-project-json', label: 'Exportă proiect (.json)', icon: '📄' },
             { action: 'separator' },
             { action: 'delete', label: 'Șterge proiect', icon: '🗑️', danger: true }
           ];
@@ -2453,8 +2494,13 @@
           return;
         }
 
-        if (action === 'export-project') {
+        if (action === 'export-project-atf') {
           await exportProjectPayload(record.payload, record.name || 'Proiect', { extension: 'atf' });
+          return;
+        }
+
+        if (action === 'export-project-json') {
+          await exportProjectPayload(record.payload, record.name || 'Proiect', { extension: 'json' });
           return;
         }
 
@@ -4635,6 +4681,40 @@
         pendingProjectNameAction = null;
       }
 
+      function openExportProjectDialog(context = { type: 'editor' }) {
+        pendingProjectExportContext = context;
+        const preferredFormat = context?.preferredFormat === 'json' ? 'json' : 'atf';
+        const formatInput = document.querySelector(`input[name="projectExportFormat"][value="${preferredFormat}"]`);
+        if (formatInput) {
+          formatInput.checked = true;
+        }
+        exportProjectDialog.hidden = false;
+        requestAnimationFrame(() => {
+          if (confirmExportProjectButton) {
+            confirmExportProjectButton.focus();
+          }
+        });
+      }
+
+      function closeExportProjectDialog() {
+        exportProjectDialog.hidden = true;
+        pendingProjectExportContext = null;
+      }
+
+      async function submitExportProjectDialog() {
+        const selectedFormatInput = document.querySelector('input[name="projectExportFormat"]:checked');
+        const extension = selectedFormatInput?.value === 'json' ? 'json' : 'atf';
+        const context = pendingProjectExportContext || { type: 'editor' };
+        closeExportProjectDialog();
+
+        if (context.type === 'record' && context.record) {
+          await exportProjectPayload(context.record.payload, context.record.name || 'Proiect', { extension });
+          return;
+        }
+
+        await exportCurrentProject(extension);
+      }
+
       async function submitProjectNameDialog() {
         const action = pendingProjectNameAction;
         const value = projectNameInput.value;
@@ -4646,11 +4726,17 @@
       async function exportProjectPayload(payload, nameOverride = null, options = {}) {
         const project = normalizeIncomingProject(payload || {});
         const chosenName = normalizeProjectName(nameOverride || project.projectName || currentProjectName);
-        const extension = options && options.extension ? options.extension : 'atf';
+        const extension = options && options.extension ? String(options.extension).toLowerCase() : 'atf';
+        const normalizedExtension = extension === 'json' ? 'json' : 'atf';
+        const exportTimestamp = new Date().toISOString();
         project.projectName = chosenName;
-        const fileName = getProjectFileName(chosenName, extension);
+        project.format = 'atelier-fisa-project';
+        project.appVersion = APP_VERSION;
+        project.exportedAt = exportTimestamp;
+        const fileName = getProjectFileName(chosenName, normalizedExtension);
+        const mimeType = getProjectExportMimeType(normalizedExtension);
         const fileContent = JSON.stringify(project, null, 2);
-        const file = new File([fileContent], fileName, { type: 'application/json' });
+        const file = new File([fileContent], fileName, { type: mimeType });
 
         if (isIPadOSDevice()) {
           try {
@@ -4697,7 +4783,7 @@
           return;
         }
 
-        const blob = new Blob([fileContent], { type: 'application/json' });
+        const blob = new Blob([fileContent], { type: mimeType });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.download = fileName;
@@ -4714,23 +4800,23 @@
         await renderProjectCards();
       }
 
-      async function exportCurrentProject() {
+      async function exportCurrentProject(extension = 'atf') {
         if (!activeProjectId) return;
         const payload = await buildProjectPayload();
-        await exportProjectPayload(payload, currentProjectName);
+        await exportProjectPayload(payload, currentProjectName, { extension });
         await saveLastWork(payload);
         markProjectClean();
       }
 
       async function loadProjectFromFile(file, { openAfterImport = true } = {}) {
         if (!file) return;
-        const fileName = String(file.name || '').toLowerCase();
-        const hasAllowedExtension = fileName.endsWith('.json') || fileName.endsWith('.atf') || fileName.endsWith('.jsd');
-        const allowedType = !file.type || file.type === 'application/json' || file.type === 'text/json';
-        if (!hasAllowedExtension && !allowedType) return;
         try {
           const text = await file.text();
           const imported = JSON.parse(text);
+          if (!isLikelyAtelierProjectFile(imported)) {
+            window.alert('Fișierul selectat nu este un proiect Atelier Fișa valid.');
+            return;
+          }
           const normalizedPayload = normalizeIncomingProject(imported);
           const importedName = normalizeProjectName(imported?.projectName || imported?.name || file.name || 'Proiect nou');
           normalizedPayload.projectName = importedName;
@@ -4746,6 +4832,7 @@
             await openProjectById(record.id);
           }
         } catch (error) {
+          window.alert('Fișierul selectat nu este un proiect Atelier Fișa valid.');
           console.warn('Proiectul nu a putut fi încărcat.', error);
         }
       }
@@ -4829,6 +4916,11 @@
         if (!exportImageDialog.hidden && event.key === 'Escape') {
           event.preventDefault();
           closeExportImageDialog();
+          return;
+        }
+        if (!exportProjectDialog.hidden && event.key === 'Escape') {
+          event.preventDefault();
+          closeExportProjectDialog();
           return;
         }
         if (!deleteNoteDialog.hidden && event.key === 'Escape') {
@@ -4921,7 +5013,7 @@
         clear.addEventListener('click', openClearAllDialog);
       }
       save.addEventListener('click', saveProject);
-      exportProjectButton.addEventListener('click', exportCurrentProject);
+      exportProjectButton.addEventListener('click', () => openExportProjectDialog({ type: 'editor' }));
       saveImage.addEventListener('click', openExportImageDialog);
       cancelClearAllButton.addEventListener('click', closeClearAllDialog);
       confirmClearAllButton.addEventListener('click', () => {
@@ -4946,9 +5038,17 @@
         closeExportImageDialog();
         await exportCurrentImage();
       });
+      cancelExportProjectButton.addEventListener('click', closeExportProjectDialog);
+      confirmExportProjectButton.addEventListener('click', async () => {
+        await submitExportProjectDialog();
+      });
       exportImageDialog.addEventListener('pointerdown', (event) => {
         if (event.target !== exportImageDialog) return;
         closeExportImageDialog();
+      });
+      exportProjectDialog.addEventListener('pointerdown', (event) => {
+        if (event.target !== exportProjectDialog) return;
+        closeExportProjectDialog();
       });
       cancelDeleteNoteButton.addEventListener('click', closeDeleteNoteDialog);
       confirmDeleteNoteButton.addEventListener('click', () => {
@@ -5014,6 +5114,23 @@
         if (event.key === 'Escape') {
           event.preventDefault();
           closeExportImageDialog();
+        }
+      });
+      cancelExportProjectButton.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeExportProjectDialog();
+        }
+      });
+      confirmExportProjectButton.addEventListener('keydown', async (event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeExportProjectDialog();
+          return;
+        }
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          await submitExportProjectDialog();
         }
       });
       cancelDeleteNoteButton.addEventListener('keydown', (event) => {
