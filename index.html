@@ -1110,15 +1110,15 @@
       align-items: center;
       justify-content: flex-start;
       gap: 8px;
-      width: min(94vw, 720px);
-      max-width: min(94vw, 720px);
-      height: 72px;
-      padding: 8px 10px;
+      width: auto;
+      min-width: min-content;
+      max-width: min(96vw, 760px);
+      padding: 7px 9px;
       border: 1px solid var(--panel-line);
-      border-radius: 16px;
+      border-radius: 999px;
       background: var(--panel-fill);
       color: var(--panel-text);
-      box-shadow: 0 14px 28px rgba(2, 6, 13, .26), inset 0 1px 0 rgba(255, 255, 255, .16);
+      box-shadow: 0 16px 30px rgba(2, 6, 13, .28), inset 0 1px 0 rgba(255, 255, 255, .16);
       backdrop-filter: blur(24px) saturate(160%);
       overflow-x: auto;
       scrollbar-width: none;
@@ -1130,8 +1130,9 @@
       justify-content: flex-start;
       gap: 8px;
       flex-wrap: nowrap;
-      width: 100%;
-      min-width: 0;
+      width: auto;
+      min-width: max-content;
+      max-width: 100%;
     }
     .drawing-tool-group {
       display: flex;
@@ -1286,10 +1287,9 @@
 
     @media (max-width: 860px) {
       .fullscreen-drawing-toolbar-shell {
-        height: 68px;
         padding: 6px 8px;
         gap: 6px;
-        border-radius: 14px;
+        border-radius: 18px;
       }
       .drawing-toolbar-row { gap: 6px; }
       .drawing-tool-group-row { gap: 4px; }
@@ -1302,8 +1302,8 @@
     }
     @media (max-width: 640px) {
       .fullscreen-drawing-toolbar-shell {
-        width: min(96vw, 640px);
-        height: 66px;
+        width: auto;
+        max-width: min(96vw, 640px);
         padding: 6px;
       }
       .drawing-toolbar-row { gap: 5px; }
@@ -2339,6 +2339,42 @@
         return value;
       }
 
+      async function resolveProjectImageDataUrl(image, fallbackBlob = null) {
+        const rawValue = typeof image?.dataUrl === 'string' ? image.dataUrl.trim() : '';
+        if (rawValue.startsWith('data:')) {
+          return rawValue;
+        }
+        if (rawValue.startsWith('blob:')) {
+          try {
+            const response = await fetch(rawValue);
+            const blob = await response.blob();
+            return await blobToDataUrl(blob);
+          } catch (error) {
+            console.warn('URL-ul de imagine blob nu a putut fi convertit.', error);
+          }
+        }
+        if (typeof image?.imageDataUrl === 'string' && image.imageDataUrl.trim()) {
+          return image.imageDataUrl.trim();
+        }
+        if (typeof image?.src === 'string' && image.src.trim()) {
+          return image.src.trim();
+        }
+        if (typeof image?.imageUrl === 'string' && image.imageUrl.trim()) {
+          return image.imageUrl.trim();
+        }
+        if (typeof image?.blobUrl === 'string' && image.blobUrl.trim()) {
+          return image.blobUrl.trim();
+        }
+        if (fallbackBlob) {
+          try {
+            return await blobToDataUrl(fallbackBlob);
+          } catch (error) {
+            console.warn('Datele de imagine fallback nu au putut fi convertite.', error);
+          }
+        }
+        return rawValue;
+      }
+
       function cloneProjectImageState(image = {}) {
         const source = image && typeof image === 'object' ? image : {};
         const drawSettings = source.drawSettings && typeof source.drawSettings === 'object' ? source.drawSettings : {};
@@ -2346,10 +2382,13 @@
         const sizeValue = Number(drawSettings.size);
         const penSizeValue = Number(drawSettings.lastPenSize);
         const eraserSizeValue = Number(drawSettings.lastEraserSize);
+        const resolvedDataUrl = typeof source.dataUrl === 'string' && source.dataUrl.trim()
+          ? source.dataUrl.trim()
+          : (typeof source.imageDataUrl === 'string' && source.imageDataUrl.trim() ? source.imageDataUrl.trim() : '');
         return {
           id: source.id || createNoteId(),
           name: source.name || '',
-          dataUrl: source.dataUrl || '',
+          dataUrl: resolvedDataUrl,
           type: source.type || 'image/png',
           strokes: cloneProjectData(Array.isArray(source.strokes) ? source.strokes : []),
           notes: normalizeNotesCollection(cloneProjectData(Array.isArray(source.notes) ? source.notes : [])),
@@ -2371,7 +2410,15 @@
       }
 
       function hasProjectImagePayload(image) {
-        return Boolean(image && typeof image === 'object' && typeof image.dataUrl === 'string' && image.dataUrl.trim());
+        if (!image || typeof image !== 'object') return false;
+        const candidates = [
+          image.dataUrl,
+          image.imageDataUrl,
+          image.src,
+          image.imageUrl,
+          image.blobUrl
+        ];
+        return candidates.some((value) => typeof value === 'string' && value.trim());
       }
 
       function hasProjectImageState(image) {
@@ -2999,6 +3046,10 @@
           }
         }
 
+        if (activeImage.dataUrl && activeImage.dataUrl.startsWith('blob:')) {
+          activeImage.dataUrl = await resolveProjectImageDataUrl(activeImage, imageBlob);
+        }
+
         if (!activeImage.dataUrl) {
           return;
         }
@@ -3020,13 +3071,7 @@
             const imageRecord = cloneProjectImageState(image);
             let dataUrl = imageRecord.dataUrl || '';
             if (dataUrl && !dataUrl.startsWith('data:')) {
-              try {
-                const response = await fetch(dataUrl);
-                const blob = await response.blob();
-                dataUrl = await blobToDataUrl(blob);
-              } catch (error) {
-                dataUrl = imageRecord.dataUrl || '';
-              }
+              dataUrl = await resolveProjectImageDataUrl(imageRecord, imageBlob);
             }
             return {
               id: imageRecord.id || createNoteId(),
