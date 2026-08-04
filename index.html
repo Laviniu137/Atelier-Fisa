@@ -3706,10 +3706,9 @@
       }
 
       function handleFloatingToolbarOutsidePointerDown(event) {
-        if (!fullscreenMode || !floatingToolbarOpen) return;
+        if (!fullscreenMode) return;
         if (!fullscreenDrawingToolbar || !fullscreenToolbarToggle) return;
         if (fullscreenDrawingToolbar.contains(event.target) || fullscreenToolbarToggle.contains(event.target)) return;
-        setFloatingToolbarOpen(false);
       }
 
       function renderNoteList() {
@@ -5099,19 +5098,15 @@
         applyCurrentBrushSettings();
         syncBrushControls();
         scheduleSave();
-        setFloatingToolbarOpen(false);
       });
       fullscreenUndoBtn.addEventListener('click', () => {
         undoLastLine();
-        setFloatingToolbarOpen(false);
       });
       fullscreenRedoBtn.addEventListener('click', () => {
         redoLastLine();
-        setFloatingToolbarOpen(false);
       });
       fullscreenClearBtn.addEventListener('click', () => {
         openClearAllDialog();
-        setFloatingToolbarOpen(false);
       });
       document.querySelectorAll('.quick-color-button').forEach((button) => {
         button.addEventListener('click', () => {
@@ -5122,7 +5117,6 @@
           applyCurrentBrushSettings();
           syncBrushControls();
           scheduleSave();
-          setFloatingToolbarOpen(false);
         });
       });
       window.addEventListener('keydown', (event) => {
