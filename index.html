@@ -1951,6 +1951,8 @@
       let projectDirty = false;
       let autosaveInProgress = false;
       let autosaveMutationCounter = 0;
+      let projectRestoreInProgress = false;
+      let pendingAutosaveAfterRestore = false;
       let pendingRecoveryResolver = null;
       let drawingFrameRequest = null;
       let pendingStrokePoints = [];
@@ -1968,7 +1970,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.4.4';
+      const APP_VERSION = '1.4.5';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2257,84 +2259,95 @@
       }
 
       async function migrateStoredProjectsIfNeeded() {
-        const alreadyMigrated = await getMetaValue(projectMigrationMetaKey);
-        if (alreadyMigrated === String(projectVersion)) {
-          return;
-        }
-
-        const existingProjects = await readAllProjectRecords();
-        for (const record of existingProjects) {
-          const normalizedPayload = normalizeIncomingProject(record?.payload || record);
-          const fallbackName = normalizeProjectName(record?.name || normalizedPayload?.projectName || 'Proiect nou');
-          const nextPayload = {
-            ...normalizedPayload,
-            projectName: fallbackName,
-            updatedAt: normalizedPayload.updatedAt || record?.updatedAt || new Date().toISOString()
-          };
-          const nextRecord = {
-            ...(record || {}),
-            id: record?.id || createProjectId(),
-            name: fallbackName,
-            createdAt: record?.createdAt || nextPayload.updatedAt || new Date().toISOString(),
-            updatedAt: record?.updatedAt || nextPayload.updatedAt || new Date().toISOString(),
-            thumbnail: getProjectThumbnail(nextPayload.images),
-            stats: {
-              images: Array.isArray(nextPayload.images) ? nextPayload.images.length : 0,
-              notes: countProjectNotes(Array.isArray(nextPayload.images) ? nextPayload.images : [])
-            },
-            payload: nextPayload
-          };
-
-          const existingPayloadImages = Array.isArray(record?.payload?.images) ? record.payload.images : [];
-          const normalizedPayloadImages = Array.isArray(nextPayload.images) ? nextPayload.images : [];
-          const existingActiveImageIndex = Number(record?.payload?.activeImageIndex ?? record?.activeImageIndex ?? 0);
-          const normalizedActiveImageIndex = Number(nextPayload.activeImageIndex ?? 0);
-          const needsMigration = Boolean(
-            !record
-            || Number(record?.payload?.version || record?.version || 0) < projectVersion
-            || record?.name !== fallbackName
-            || !record?.payload
-            || !Array.isArray(record?.payload?.images)
-            || record?.thumbnail !== nextRecord.thumbnail
-            || record?.stats?.images !== nextRecord.stats.images
-            || record?.stats?.notes !== nextRecord.stats.notes
-            || existingPayloadImages.length !== normalizedPayloadImages.length
-            || existingActiveImageIndex !== normalizedActiveImageIndex
-            || JSON.stringify(existingPayloadImages) !== JSON.stringify(normalizedPayloadImages)
-          );
-
-          if (!needsMigration) {
-            continue;
+        projectRestoreInProgress = true;
+        pendingAutosaveAfterRestore = false;
+        try {
+          const alreadyMigrated = await getMetaValue(projectMigrationMetaKey);
+          if (alreadyMigrated === String(projectVersion)) {
+            return;
           }
 
-          try {
-            const backupEntry = await createProjectBackup(record, 'migration');
-            await saveProjectRecord(nextRecord);
-            if (backupEntry && activeProjectId === record?.id) {
-              currentProjectUpdatedAt = nextRecord.updatedAt || null;
+          const existingProjects = await readAllProjectRecords();
+          for (const record of existingProjects) {
+            const normalizedPayload = normalizeIncomingProject(record?.payload || record);
+            const fallbackName = normalizeProjectName(record?.name || normalizedPayload?.projectName || 'Proiect nou');
+            const nextPayload = {
+              ...normalizedPayload,
+              projectName: fallbackName,
+              updatedAt: normalizedPayload.updatedAt || record?.updatedAt || new Date().toISOString()
+            };
+            const nextRecord = {
+              ...(record || {}),
+              id: record?.id || createProjectId(),
+              name: fallbackName,
+              createdAt: record?.createdAt || nextPayload.updatedAt || new Date().toISOString(),
+              updatedAt: record?.updatedAt || nextPayload.updatedAt || new Date().toISOString(),
+              thumbnail: getProjectThumbnail(nextPayload.images),
+              stats: {
+                images: Array.isArray(nextPayload.images) ? nextPayload.images.length : 0,
+                notes: countProjectNotes(Array.isArray(nextPayload.images) ? nextPayload.images : [])
+              },
+              payload: nextPayload
+            };
+
+            const existingPayloadImages = Array.isArray(record?.payload?.images) ? record.payload.images : [];
+            const normalizedPayloadImages = Array.isArray(nextPayload.images) ? nextPayload.images : [];
+            const existingActiveImageIndex = Number(record?.payload?.activeImageIndex ?? record?.activeImageIndex ?? 0);
+            const normalizedActiveImageIndex = Number(nextPayload.activeImageIndex ?? 0);
+            const needsMigration = Boolean(
+              !record
+              || Number(record?.payload?.version || record?.version || 0) < projectVersion
+              || record?.name !== fallbackName
+              || !record?.payload
+              || !Array.isArray(record?.payload?.images)
+              || record?.thumbnail !== nextRecord.thumbnail
+              || record?.stats?.images !== nextRecord.stats.images
+              || record?.stats?.notes !== nextRecord.stats.notes
+              || existingPayloadImages.length !== normalizedPayloadImages.length
+              || existingActiveImageIndex !== normalizedActiveImageIndex
+              || JSON.stringify(existingPayloadImages) !== JSON.stringify(normalizedPayloadImages)
+            );
+
+            if (!needsMigration) {
+              continue;
             }
-          } catch (error) {
-            console.warn('Migrarea proiectului a eșuat, se restaurează backup-ul.', error);
-            await restoreProjectBackup(record?.id);
+
+            try {
+              const backupEntry = await createProjectBackup(record, 'migration');
+              await saveProjectRecord(nextRecord);
+              if (backupEntry && activeProjectId === record?.id) {
+                currentProjectUpdatedAt = nextRecord.updatedAt || null;
+              }
+            } catch (error) {
+              console.warn('Migrarea proiectului a eșuat, se restaurează backup-ul.', error);
+              await restoreProjectBackup(record?.id);
+            }
+          }
+
+          const legacyProject = await readLegacyLastWorkFromDatabase();
+          if (legacyProject && (!existingProjects.length || (!existingProjects.some((record) => record?.payload?.projectName === legacyProject?.projectName && Array.isArray(record?.payload?.images)))) ) {
+            try {
+              const normalizedPayload = normalizeIncomingProject(legacyProject);
+              const record = buildProjectRecordFromPayload(normalizedPayload, {
+                name: legacyProject?.projectName || legacyProject?.name || 'Proiect recuperat'
+              });
+              await createProjectBackup(record, 'legacy-autosave');
+              await saveProjectRecord(record);
+              await setActiveProjectId(record.id);
+            } catch (error) {
+              console.warn('Recuperarea din autosave-ul vechi a eșuat.', error);
+            }
+          }
+
+          await setMetaValue(projectMigrationMetaKey, String(projectVersion));
+        } finally {
+          projectRestoreInProgress = false;
+          if (pendingAutosaveAfterRestore && projectDirty) {
+            pendingAutosaveAfterRestore = false;
+            window.clearTimeout(saveTimer);
+            saveTimer = window.setTimeout(() => flushAutosave({ force: true }), 0);
           }
         }
-
-        const legacyProject = await readLegacyLastWorkFromDatabase();
-        if (legacyProject && (!existingProjects.length || (!existingProjects.some((record) => record?.payload?.projectName === legacyProject?.projectName && Array.isArray(record?.payload?.images)))) ) {
-          try {
-            const normalizedPayload = normalizeIncomingProject(legacyProject);
-            const record = buildProjectRecordFromPayload(normalizedPayload, {
-              name: legacyProject?.projectName || legacyProject?.name || 'Proiect recuperat'
-            });
-            await createProjectBackup(record, 'legacy-autosave');
-            await saveProjectRecord(record);
-            await setActiveProjectId(record.id);
-          } catch (error) {
-            console.warn('Recuperarea din autosave-ul vechi a eșuat.', error);
-          }
-        }
-
-        await setMetaValue(projectMigrationMetaKey, String(projectVersion));
       }
 
       function blobToDataUrl(blob) {
@@ -3075,6 +3088,10 @@
       }
 
       async function saveLastWork(projectOverride = null) {
+        if (projectRestoreInProgress) {
+          pendingAutosaveAfterRestore = true;
+          return;
+        }
         try {
           const payload = normalizeIncomingProject(projectOverride || await buildProjectPayload());
           const currentName = normalizeProjectName(payload.projectName || currentProjectName || 'Proiect nou');
@@ -3128,6 +3145,10 @@
       }
 
       async function flushAutosave({ force = false } = {}) {
+        if (projectRestoreInProgress) {
+          pendingAutosaveAfterRestore = true;
+          return;
+        }
         if (!force && !projectDirty) return;
         if (!force && isContinuousInteractionActive()) {
           window.clearTimeout(saveTimer);
@@ -3158,6 +3179,11 @@
       }
 
       function scheduleSave() {
+        if (projectRestoreInProgress) {
+          pendingAutosaveAfterRestore = true;
+          projectDirty = true;
+          return;
+        }
         window.clearTimeout(saveTimer);
         autosaveMutationCounter += 1;
         projectDirty = true;
@@ -3218,25 +3244,36 @@
       }
 
       async function applyProjectState(project) {
-        const normalizedProject = normalizeIncomingProject(project);
-        currentProjectUpdatedAt = normalizedProject.updatedAt || project?.updatedAt || null;
-        setProjectName(normalizedProject.projectName || project?.projectName || project?.name || 'Proiect nou');
-
-        projectImages = normalizedProject.images.map((image) => cloneProjectImageState(image));
-        sanitizeProjectImagesCollection();
-        if (!projectImages.length) {
-          resetCurrentProject({ persist: false });
+        projectRestoreInProgress = true;
+        pendingAutosaveAfterRestore = false;
+        try {
+          const normalizedProject = normalizeIncomingProject(project);
           currentProjectUpdatedAt = normalizedProject.updatedAt || project?.updatedAt || null;
-          setProjectName(normalizedProject.projectName);
-          return;
-        }
+          setProjectName(normalizedProject.projectName || project?.projectName || project?.name || 'Proiect nou');
 
-        activeImageIndex = resolveActiveImageIndex(
-          projectImages,
-          Number.isFinite(Number(normalizedProject.activeImageIndex)) ? Number(normalizedProject.activeImageIndex) : 0
-        );
-        await activateImageAt(activeImageIndex, { persist: false });
-        markProjectClean();
+          projectImages = normalizedProject.images.map((image) => cloneProjectImageState(image));
+          sanitizeProjectImagesCollection();
+          if (!projectImages.length) {
+            resetCurrentProject({ persist: false });
+            currentProjectUpdatedAt = normalizedProject.updatedAt || project?.updatedAt || null;
+            setProjectName(normalizedProject.projectName);
+            return;
+          }
+
+          activeImageIndex = resolveActiveImageIndex(
+            projectImages,
+            Number.isFinite(Number(normalizedProject.activeImageIndex)) ? Number(normalizedProject.activeImageIndex) : 0
+          );
+          await activateImageAt(activeImageIndex, { persist: false });
+          markProjectClean();
+        } finally {
+          projectRestoreInProgress = false;
+          if (pendingAutosaveAfterRestore && projectDirty) {
+            pendingAutosaveAfterRestore = false;
+            window.clearTimeout(saveTimer);
+            saveTimer = window.setTimeout(() => flushAutosave({ force: true }), 0);
+          }
+        }
       }
 
       async function restoreProject(project) {
