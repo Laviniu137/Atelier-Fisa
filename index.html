@@ -1027,7 +1027,8 @@
     body.fullscreen-mode #fullscreenBtn { display: none; }
     body.fullscreen-mode .fullscreen-close-btn { display: inline-flex; }
     body.fullscreen-mode .fullscreen-toolbar-toggle { display: inline-flex; }
-    body.fullscreen-mode .fullscreen-drawing-toolbar { display: none; }
+    body.fullscreen-mode .fullscreen-drawing-toolbar:not(.is-open) { display: none; }
+    body.fullscreen-mode .fullscreen-drawing-toolbar.is-open { display: flex; }
     .fullscreen-close-btn {
       position: fixed;
       top: calc(env(safe-area-inset-top, 0px) + 18px);
@@ -4050,10 +4051,14 @@
         fullscreenToolbarToggle.classList.toggle('is-active', floatingToolbarOpen);
         fullscreenDrawingToolbar.classList.toggle('is-open', floatingToolbarOpen);
         fullscreenDrawingToolbar.hidden = !fullscreenMode || !floatingToolbarOpen;
-        fullscreenDrawingToolbar.style.display = !fullscreenMode || !floatingToolbarOpen ? 'none' : 'flex';
+        fullscreenDrawingToolbar.style.removeProperty('display');
         fullscreenToolbarToggle.setAttribute('aria-expanded', floatingToolbarOpen ? 'true' : 'false');
         if (floatingToolbarOpen) {
-          positionFloatingToolbar();
+          requestAnimationFrame(() => {
+            if (fullscreenDrawingToolbar && !fullscreenDrawingToolbar.hidden) {
+              positionFloatingToolbar();
+            }
+          });
         }
       }
 
@@ -4838,7 +4843,7 @@
         if (fullscreenDrawingToolbar) {
           fullscreenDrawingToolbar.hidden = !enabled;
           fullscreenDrawingToolbar.classList.remove('is-open');
-          fullscreenDrawingToolbar.style.display = enabled ? 'none' : 'none';
+          fullscreenDrawingToolbar.style.removeProperty('display');
         }
         if (enabled) {
           previousFullscreenTool = activeTool;
@@ -4877,7 +4882,7 @@
           if (fullscreenDrawingToolbar) {
             fullscreenDrawingToolbar.hidden = true;
             fullscreenDrawingToolbar.classList.remove('is-open');
-            fullscreenDrawingToolbar.style.display = 'none';
+            fullscreenDrawingToolbar.style.removeProperty('display');
           }
           if (fullscreenToolbarToggle) {
             fullscreenToolbarToggle.hidden = true;
