@@ -28,6 +28,203 @@
     button:focus-visible, #notes:focus { outline: 3px solid rgba(107, 86, 59, .36); outline-offset: 3px; }
     button:disabled { cursor: not-allowed; border-color: #e6e1d9; background: #f5f2ed; color: #afa89e; box-shadow: none; }
     .app { max-width: 1380px; margin: 0 auto; padding: clamp(18px, 3vw, 42px); }
+    .project-manager-view {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: clamp(20px, 3vw, 44px);
+      display: grid;
+      gap: 20px;
+    }
+    .project-manager-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+      padding: 22px;
+      border: 1px solid rgba(136, 119, 91, .16);
+      border-radius: 22px;
+      background: linear-gradient(140deg, rgba(255, 254, 251, .9), rgba(246, 240, 230, .78));
+      box-shadow: 0 16px 34px rgba(63, 51, 35, .1);
+    }
+    .project-manager-title-block {
+      min-width: 0;
+      display: grid;
+      gap: 5px;
+    }
+    .project-manager-title {
+      margin: 0;
+      font-family: "Cormorant Garamond", "Times New Roman", Georgia, serif;
+      font-size: clamp(2.35rem, 4.4vw, 3.1rem);
+      line-height: 1;
+      font-weight: 700;
+      color: #2f291f;
+    }
+    .project-manager-subtitle {
+      margin: 0;
+      color: #6e6252;
+      font-size: .96rem;
+      letter-spacing: .03em;
+      line-height: 1.45;
+    }
+    .project-manager-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    #pmNewProject {
+      border-color: #3f6a4f;
+      background: #3f6a4f;
+      color: #fff;
+      box-shadow: 0 10px 18px rgba(36, 73, 53, .2);
+      min-width: 176px;
+    }
+    #pmNewProject:hover:not(:disabled) {
+      border-color: #345842;
+      background: #345842;
+    }
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      align-items: stretch;
+    }
+    .project-card {
+      border: 1px solid rgba(134, 116, 89, .2);
+      border-radius: 18px;
+      background: rgba(255, 253, 249, .9);
+      box-shadow: 0 14px 30px rgba(59, 45, 27, .11);
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: 170px auto;
+      min-height: 320px;
+    }
+    .project-card-thumb-wrap {
+      position: relative;
+      background: linear-gradient(145deg, #e7dece, #f6f0e5);
+      border-bottom: 1px solid rgba(134, 116, 89, .2);
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .project-card-thumb {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .project-card-body {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+    .project-card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .project-card-open {
+      all: unset;
+      cursor: pointer;
+      color: #2e281f;
+      font-size: 1.02rem;
+      font-weight: 750;
+      line-height: 1.28;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .project-card-open:hover {
+      color: #4b4133;
+      text-decoration: underline;
+      text-decoration-thickness: 1.5px;
+    }
+    .project-card-date {
+      color: #6f6455;
+      font-size: .82rem;
+      line-height: 1.35;
+    }
+    .project-card-stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .project-stat {
+      padding: 8px 10px;
+      border: 1px solid #e5ddd0;
+      border-radius: 12px;
+      background: #fbf8f3;
+      color: #4f4335;
+      font-size: .84rem;
+      font-weight: 650;
+      text-align: center;
+    }
+    .project-card-menu {
+      position: relative;
+    }
+    .project-card-menu summary {
+      list-style: none;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 1px solid #d8cdbb;
+      background: #f9f4eb;
+      color: #5d5040;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      font-size: 1.15rem;
+      line-height: 1;
+      font-weight: 700;
+    }
+    .project-card-menu summary::-webkit-details-marker { display: none; }
+    .project-card-menu[open] summary {
+      border-color: #9f8a6e;
+      background: #f3eadc;
+    }
+    .project-card-menu-items {
+      position: absolute;
+      right: 0;
+      top: calc(100% + 6px);
+      min-width: 150px;
+      border: 1px solid #d8cebf;
+      border-radius: 12px;
+      background: #fffdf9;
+      box-shadow: 0 14px 24px rgba(39, 29, 16, .18);
+      padding: 6px;
+      z-index: 12;
+      display: grid;
+      gap: 4px;
+    }
+    .project-card-menu-items button {
+      justify-content: flex-start;
+      min-height: 36px;
+      border-radius: 9px;
+      border-color: transparent;
+      background: transparent;
+      box-shadow: none;
+      padding: 8px 10px;
+      font-size: .85rem;
+      color: #4a3f31;
+    }
+    .project-card-menu-items button:hover:not(:disabled) {
+      transform: none;
+      border-color: #d8cebf;
+      background: #f7f1e8;
+      box-shadow: none;
+    }
+    .project-empty {
+      border: 1px dashed #cebfa8;
+      border-radius: 18px;
+      background: rgba(255, 251, 244, .82);
+      color: #6c5f4f;
+      padding: 24px;
+      text-align: center;
+      line-height: 1.6;
+      font-size: .95rem;
+    }
     header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 20px 18px 24px; border: 1px solid rgba(136, 119, 91, .16); border-radius: 20px; background: rgba(255, 254, 251, .76); box-shadow: 0 12px 32px rgba(63, 51, 35, .08); backdrop-filter: blur(10px); }
     .header-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
     .brand-block { position: relative; padding-left: 16px; min-width: 0; }
@@ -75,7 +272,7 @@
     .note-marker:active { cursor: grabbing; }
     .note-marker.selected { background: linear-gradient(140deg, #2f6f51, #1f4e3d); transform: translate(-50%, -50%) scale(calc(var(--note-marker-screen-scale, 1) * 1.03)); }
     .empty { max-width: 290px; padding: 28px; color: #7c7265; text-align: center; font-size: .95rem; line-height: 1.6; }
-    .toolbar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
+    .toolbar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
     .toolbar button { width: 100%; max-width: none; margin-inline: 0; padding-inline: 16px; }
     #saveImage {
       border-color: #d8d1c6;
@@ -815,6 +1012,11 @@
     }
     @media (orientation: portrait), (max-width: 800px) {
       .app { padding: 16px; }
+      .project-manager-view { padding: 14px; gap: 14px; }
+      .project-manager-header { padding: 16px; }
+      .project-manager-actions { width: 100%; }
+      .project-manager-actions button { flex: 1 1 auto; }
+      .project-grid { grid-template-columns: 1fr; }
       header { align-items: stretch; flex-direction: column; padding: 18px; }
       .brand-title { font-size: clamp(2.15rem, 8.5vw, 2.7rem); }
       .brand-subtitle { font-size: clamp(.95rem, 3.6vw, 1.06rem); }
@@ -843,6 +1045,28 @@
   </style>
 </head>
 <body>
+  <main id="projectManagerView" class="project-manager-view">
+    <section class="project-manager-header" aria-labelledby="projectManagerTitle">
+      <div class="project-manager-title-block">
+        <div class="brand-block" aria-label="La-Tâmplar Mobilă la comandă">
+          <h1 class="brand-title">La-Tâmplar</h1>
+          <p class="brand-subtitle">Mobilă la comandă</p>
+        </div>
+        <h2 id="projectManagerTitle" class="project-manager-title">Proiectele mele</h2>
+        <p class="project-manager-subtitle">Deschide, organizează și salvează proiectele direct în aplicație.</p>
+      </div>
+      <div class="project-manager-actions">
+        <button type="button" id="pmImportProject"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg><span>Încarcă proiect</span></button>
+        <button type="button" id="pmNewProject"><span>➕ Proiect nou</span></button>
+      </div>
+    </section>
+    <section>
+      <div id="projectCards" class="project-grid" aria-live="polite"></div>
+      <div id="projectEmptyState" class="project-empty" hidden>
+        Nu există proiecte încă. Creează un proiect nou sau importă un fișier existent.
+      </div>
+    </section>
+  </main>
   <div id="saveProjectDialog" class="save-dialog-backdrop" hidden>
     <div class="save-dialog" role="dialog" aria-modal="true" aria-labelledby="saveDialogTitle">
       <h2 id="saveDialogTitle">Salvează proiectul</h2>
@@ -936,13 +1160,14 @@
     </div>
   </div>
   <div id="fullscreenOverlay" class="fullscreen-overlay" hidden></div>
-  <main class="app">
+  <main class="app" hidden>
     <header>
       <div class="brand-block" aria-label="La-Tâmplar Mobilă la comandă">
         <h1 class="brand-title">La-Tâmplar</h1>
         <p class="brand-subtitle">Mobilă la comandă</p>
       </div>
       <div class="header-actions">
+        <button type="button" id="backToProjects"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path><path d="M9 12h12"></path></svg><span>Proiectele mele</span></button>
         <button type="button" id="loadProject"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg><span>Încarcă proiect</span></button>
         <button type="button" id="addImage"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="M7 8l5-5 5 5"></path><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"></path></svg><span>Adaugă imagine</span></button>
         <button type="button" id="removeImage" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg><span>Șterge imaginea</span></button>
@@ -1029,6 +1254,7 @@
         </div>
         <div class="toolbar" aria-label="Acțiune principală">
           <button type="button" id="save" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg><span>Salvează</span></button>
+          <button type="button" id="exportProject" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V9"></path><path d="m7 14 5-5 5 5"></path><path d="M5 4h14"></path></svg><span>Exportă proiect</span></button>
           <button type="button" id="saveImage" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10" r="1.4"></circle><path d="m21 16-5.3-5.3a1 1 0 0 0-1.4 0L8 17"></path></svg><span>Salvează imaginea</span></button>
         </div>
         <p class="help">Selectează modul Desen pentru a utiliza Apple Pencil sau degetul pe imagine. În modul Note poți muta marcatorii și edita textul.</p>
@@ -1103,7 +1329,15 @@
 
   <script>
     (() => {
+      const projectManagerView = document.getElementById('projectManagerView');
+      const projectCards = document.getElementById('projectCards');
+      const projectEmptyState = document.getElementById('projectEmptyState');
+      const newProjectButton = document.getElementById('pmNewProject');
+      const managerImportProjectButton = document.getElementById('pmImportProject');
+      const appMain = document.querySelector('main.app');
+      const saveDialogTitle = document.getElementById('saveDialogTitle');
       const addImage = document.getElementById('addImage');
+      const backToProjectsButton = document.getElementById('backToProjects');
       const removeImageButton = document.getElementById('removeImage');
       const imageInput = document.getElementById('imageInput');
       const loadProjectButton = document.getElementById('loadProject');
@@ -1139,6 +1373,7 @@
       const undo = document.getElementById('undo');
       const clear = document.getElementById('clear');
       const save = document.getElementById('save');
+      const exportProjectButton = document.getElementById('exportProject');
       const saveImage = document.getElementById('saveImage');
       const drawModeButton = document.getElementById('drawModeBtn');
       const notesModeButton = document.getElementById('notesModeBtn');
@@ -1198,6 +1433,8 @@
       let projectImages = [];
       let activeImageIndex = 0;
       let currentProjectName = 'Proiect nou';
+      let activeProjectId = null;
+      let pendingProjectNameAction = null;
       let interactiveNotes = [];
       let selectedNoteId = null;
       let draggingNoteId = null;
@@ -1264,11 +1501,15 @@
       const AUTOSAVE_DEBOUNCE_MS = 2000;
       const STROKE_SAMPLE_MIN_DISTANCE_PX = 0.35;
       const databaseName = 'fisa-atelier-offline';
-      const databaseStore = 'lucrari';
+      const legacyAutosaveStore = 'lucrari';
+      const projectStore = 'projects';
+      const metaStore = 'meta';
       const projectVersion = 2;
-      const APP_VERSION = '1.1.0';
+      const APP_VERSION = '1.2.0';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
+      const activeProjectMetaKey = 'active-project-id';
+      const legacyMigrationMetaKey = 'legacy-autosave-migrated-v1';
 
       if (appVersionLabel) {
         appVersionLabel.textContent = `v${APP_VERSION}`;
@@ -1276,11 +1517,201 @@
 
       function openDatabase() {
         return new Promise((resolve, reject) => {
-          const request = indexedDB.open(databaseName, 1);
-          request.onupgradeneeded = () => request.result.createObjectStore(databaseStore);
+          const request = indexedDB.open(databaseName, 2);
+          request.onupgradeneeded = () => {
+            const db = request.result;
+            if (!db.objectStoreNames.contains(legacyAutosaveStore)) {
+              db.createObjectStore(legacyAutosaveStore);
+            }
+            if (!db.objectStoreNames.contains(projectStore)) {
+              db.createObjectStore(projectStore, { keyPath: 'id' });
+            }
+            if (!db.objectStoreNames.contains(metaStore)) {
+              db.createObjectStore(metaStore, { keyPath: 'key' });
+            }
+          };
           request.onsuccess = () => resolve(request.result);
           request.onerror = () => reject(request.error);
         });
+      }
+
+      function requestAsPromise(request) {
+        return new Promise((resolve, reject) => {
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      function transactionAsPromise(transaction) {
+        return new Promise((resolve, reject) => {
+          transaction.oncomplete = () => resolve();
+          transaction.onabort = () => reject(transaction.error || new Error('IndexedDB transaction aborted.'));
+          transaction.onerror = () => reject(transaction.error || new Error('IndexedDB transaction failed.'));
+        });
+      }
+
+      function createProjectId() {
+        if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+          return window.crypto.randomUUID();
+        }
+        return `project-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      }
+
+      function countProjectNotes(images = []) {
+        if (!Array.isArray(images)) return 0;
+        return images.reduce((total, image) => {
+          const imageNotes = Array.isArray(image?.notes) ? image.notes.length : 0;
+          return total + imageNotes;
+        }, 0);
+      }
+
+      function getProjectThumbnail(images = []) {
+        if (!Array.isArray(images) || !images.length) return '';
+        const firstWithImage = images.find((image) => typeof image?.dataUrl === 'string' && image.dataUrl.trim());
+        return firstWithImage?.dataUrl || '';
+      }
+
+      function buildProjectRecordFromPayload(payload, options = {}) {
+        const nowIso = new Date().toISOString();
+        const projectName = normalizeProjectName(options.name || payload?.projectName);
+        const images = Array.isArray(payload?.images) ? payload.images : [];
+        const stats = {
+          images: images.length,
+          notes: countProjectNotes(images)
+        };
+        return {
+          id: options.id || createProjectId(),
+          name: projectName,
+          createdAt: options.createdAt || nowIso,
+          updatedAt: nowIso,
+          thumbnail: getProjectThumbnail(images),
+          stats,
+          payload: {
+            ...(payload || {}),
+            projectName,
+            updatedAt: nowIso
+          }
+        };
+      }
+
+      async function setMetaValue(key, value) {
+        const database = await openDatabase();
+        try {
+          const transaction = database.transaction(metaStore, 'readwrite');
+          const store = transaction.objectStore(metaStore);
+          await requestAsPromise(store.put({ key, value }));
+          await transactionAsPromise(transaction);
+        } finally {
+          database.close();
+        }
+      }
+
+      async function getMetaValue(key) {
+        const database = await openDatabase();
+        try {
+          const transaction = database.transaction(metaStore, 'readonly');
+          const store = transaction.objectStore(metaStore);
+          const row = await requestAsPromise(store.get(key));
+          return row?.value ?? null;
+        } finally {
+          database.close();
+        }
+      }
+
+      async function setActiveProjectId(projectId) {
+        activeProjectId = projectId || null;
+        await setMetaValue(activeProjectMetaKey, activeProjectId);
+      }
+
+      async function getStoredActiveProjectId() {
+        const value = await getMetaValue(activeProjectMetaKey);
+        return typeof value === 'string' && value ? value : null;
+      }
+
+      async function readAllProjectRecords() {
+        const database = await openDatabase();
+        try {
+          const transaction = database.transaction(projectStore, 'readonly');
+          const store = transaction.objectStore(projectStore);
+          const rows = await requestAsPromise(store.getAll());
+          return Array.isArray(rows) ? rows : [];
+        } finally {
+          database.close();
+        }
+      }
+
+      async function readProjectRecord(projectId) {
+        if (!projectId) return null;
+        const database = await openDatabase();
+        try {
+          const transaction = database.transaction(projectStore, 'readonly');
+          const store = transaction.objectStore(projectStore);
+          return await requestAsPromise(store.get(projectId));
+        } finally {
+          database.close();
+        }
+      }
+
+      async function saveProjectRecord(record) {
+        if (!record || !record.id) return;
+        const database = await openDatabase();
+        try {
+          const transaction = database.transaction(projectStore, 'readwrite');
+          const store = transaction.objectStore(projectStore);
+          await requestAsPromise(store.put(record));
+          await transactionAsPromise(transaction);
+        } finally {
+          database.close();
+        }
+      }
+
+      async function deleteProjectRecord(projectId) {
+        if (!projectId) return;
+        const database = await openDatabase();
+        try {
+          const transaction = database.transaction(projectStore, 'readwrite');
+          const store = transaction.objectStore(projectStore);
+          await requestAsPromise(store.delete(projectId));
+          await transactionAsPromise(transaction);
+        } finally {
+          database.close();
+        }
+      }
+
+      async function readLegacyLastWorkFromDatabase() {
+        try {
+          const database = await openDatabase();
+          const transaction = database.transaction(legacyAutosaveStore, 'readonly');
+          const store = transaction.objectStore(legacyAutosaveStore);
+          const work = await requestAsPromise(store.get('ultima-lucrare'));
+          database.close();
+          return work || null;
+        } catch (error) {
+          console.warn('Lucrarea anterioară nu a putut fi citită.', error);
+          return null;
+        }
+      }
+
+      async function migrateLegacyAutosaveIfNeeded() {
+        const alreadyMigrated = await getMetaValue(legacyMigrationMetaKey);
+        if (alreadyMigrated) return;
+
+        const existingProjects = await readAllProjectRecords();
+        if (existingProjects.length) {
+          await setMetaValue(legacyMigrationMetaKey, true);
+          return;
+        }
+
+        const legacyProject = await readLegacyLastWorkFromDatabase();
+        if (legacyProject && (Array.isArray(legacyProject.images) ? legacyProject.images.length : Boolean(legacyProject.image?.dataUrl))) {
+          const normalizedPayload = normalizeIncomingProject(legacyProject);
+          const record = buildProjectRecordFromPayload(normalizedPayload, {
+            name: legacyProject?.projectName || legacyProject?.name || 'Proiect recuperat'
+          });
+          await saveProjectRecord(record);
+          await setActiveProjectId(record.id);
+        }
+        await setMetaValue(legacyMigrationMetaKey, true);
       }
 
       function blobToDataUrl(blob) {
@@ -1462,7 +1893,7 @@
       }
 
       function normalizeProjectName(value) {
-        const text = String(value ?? '').replace(/\.json$/i, '').trim();
+        const text = String(value ?? '').replace(/\.(json|atf|jsd)$/i, '').trim();
         return text || 'Proiect nou';
       }
 
@@ -1474,12 +1905,16 @@
 
       function getProjectFileName(value = currentProjectName) {
         const baseName = normalizeProjectName(value);
-        return `${baseName}.json`;
+        return `${baseName}.atf`;
       }
 
       function setProjectName(name) {
         currentProjectName = normalizeProjectName(name);
-        document.title = `${currentProjectName} | Notițe interactive pe imagine`;
+        if (!projectManagerView.hidden) {
+          document.title = 'Proiectele mele | La-Tamplar';
+        } else {
+          document.title = `${currentProjectName} | Notite interactive pe imagine`;
+        }
         return currentProjectName;
       }
 
@@ -1487,8 +1922,279 @@
         return `Imagine ${index + 1}`;
       }
 
+      function normalizeIncomingProject(project) {
+        if (!project || typeof project !== 'object') {
+          return {
+            version: projectVersion,
+            updatedAt: new Date().toISOString(),
+            projectName: 'Proiect nou',
+            activeImageIndex: 0,
+            images: []
+          };
+        }
+
+        const sourceImages = Array.isArray(project.images) && project.images.length
+          ? project.images
+          : (project.image?.dataUrl ? [{
+              id: createNoteId(),
+              name: project.image.name || 'Imagine 1',
+              dataUrl: project.image.dataUrl,
+              type: project.image.type || 'image/png',
+              strokes: Array.isArray(project.drawing?.strokes) ? project.drawing.strokes : [],
+              notes: Array.isArray(project.notes) ? project.notes : [],
+              zoom: typeof project.ui?.zoom === 'number' ? project.ui.zoom : 1,
+              pan: project.ui?.pan && typeof project.ui.pan.x === 'number' && typeof project.ui.pan.y === 'number' ? { x: project.ui.pan.x, y: project.ui.pan.y } : { x: 0, y: 0 },
+              activeTool: project.ui?.activeTool === 'notes' ? 'notes' : 'draw',
+              selectedNoteId: project.ui?.selectedNoteId || null,
+              selectedNoteMode: project.ui?.selectedNoteMode === 'pencil' ? 'pencil' : 'text'
+            }] : []);
+
+        const images = sourceImages.map((image, index) => cloneProjectImageState({
+          id: image.id || createNoteId(),
+          name: image.name || getProjectImageName(index),
+          dataUrl: image.dataUrl || '',
+          type: image.type || 'image/png',
+          strokes: Array.isArray(image.strokes) ? image.strokes : [],
+          notes: Array.isArray(image.notes) ? image.notes : [],
+          zoom: typeof image.zoom === 'number' ? image.zoom : 1,
+          pan: image.pan && typeof image.pan.x === 'number' && typeof image.pan.y === 'number' ? { x: image.pan.x, y: image.pan.y } : { x: 0, y: 0 },
+          activeTool: image.activeTool === 'notes' ? 'notes' : 'draw',
+          selectedNoteId: image.selectedNoteId || null,
+          selectedNoteMode: image.selectedNoteMode === 'pencil' ? 'pencil' : 'text',
+          drawSettings: image.drawSettings && typeof image.drawSettings === 'object' ? image.drawSettings : {
+            color: '#000000',
+            size: 4,
+            eraser: false
+          }
+        })).filter(isValidProjectImageEntry);
+
+        const nextActiveImageIndex = Number.isFinite(Number(project.activeImageIndex))
+          ? Number(project.activeImageIndex)
+          : (Number.isFinite(Number(project.ui?.activeImageIndex)) ? Number(project.ui.activeImageIndex) : 0);
+
+        return {
+          version: projectVersion,
+          updatedAt: typeof project.updatedAt === 'string' ? project.updatedAt : new Date().toISOString(),
+          projectName: normalizeProjectName(project.projectName || project.name || 'Proiect nou'),
+          activeImageIndex: clamp(nextActiveImageIndex, 0, Math.max(images.length - 1, 0)),
+          images
+        };
+      }
+
+      function formatProjectDate(dateLike) {
+        const timestamp = Date.parse(String(dateLike || ''));
+        if (!timestamp) return 'Fara data';
+        return new Intl.DateTimeFormat('ro-RO', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        }).format(new Date(timestamp));
+      }
+
+      function showProjectManager() {
+        if (fullscreenMode) {
+          setFullscreenMode(false);
+        }
+        appMain.hidden = true;
+        projectManagerView.hidden = false;
+        document.title = 'Proiectele mele | La-Tamplar';
+      }
+
+      function showEditor() {
+        projectManagerView.hidden = true;
+        appMain.hidden = false;
+        document.title = `${currentProjectName} | Notite interactive pe imagine`;
+      }
+
+      async function renderProjectCards() {
+        const records = await readAllProjectRecords();
+        records.sort((first, second) => Date.parse(second.updatedAt || '') - Date.parse(first.updatedAt || ''));
+
+        projectCards.innerHTML = '';
+        projectEmptyState.hidden = records.length > 0;
+        if (!records.length) {
+          return;
+        }
+
+        const fragment = document.createDocumentFragment();
+        records.forEach((record) => {
+          const card = document.createElement('article');
+          card.className = 'project-card';
+          card.dataset.projectId = record.id;
+
+          const thumbWrap = document.createElement('div');
+          thumbWrap.className = 'project-card-thumb-wrap';
+          thumbWrap.addEventListener('click', () => {
+            openProjectById(record.id);
+          });
+
+          const thumb = document.createElement('img');
+          thumb.className = 'project-card-thumb';
+          thumb.alt = record.name || 'Proiect';
+          thumb.src = record.thumbnail || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22540%22 height=%22320%22 viewBox=%220 0 540 320%22%3E%3Crect width=%22540%22 height=%22320%22 fill=%22%23eee6d8%22/%3E%3Cpath d=%22M90 218l90-90 72 72 108-132 90 150v40H90z%22 fill=%22%23d8c7ae%22/%3E%3C/svg%3E';
+          thumbWrap.appendChild(thumb);
+
+          const body = document.createElement('div');
+          body.className = 'project-card-body';
+
+          const top = document.createElement('div');
+          top.className = 'project-card-top';
+
+          const titleColumn = document.createElement('div');
+          const openButton = document.createElement('button');
+          openButton.type = 'button';
+          openButton.className = 'project-card-open';
+          openButton.textContent = record.name || 'Proiect fara nume';
+          openButton.addEventListener('click', () => {
+            openProjectById(record.id);
+          });
+          titleColumn.appendChild(openButton);
+
+          const updated = document.createElement('div');
+          updated.className = 'project-card-date';
+          updated.textContent = `Ultima modificare: ${formatProjectDate(record.updatedAt)}`;
+          titleColumn.appendChild(updated);
+
+          const menu = document.createElement('details');
+          menu.className = 'project-card-menu';
+          const summary = document.createElement('summary');
+          summary.setAttribute('aria-label', 'Actiuni proiect');
+          summary.textContent = '⋯';
+          menu.appendChild(summary);
+
+          const menuItems = document.createElement('div');
+          menuItems.className = 'project-card-menu-items';
+          [
+            { action: 'rename', label: 'Redenumeste' },
+            { action: 'duplicate', label: 'Duplica' },
+            { action: 'export', label: 'Exporta' },
+            { action: 'delete', label: 'Sterge' }
+          ].forEach((item) => {
+            const itemButton = document.createElement('button');
+            itemButton.type = 'button';
+            itemButton.textContent = item.label;
+            itemButton.addEventListener('click', async (event) => {
+              event.preventDefault();
+              menu.open = false;
+              await handleProjectCardAction(record, item.action);
+            });
+            menuItems.appendChild(itemButton);
+          });
+          menu.appendChild(menuItems);
+
+          top.appendChild(titleColumn);
+          top.appendChild(menu);
+
+          const stats = document.createElement('div');
+          stats.className = 'project-card-stats';
+          const imagesCount = Number.isFinite(Number(record?.stats?.images))
+            ? Number(record.stats.images)
+            : (Array.isArray(record?.payload?.images) ? record.payload.images.length : 0);
+          const notesCount = Number.isFinite(Number(record?.stats?.notes))
+            ? Number(record.stats.notes)
+            : countProjectNotes(Array.isArray(record?.payload?.images) ? record.payload.images : []);
+          const imageStat = document.createElement('div');
+          imageStat.className = 'project-stat';
+          imageStat.textContent = `${imagesCount} imagini`;
+          const noteStat = document.createElement('div');
+          noteStat.className = 'project-stat';
+          noteStat.textContent = `${notesCount} note`;
+          stats.appendChild(imageStat);
+          stats.appendChild(noteStat);
+
+          body.appendChild(top);
+          body.appendChild(stats);
+          card.appendChild(thumbWrap);
+          card.appendChild(body);
+          fragment.appendChild(card);
+        });
+
+        projectCards.appendChild(fragment);
+      }
+
+      async function openProjectById(projectId) {
+        const record = await readProjectRecord(projectId);
+        if (!record || !record.payload) return;
+        await setActiveProjectId(record.id);
+        setProjectName(record.name || record.payload.projectName || 'Proiect nou');
+        await applyProjectState(record.payload);
+        showEditor();
+      }
+
+      async function createProjectAndOpen(name) {
+        const projectName = normalizeProjectName(name || 'Proiect nou');
+        const payload = normalizeIncomingProject({ projectName, images: [] });
+        const record = buildProjectRecordFromPayload(payload, { name: projectName });
+        await saveProjectRecord(record);
+        await setActiveProjectId(record.id);
+        await applyProjectState(record.payload);
+        markProjectClean();
+        showEditor();
+      }
+
+      async function handleProjectCardAction(record, action) {
+        if (!record || !record.id) return;
+        if (action === 'rename') {
+          openSaveProjectDialog({
+            title: 'Redenumeste proiectul',
+            confirmLabel: 'Redenumeste',
+            defaultValue: record.name || 'Proiect nou',
+            async onConfirm(value) {
+              const nextName = normalizeProjectName(value);
+              const nextPayload = normalizeIncomingProject(record.payload || {});
+              nextPayload.projectName = nextName;
+              const renamedRecord = {
+                ...record,
+                name: nextName,
+                updatedAt: new Date().toISOString(),
+                payload: nextPayload
+              };
+              await saveProjectRecord(renamedRecord);
+              if (record.id === activeProjectId) {
+                setProjectName(nextName);
+              }
+              await renderProjectCards();
+            }
+          });
+          return;
+        }
+
+        if (action === 'duplicate') {
+          const sourcePayload = normalizeIncomingProject(record.payload || {});
+          const duplicateName = normalizeProjectName(`${record.name || sourcePayload.projectName || 'Proiect'} copie`);
+          const duplicateRecord = buildProjectRecordFromPayload(cloneProjectData(sourcePayload), {
+            name: duplicateName
+          });
+          await saveProjectRecord(duplicateRecord);
+          await renderProjectCards();
+          return;
+        }
+
+        if (action === 'export') {
+          await exportProjectPayload(record.payload, record.name || 'Proiect');
+          return;
+        }
+
+        if (action === 'delete') {
+          const shouldDelete = window.confirm(`Stergi proiectul "${record.name || 'Proiect'}"?`);
+          if (!shouldDelete) return;
+          await deleteProjectRecord(record.id);
+          if (activeProjectId === record.id) {
+            await setActiveProjectId(null);
+            resetCurrentProject({ persist: false });
+            showProjectManager();
+          }
+          await renderProjectCards();
+        }
+      }
+
       async function saveCurrentImageState() {
         const currentState = projectImages[activeImageIndex] || {};
+        if (!sourceImage && !currentState.dataUrl) {
+          return;
+        }
         const activeImage = cloneProjectImageState({
           ...currentState,
           name: currentState.name || getProjectImageName(activeImageIndex),
@@ -1515,6 +2221,10 @@
           }
         }
 
+        if (!activeImage.dataUrl) {
+          return;
+        }
+
         activeImage.name = activeImage.name || getProjectImageName(activeImageIndex);
         projectImages[activeImageIndex] = activeImage;
       }
@@ -1522,6 +2232,7 @@
       async function buildProjectPayload() {
         sanitizeProjectImagesCollection();
         await saveCurrentImageState();
+        sanitizeProjectImagesCollection();
         const payload = {
           version: projectVersion,
           updatedAt: new Date().toISOString(),
@@ -1564,40 +2275,48 @@
 
       async function saveLastWork(projectOverride = null) {
         try {
-          const database = await openDatabase();
-          const transaction = database.transaction(databaseStore, 'readwrite');
-          const payload = projectOverride || await buildProjectPayload();
-          transaction.objectStore(databaseStore).put(payload, 'ultima-lucrare');
-          transaction.oncomplete = () => database.close();
+          const payload = normalizeIncomingProject(projectOverride || await buildProjectPayload());
+          const currentName = normalizeProjectName(payload.projectName || currentProjectName || 'Proiect nou');
+          let nextActiveProjectId = activeProjectId;
+          let existingRecord = null;
+
+          if (nextActiveProjectId) {
+            existingRecord = await readProjectRecord(nextActiveProjectId);
+          }
+
+          if (!nextActiveProjectId) {
+            nextActiveProjectId = createProjectId();
+            await setActiveProjectId(nextActiveProjectId);
+          }
+
+          const record = buildProjectRecordFromPayload(payload, {
+            id: nextActiveProjectId,
+            name: currentName,
+            createdAt: existingRecord?.createdAt
+          });
+
+          await saveProjectRecord(record);
+          setProjectName(currentName);
+
+          if (!projectManagerView.hidden) {
+            await renderProjectCards();
+          }
         } catch (error) {
           console.warn('Lucrarea nu a putut fi salvată local.', error);
         }
       }
 
       async function readLastWorkFromDatabase() {
-        try {
-          const database = await openDatabase();
-          const transaction = database.transaction(databaseStore, 'readonly');
-          const store = transaction.objectStore(databaseStore);
-          const work = await new Promise((resolve, reject) => {
-            const request = store.get('ultima-lucrare');
-            request.onsuccess = () => resolve(request.result || null);
-            request.onerror = () => reject(request.error);
-          });
-          database.close();
-          return work;
-        } catch (error) {
-          console.warn('Lucrarea anterioară nu a putut fi citită.', error);
-          return null;
-        }
+        return readLegacyLastWorkFromDatabase();
       }
 
       async function clearLastWorkFromDatabase() {
         try {
           const database = await openDatabase();
-          const transaction = database.transaction(databaseStore, 'readwrite');
-          transaction.objectStore(databaseStore).delete('ultima-lucrare');
-          transaction.oncomplete = () => database.close();
+          const transaction = database.transaction(legacyAutosaveStore, 'readwrite');
+          transaction.objectStore(legacyAutosaveStore).delete('ultima-lucrare');
+          await transactionAsPromise(transaction);
+          database.close();
         } catch (error) {
           console.warn('Autosave-ul nu a putut fi șters.', error);
         }
@@ -1694,55 +2413,22 @@
       }
 
       async function applyProjectState(project) {
-        if (!project) return;
-        if (project.projectName || project.name) {
-          setProjectName(project.projectName || project.name);
-        }
+        const normalizedProject = normalizeIncomingProject(project);
+        setProjectName(normalizedProject.projectName || project?.projectName || project?.name || 'Proiect nou');
 
-        const sourceImages = Array.isArray(project.images) && project.images.length
-          ? project.images
-          : (project.image?.dataUrl ? [{
-              id: createNoteId(),
-              name: project.image.name || 'Imagine 1',
-              dataUrl: project.image.dataUrl,
-              type: project.image.type || 'image/png',
-              strokes: Array.isArray(project.drawing?.strokes) ? project.drawing.strokes : [],
-              notes: Array.isArray(project.notes) ? project.notes : [],
-              zoom: typeof project.ui?.zoom === 'number' ? project.ui.zoom : 1,
-              pan: project.ui?.pan && typeof project.ui.pan.x === 'number' && typeof project.ui.pan.y === 'number' ? { x: project.ui.pan.x, y: project.ui.pan.y } : { x: 0, y: 0 },
-              activeTool: project.ui?.activeTool === 'notes' ? 'notes' : 'draw',
-              selectedNoteId: project.ui?.selectedNoteId || null,
-              selectedNoteMode: project.ui?.selectedNoteMode === 'pencil' ? 'pencil' : 'text'
-            }] : []);
-
-        projectImages = sourceImages.map((image, index) => cloneProjectImageState({
-          id: image.id || createNoteId(),
-          name: image.name || getProjectImageName(index),
-          dataUrl: image.dataUrl || '',
-          type: image.type || 'image/png',
-          strokes: Array.isArray(image.strokes) ? image.strokes : [],
-          notes: Array.isArray(image.notes) ? image.notes : [],
-          zoom: typeof image.zoom === 'number' ? image.zoom : 1,
-          pan: image.pan && typeof image.pan.x === 'number' && typeof image.pan.y === 'number' ? { x: image.pan.x, y: image.pan.y } : { x: 0, y: 0 },
-          activeTool: image.activeTool === 'notes' ? 'notes' : 'draw',
-          selectedNoteId: image.selectedNoteId || null,
-          selectedNoteMode: image.selectedNoteMode === 'pencil' ? 'pencil' : 'text',
-          drawSettings: image.drawSettings && typeof image.drawSettings === 'object' ? image.drawSettings : {
-            color: '#000000',
-            size: 4,
-            eraser: false
-          }
-        }));
+        projectImages = normalizedProject.images.map((image) => cloneProjectImageState(image));
         sanitizeProjectImagesCollection();
         if (!projectImages.length) {
           resetCurrentProject({ persist: false });
+          setProjectName(normalizedProject.projectName);
           return;
         }
 
-        const projectActiveIndex = Number.isFinite(Number(project.activeImageIndex))
-          ? Number(project.activeImageIndex)
-          : (Number.isFinite(Number(project.ui?.activeImageIndex)) ? Number(project.ui.activeImageIndex) : 0);
-        activeImageIndex = clamp(projectActiveIndex, 0, Math.max(projectImages.length - 1, 0));
+        activeImageIndex = clamp(
+          Number.isFinite(Number(normalizedProject.activeImageIndex)) ? Number(normalizedProject.activeImageIndex) : 0,
+          0,
+          Math.max(projectImages.length - 1, 0)
+        );
         await activateImageAt(activeImageIndex, { persist: false });
         markProjectClean();
       }
@@ -1752,23 +2438,14 @@
         await applyProjectState(project);
       }
 
-      async function restoreLastWork() {
-        const work = await readLastWorkFromDatabase();
-        if (!work) return;
-
-        if (shouldPromptAutosaveRecovery(work)) {
-          const choice = await askAutosaveRecoveryChoice();
-          if (choice === 'continue') {
-            await restoreProject(work);
-            return;
-          }
-          await clearLastWorkFromDatabase();
-          resetCurrentProject({ persist: false });
-          markProjectClean();
-          return;
+      async function initializeProjectManagerStartup() {
+        await migrateLegacyAutosaveIfNeeded();
+        const storedActiveProjectId = await getStoredActiveProjectId();
+        if (storedActiveProjectId) {
+          activeProjectId = storedActiveProjectId;
         }
-
-        await restoreProject(work);
+        await renderProjectCards();
+        showProjectManager();
       }
 
       function setControls() {
@@ -1779,7 +2456,8 @@
         if (clear) {
           clear.disabled = !ready || strokes.length === 0 || activeTool !== 'draw';
         }
-        save.disabled = !ready;
+        save.disabled = !activeProjectId;
+        exportProjectButton.disabled = !activeProjectId;
         saveImage.disabled = !ready;
         fullscreenButton.disabled = !ready;
         removeImageButton.disabled = !ready;
@@ -3641,9 +4319,11 @@
         scheduleSave();
       }
 
-      function openSaveProjectDialog() {
-        if (!sourceImage) return;
-        projectNameInput.value = currentProjectName || 'Proiect nou';
+      function openSaveProjectDialog({ title = 'Numele proiectului', confirmLabel = 'Confirmă', defaultValue = 'Proiect nou', onConfirm = null } = {}) {
+        saveDialogTitle.textContent = title;
+        confirmProjectSaveButton.textContent = confirmLabel;
+        projectNameInput.value = defaultValue;
+        pendingProjectNameAction = typeof onConfirm === 'function' ? onConfirm : null;
         saveProjectDialog.hidden = false;
         requestAnimationFrame(() => {
           projectNameInput.focus();
@@ -3653,13 +4333,22 @@
 
       function closeSaveProjectDialog() {
         saveProjectDialog.hidden = true;
+        pendingProjectNameAction = null;
       }
 
-      async function saveProjectWithName(name) {
-        const chosenName = normalizeProjectName(name);
-        setProjectName(chosenName);
-        const project = await buildProjectPayload();
-        const fileName = getProjectFileName();
+      async function submitProjectNameDialog() {
+        const action = pendingProjectNameAction;
+        const value = projectNameInput.value;
+        closeSaveProjectDialog();
+        if (!action) return;
+        await action(value);
+      }
+
+      async function exportProjectPayload(payload, nameOverride = null) {
+        const project = normalizeIncomingProject(payload || {});
+        const chosenName = normalizeProjectName(nameOverride || project.projectName || currentProjectName);
+        project.projectName = chosenName;
+        const fileName = getProjectFileName(chosenName);
         const fileContent = JSON.stringify(project, null, 2);
         const file = new File([fileContent], fileName, { type: 'application/json' });
 
@@ -3668,24 +4357,20 @@
             if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
               await navigator.share({
                 title: fileName,
-                text: `Salvează proiectul ${chosenName}`,
+                text: `Export proiect ${chosenName}`,
                 files: [file]
               });
               markManualProjectExported(Date.now());
-              await saveLastWork(project);
-              markProjectClean();
               return;
             }
 
             if (navigator.share) {
               await navigator.share({
                 title: fileName,
-                text: `Salvează proiectul ${chosenName}`,
+                text: `Export proiect ${chosenName}`,
                 files: [file]
               });
               markManualProjectExported(Date.now());
-              await saveLastWork(project);
-              markProjectClean();
               return;
             }
           } catch (error) {
@@ -3709,8 +4394,6 @@
           }
           window.setTimeout(() => URL.revokeObjectURL(fallbackUrl), 15000);
           markManualProjectExported(Date.now());
-          await saveLastWork(project);
-          markProjectClean();
           return;
         }
 
@@ -3722,16 +4405,24 @@
         link.click();
         window.setTimeout(() => URL.revokeObjectURL(url), 1000);
         markManualProjectExported(Date.now());
-        await saveLastWork(project);
-        markProjectClean();
       }
 
       async function saveProject() {
-        if (!sourceImage) return;
-        openSaveProjectDialog();
+        if (!activeProjectId) return;
+        await saveLastWork();
+        markProjectClean();
+        await renderProjectCards();
       }
 
-      async function loadProjectFromFile(file) {
+      async function exportCurrentProject() {
+        if (!activeProjectId) return;
+        const payload = await buildProjectPayload();
+        await exportProjectPayload(payload, currentProjectName);
+        await saveLastWork(payload);
+        markProjectClean();
+      }
+
+      async function loadProjectFromFile(file, { openAfterImport = true } = {}) {
         if (!file) return;
         const fileName = String(file.name || '').toLowerCase();
         const hasAllowedExtension = fileName.endsWith('.json') || fileName.endsWith('.atf') || fileName.endsWith('.jsd');
@@ -3739,11 +4430,16 @@
         if (!hasAllowedExtension && !allowedType) return;
         try {
           const text = await file.text();
-          const project = JSON.parse(text);
-          setProjectName(project?.projectName || project?.name || file.name || 'Proiect nou');
-          await restoreProject(project);
-          await saveLastWork();
-          markProjectClean();
+          const imported = JSON.parse(text);
+          const normalizedPayload = normalizeIncomingProject(imported);
+          const importedName = normalizeProjectName(imported?.projectName || imported?.name || file.name || 'Proiect nou');
+          normalizedPayload.projectName = importedName;
+          const record = buildProjectRecordFromPayload(normalizedPayload, { name: importedName });
+          await saveProjectRecord(record);
+          await renderProjectCards();
+          if (openAfterImport) {
+            await openProjectById(record.id);
+          }
         } catch (error) {
           console.warn('Proiectul nu a putut fi încărcat.', error);
         }
@@ -3866,6 +4562,28 @@
         if (!projectDirty) return;
         flushAutosave({ force: true });
       });
+      newProjectButton.addEventListener('click', () => {
+        openSaveProjectDialog({
+          title: 'Proiect nou',
+          confirmLabel: 'Creează',
+          defaultValue: 'Proiect nou',
+          onConfirm: async (value) => {
+            await createProjectAndOpen(value);
+          }
+        });
+      });
+      managerImportProjectButton.addEventListener('click', (event) => {
+        event.preventDefault();
+        projectInput.click();
+      });
+      backToProjectsButton.addEventListener('click', async (event) => {
+        event.preventDefault();
+        if (projectDirty) {
+          await flushAutosave({ force: true });
+        }
+        await renderProjectCards();
+        showProjectManager();
+      });
       removeImageButton.addEventListener('click', openRemoveImageDialog);
       loadProjectButton.addEventListener('click', (event) => {
         event.preventDefault();
@@ -3890,6 +4608,7 @@
         if (file) {
           await loadProjectFromFile(file);
         }
+        projectInput.value = '';
       });
       drawModeButton.addEventListener('click', () => setActiveTool('draw'));
       notesModeButton.addEventListener('click', () => setActiveTool('notes'));
@@ -3900,6 +4619,7 @@
         clear.addEventListener('click', openClearAllDialog);
       }
       save.addEventListener('click', saveProject);
+      exportProjectButton.addEventListener('click', exportCurrentProject);
       saveImage.addEventListener('click', openExportImageDialog);
       cancelClearAllButton.addEventListener('click', closeClearAllDialog);
       confirmClearAllButton.addEventListener('click', () => {
@@ -3939,15 +4659,12 @@
       });
       cancelProjectSaveButton.addEventListener('click', closeSaveProjectDialog);
       confirmProjectSaveButton.addEventListener('click', async () => {
-        const name = projectNameInput.value;
-        closeSaveProjectDialog();
-        await saveProjectWithName(name);
+        await submitProjectNameDialog();
       });
       projectNameInput.addEventListener('keydown', async (event) => {
         if (event.key === 'Enter') {
           event.preventDefault();
-          closeSaveProjectDialog();
-          await saveProjectWithName(projectNameInput.value);
+          await submitProjectNameDialog();
         }
         if (event.key === 'Escape') {
           closeSaveProjectDialog();
@@ -4104,9 +4821,16 @@
       canvas.addEventListener('pointerup', finishDrawing, { passive: false });
       canvas.addEventListener('pointercancel', finishDrawing, { passive: false });
       canvas.addEventListener('gesturestart', (event) => event.preventDefault(), { passive: false });
+      document.addEventListener('click', (event) => {
+        const detailsList = document.querySelectorAll('.project-card-menu[open]');
+        detailsList.forEach((details) => {
+          if (details.contains(event.target)) return;
+          details.open = false;
+        });
+      });
       setActiveTool('draw');
       updateImageTransform();
-      restoreLastWork();
+      initializeProjectManagerStartup();
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('./sw.js').then((registration) => {
