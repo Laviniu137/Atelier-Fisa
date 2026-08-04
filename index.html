@@ -1585,6 +1585,9 @@
           <div class="drawing-tool-group edit-group">
             <span class="tool-label">Editare</span>
             <div class="drawing-tool-group-row">
+              <button type="button" id="fullscreenLineBtn" class="drawing-tool-button" aria-label="Linie" title="Linie" aria-pressed="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5"></path></svg>
+              </button>
               <button type="button" id="fullscreenEraserBtn" class="drawing-tool-button" aria-label="Radieră" title="Radieră">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.2 15.4 11 7.2a2.2 2.2 0 0 0-3.1 0L3.8 11.3a2.2 2.2 0 0 0 0 3.1l3.3 3.3a2.2 2.2 0 0 0 1.5.6H17"></path><path d="M13 20h8"></path></svg>
               </button>
@@ -1753,6 +1756,7 @@
       const fullscreenColorPicker = document.getElementById('fullscreenColorPicker');
       const fullscreenBrushSize = document.getElementById('fullscreenBrushSize');
       const fullscreenBrushSizeValue = document.getElementById('fullscreenBrushSizeValue');
+      const fullscreenLineBtn = document.getElementById('fullscreenLineBtn');
       const fullscreenEraserBtn = document.getElementById('fullscreenEraserBtn');
       const fullscreenUndoBtn = document.getElementById('fullscreenUndoBtn');
       const fullscreenRedoBtn = document.getElementById('fullscreenRedoBtn');
@@ -1819,6 +1823,9 @@
       let activeTool = 'draw';
       let previousFullscreenTool = 'draw';
       let selectedNoteMode = 'text';
+      let activeDrawMode = 'freehand';
+      let lineDraftStartPoint = null;
+      let lineDraftCurrentPoint = null;
       let brushColor = '#000000';
       let brushSize = 4;
       let lastPenSize = 4;
@@ -1883,7 +1890,7 @@
       const projectStore = 'projects';
       const metaStore = 'meta';
       const projectVersion = 2;
-      const APP_VERSION = '1.3.5';
+      const APP_VERSION = '1.3.6';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
       const activeProjectMetaKey = 'active-project-id';
@@ -3034,11 +3041,41 @@
         });
       }
 
+      function clearLineToolPreview() {
+        lineDraftStartPoint = null;
+        lineDraftCurrentPoint = null;
+        if (activeStroke && activeStroke.type === 'line') {
+          activeStroke = null;
+        }
+        redraw();
+      }
+
+      function setActiveDrawMode(mode) {
+        const nextMode = mode === 'line' ? 'line' : 'freehand';
+        if (nextMode === 'line' && activeDrawMode === 'line' && lineDraftStartPoint) {
+          clearLineToolPreview();
+          syncBrushControls();
+          return;
+        }
+        activeDrawMode = nextMode;
+        if (fullscreenLineBtn) {
+          fullscreenLineBtn.classList.toggle('active', activeDrawMode === 'line');
+          fullscreenLineBtn.setAttribute('aria-pressed', activeDrawMode === 'line' ? 'true' : 'false');
+        }
+        if (activeDrawMode !== 'line') {
+          clearLineToolPreview();
+        }
+        syncBrushControls();
+      }
+
       function setActiveTool(tool) {
         activeTool = tool;
         drawModeButton.classList.toggle('active', tool === 'draw');
         notesModeButton.classList.toggle('active', tool === 'notes');
         canvas.style.cursor = tool === 'draw' ? 'crosshair' : 'default';
+        if (tool !== 'draw') {
+          clearLineToolPreview();
+        }
         setControls();
       }
 
@@ -3149,7 +3186,14 @@
         ctx.strokeStyle = isErasingStroke ? 'rgba(0,0,0,1)' : strokeColor;
         ctx.fillStyle = isErasingStroke ? 'rgba(0,0,0,1)' : strokeColor;
         ctx.globalCompositeOperation = isErasingStroke ? 'destination-out' : 'source-over';
-        if (stroke.points.length === 1) {
+        if (stroke.type === 'line' && stroke.points.length >= 2) {
+          const first = stroke.points[0];
+          const second = stroke.points[1];
+          ctx.beginPath();
+          ctx.moveTo(first.x * size.width, first.y * size.height);
+          ctx.lineTo(second.x * size.width, second.y * size.height);
+          ctx.stroke();
+        } else if (stroke.points.length === 1) {
           const first = stroke.points[0];
           ctx.beginPath();
           ctx.arc(first.x * size.width, first.y * size.height, Math.max(1, strokeSize / 2), 0, Math.PI * 2);
@@ -3173,7 +3217,14 @@
         targetContext.strokeStyle = isErasingStroke ? 'rgba(0,0,0,1)' : strokeColor;
         targetContext.fillStyle = isErasingStroke ? 'rgba(0,0,0,1)' : strokeColor;
         targetContext.globalCompositeOperation = isErasingStroke ? 'destination-out' : 'source-over';
-        if (stroke.points.length === 1) {
+        if (stroke.type === 'line' && stroke.points.length >= 2) {
+          const first = stroke.points[0];
+          const second = stroke.points[1];
+          targetContext.beginPath();
+          targetContext.moveTo(first.x * width, first.y * height);
+          targetContext.lineTo(second.x * width, second.y * height);
+          targetContext.stroke();
+        } else if (stroke.points.length === 1) {
           const first = stroke.points[0];
           targetContext.beginPath();
           targetContext.arc(first.x * width, first.y * height, Math.max(1, strokeSize / 2), 0, Math.PI * 2);
@@ -3388,6 +3439,10 @@
         if (fullscreenBrushSizeValue) {
           fullscreenBrushSizeValue.textContent = `${brushSize} px`;
         }
+        if (fullscreenLineBtn) {
+          fullscreenLineBtn.classList.toggle('active', activeDrawMode === 'line');
+          fullscreenLineBtn.setAttribute('aria-pressed', activeDrawMode === 'line' ? 'true' : 'false');
+        }
         if (fullscreenEraserBtn) {
           fullscreenEraserBtn.classList.toggle('active', isErasing);
         }
@@ -3529,6 +3584,40 @@
         if (event.pointerType === 'touch') {
           if (!fullscreenMode) return;
           event.preventDefault();
+          if (activeDrawMode === 'line') {
+            const touchPoint = pointFromEvent(event);
+            if (!touchPoint) return;
+            if (!lineDraftStartPoint) {
+              lineDraftStartPoint = touchPoint;
+              lineDraftCurrentPoint = touchPoint;
+              activeStroke = {
+                points: [touchPoint, touchPoint],
+                color: brushColor,
+                size: brushSize,
+                eraser: isErasing,
+                type: 'line'
+              };
+              redraw();
+              return;
+            }
+            const endPoint = lineDraftCurrentPoint || touchPoint;
+            strokes.push({
+              points: [lineDraftStartPoint, endPoint],
+              color: brushColor,
+              size: brushSize,
+              eraser: isErasing,
+              type: 'line'
+            });
+            redoStack = [];
+            lineDraftStartPoint = null;
+            lineDraftCurrentPoint = null;
+            activeStroke = null;
+            redraw();
+            setControls();
+            syncBrushControls();
+            scheduleSave();
+            return;
+          }
           registerTouchPointer(event);
           return;
         }
@@ -3536,6 +3625,40 @@
         event.preventDefault();
         const startPoint = pointFromEvent(event);
         if (!startPoint) return;
+        if (activeDrawMode === 'line') {
+          if (!lineDraftStartPoint) {
+            lineDraftStartPoint = startPoint;
+            lineDraftCurrentPoint = startPoint;
+            activeStroke = {
+              points: [startPoint, startPoint],
+              color: brushColor,
+              size: brushSize,
+              eraser: isErasing,
+              type: 'line'
+            };
+            activeDrawingPointerId = null;
+            isDrawing = false;
+            redraw();
+            return;
+          }
+          const endPoint = lineDraftCurrentPoint || startPoint;
+          strokes.push({
+            points: [lineDraftStartPoint, endPoint],
+            color: brushColor,
+            size: brushSize,
+            eraser: isErasing,
+            type: 'line'
+          });
+          redoStack = [];
+          lineDraftStartPoint = null;
+          lineDraftCurrentPoint = null;
+          activeStroke = null;
+          redraw();
+          setControls();
+          syncBrushControls();
+          scheduleSave();
+          return;
+        }
         canvas.setPointerCapture(event.pointerId);
         activeDrawingPointerId = event.pointerId;
         isDrawing = true;
@@ -3555,6 +3678,24 @@
 
       function continueDrawing(event) {
         if (event.pointerType === 'touch' && activeTouches.has(event.pointerId)) return;
+        if (activeDrawMode === 'line' && lineDraftStartPoint) {
+          const nextPoint = pointFromEvent(event);
+          if (!nextPoint) return;
+          lineDraftCurrentPoint = nextPoint;
+          if (activeStroke && activeStroke.type === 'line') {
+            activeStroke.points[1] = nextPoint;
+          } else {
+            activeStroke = {
+              points: [lineDraftStartPoint, nextPoint],
+              color: brushColor,
+              size: brushSize,
+              eraser: isErasing,
+              type: 'line'
+            };
+          }
+          redraw();
+          return;
+        }
         if (!activeStroke || event.pointerId !== activeDrawingPointerId) return;
         event.preventDefault();
         const coalesced = typeof event.getCoalescedEvents === 'function' ? event.getCoalescedEvents() : [event];
@@ -3577,8 +3718,15 @@
           }
           return;
         }
-        if (!activeStroke || (event.pointerId !== undefined && event.pointerId !== activeDrawingPointerId)) return;
+        if (event.pointerId !== undefined && event.pointerId !== activeDrawingPointerId) return;
         event.preventDefault();
+        if (activeDrawMode === 'line') {
+          activeDrawingPointerId = null;
+          isDrawing = false;
+          redraw();
+          return;
+        }
+        if (!activeStroke) return;
         flushPendingStrokePoints({ cancelAnimation: true });
         releasePointerCapture(canvas, event.pointerId ?? activeDrawingPointerId);
         activeDrawingPointerId = null;
@@ -4636,6 +4784,9 @@
         imageBlob = null;
         currentObjectUrl = null;
         activeStroke = null;
+        activeDrawMode = 'freehand';
+        lineDraftStartPoint = null;
+        lineDraftCurrentPoint = null;
         strokes = [];
         interactiveNotes = [];
         projectImages = [];
@@ -5135,6 +5286,9 @@
         syncBrushControls();
         scheduleSave();
       });
+      fullscreenLineBtn.addEventListener('click', () => {
+        setActiveDrawMode(activeDrawMode === 'line' ? 'freehand' : 'line');
+      });
       fullscreenEraserBtn.addEventListener('click', () => {
         isErasing = !isErasing;
         brushSize = isErasing ? lastEraserSize : lastPenSize;
@@ -5208,6 +5362,11 @@
           attemptPencilEditorCloseFromIndirectAction();
           return;
         }
+        if (activeDrawMode === 'line' && lineDraftStartPoint) {
+          event.preventDefault();
+          clearLineToolPreview();
+          return;
+        }
         if (!fullscreenMode) return;
         if (event.key === 'Escape') {
           event.preventDefault();
@@ -5269,7 +5428,10 @@
         }
         projectInput.value = '';
       });
-      drawModeButton.addEventListener('click', () => setActiveTool('draw'));
+      drawModeButton.addEventListener('click', () => {
+        setActiveTool('draw');
+        setActiveDrawMode('freehand');
+      });
       notesModeButton.addEventListener('click', () => setActiveTool('notes'));
       if (undo) {
         undo.addEventListener('click', undoLastLine);
