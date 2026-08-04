@@ -1051,29 +1051,29 @@
     .fullscreen-close-btn svg { width: 22px; height: 22px; stroke-width: 2.2; }
 
     .fullscreen-toolbar-toggle {
-      position: relative;
+      position: fixed;
+      left: 22px;
+      top: 112px;
       z-index: 1640;
-      display: inline-flex;
+      display: none;
       align-items: center;
       justify-content: center;
-      width: 36px;
-      height: 36px;
-      min-width: 36px;
-      min-height: 36px;
-      margin-right: 12px;
+      width: 56px;
+      height: 56px;
+      min-width: 56px;
+      min-height: 56px;
       padding: 0;
       border: 1px solid rgba(255, 255, 255, .28);
-      border-radius: 10px;
+      border-radius: 18px;
       background: linear-gradient(165deg, rgba(43, 53, 66, .72), rgba(19, 26, 36, .58));
       color: #f4f9ff;
-      box-shadow: 0 8px 16px rgba(2, 6, 14, .24);
+      box-shadow: 0 14px 28px rgba(2, 6, 14, .34);
       backdrop-filter: blur(14px) saturate(145%);
       cursor: grab;
       touch-action: none;
       -webkit-user-select: none;
       user-select: none;
       transition: box-shadow .16s ease, transform .16s ease, border-color .16s ease;
-      flex: 0 0 auto;
     }
     .fullscreen-toolbar-toggle svg { width: 22px; height: 22px; stroke-width: 2.1; }
     .fullscreen-toolbar-toggle:active { cursor: grabbing; }
@@ -1110,38 +1110,39 @@
       align-items: center;
       justify-content: flex-start;
       gap: 8px;
-      width: fit-content;
+      width: auto;
+      min-width: min-content;
       max-width: min(96vw, 760px);
-      height: 86px;
-      padding: 8px 10px;
+      min-height: 84px;
+      padding: 8px 12px;
       border: 1px solid var(--panel-line);
-      border-radius: 16px;
+      border-radius: 18px;
       background: var(--panel-fill);
       color: var(--panel-text);
-      box-shadow: 0 10px 20px rgba(2, 6, 13, .24), inset 0 1px 0 rgba(255, 255, 255, .14);
-      backdrop-filter: blur(16px) saturate(140%);
-      overflow: hidden;
+      box-shadow: 0 16px 30px rgba(2, 6, 13, .28), inset 0 1px 0 rgba(255, 255, 255, .16);
+      backdrop-filter: blur(24px) saturate(160%);
+      overflow-x: auto;
+      scrollbar-width: none;
     }
+    .fullscreen-drawing-toolbar-shell::-webkit-scrollbar { display: none; }
     .drawing-toolbar-row {
       display: flex;
-      align-items: stretch;
+      align-items: center;
       justify-content: flex-start;
       gap: 8px;
       flex-wrap: nowrap;
-      width: fit-content;
+      width: auto;
+      min-width: max-content;
       max-width: 100%;
     }
     .drawing-tool-group {
       display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 5px;
-      padding: 6px 8px;
+      align-items: center;
+      gap: 6px;
+      padding: 0;
+      background: transparent;
       min-width: 0;
       flex: 0 0 auto;
-      border: 1px solid rgba(255, 255, 255, .14);
-      border-radius: 12px;
-      background: rgba(255, 255, 255, .04);
     }
     .drawing-tool-group-row {
       display: flex;
@@ -1607,11 +1608,11 @@
         <button type="button" class="fullscreen-close-btn" id="fullscreenCloseButton" aria-label="Închide ecran complet" title="Închide ecran complet" hidden>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6 6 18"></path></svg>
         </button>
+        <button type="button" class="fullscreen-toolbar-toggle" id="fullscreenToolbarToggle" aria-label="Afișează instrumentele de desen" title="Instrumente desen" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-1 10-10a2.2 2.2 0 0 0 0-3.1l-.1-.1a2.2 2.2 0 0 0-3.1 0L5 15.7 4 20z"></path><path d="m13.4 7.4 3.2 3.2"></path></svg>
+        </button>
         <div class="fullscreen-drawing-toolbar" id="fullscreenDrawingToolbar" hidden>
           <div class="fullscreen-drawing-toolbar-shell">
-            <button type="button" class="fullscreen-toolbar-toggle" id="fullscreenToolbarToggle" aria-label="Afișează instrumentele de desen" title="Instrumente desen" hidden>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-1 10-10a2.2 2.2 0 0 0 0-3.1l-.1-.1a2.2 2.2 0 0 0-3.1 0L5 15.7 4 20z"></path><path d="m13.4 7.4 3.2 3.2"></path></svg>
-            </button>
             <div class="drawing-toolbar-row">
               <div class="drawing-tool-group color-group">
                 <span class="tool-label">Desen</span>
@@ -4140,8 +4141,8 @@
       }
 
       function getFloatingToolbarBounds() {
-        const toolbarWidth = fullscreenDrawingToolbar?.offsetWidth || 420;
-        const toolbarHeight = fullscreenDrawingToolbar?.offsetHeight || 92;
+        const toolbarWidth = fullscreenDrawingToolbar?.offsetWidth || 720;
+        const toolbarHeight = fullscreenDrawingToolbar?.offsetHeight || 84;
         const minX = 10;
         const minY = 10;
         const maxX = Math.max(minX, window.innerWidth - toolbarWidth - 10);
@@ -4171,17 +4172,49 @@
       }
 
       function applyFloatingToolbarPosition() {
-        if (!fullscreenDrawingToolbar) return;
+        if (!fullscreenToolbarToggle || !fullscreenDrawingToolbar) return;
         const { minX, minY, maxX, maxY } = getFloatingToolbarBounds();
         floatingToolbarPosition.x = clamp(floatingToolbarPosition.x, minX, maxX);
         floatingToolbarPosition.y = clamp(floatingToolbarPosition.y, minY, maxY);
-        fullscreenDrawingToolbar.style.left = `${floatingToolbarPosition.x}px`;
+        fullscreenToolbarToggle.style.left = `${floatingToolbarPosition.x}px`;
+        fullscreenToolbarToggle.style.top = `${floatingToolbarPosition.y}px`;
+        fullscreenToolbarToggle.style.right = 'auto';
+        fullscreenToolbarToggle.style.bottom = 'auto';
+        fullscreenDrawingToolbar.style.left = `${floatingToolbarPosition.x + 72}px`;
         fullscreenDrawingToolbar.style.top = `${floatingToolbarPosition.y}px`;
+        fullscreenDrawingToolbar.style.right = 'auto';
+        fullscreenDrawingToolbar.style.bottom = 'auto';
       }
 
       function positionFloatingToolbar() {
-        if (!fullscreenDrawingToolbar) return;
-        applyFloatingToolbarPosition();
+        if (!fullscreenToolbarToggle || !fullscreenDrawingToolbar) return;
+        const buttonRect = fullscreenToolbarToggle.getBoundingClientRect();
+        const toolbarRect = fullscreenDrawingToolbar.getBoundingClientRect();
+        const offset = 12;
+        const spaceRight = window.innerWidth - buttonRect.right;
+        const spaceLeft = buttonRect.left;
+        const spaceBelow = window.innerHeight - buttonRect.bottom;
+        const spaceAbove = buttonRect.top;
+
+        let left = buttonRect.right + offset;
+        if (spaceRight < toolbarRect.width + offset && spaceLeft > toolbarRect.width + offset) {
+          left = buttonRect.left - toolbarRect.width - offset;
+        }
+        left = clamp(left, 10, Math.max(10, window.innerWidth - toolbarRect.width - 10));
+
+        let top = buttonRect.top;
+        if (spaceBelow < toolbarRect.height + offset && spaceAbove > toolbarRect.height + offset) {
+          top = buttonRect.bottom - toolbarRect.height;
+        }
+        if (top + toolbarRect.height > window.innerHeight - 10) {
+          top = window.innerHeight - toolbarRect.height - 10;
+        }
+        top = clamp(top, 10, Math.max(10, window.innerHeight - toolbarRect.height - 10));
+
+        fullscreenDrawingToolbar.style.left = `${left}px`;
+        fullscreenDrawingToolbar.style.top = `${top}px`;
+        fullscreenDrawingToolbar.style.right = 'auto';
+        fullscreenDrawingToolbar.style.bottom = 'auto';
       }
 
       function setFloatingToolbarOpen(isOpen) {
@@ -4190,7 +4223,6 @@
         fullscreenToolbarToggle.classList.toggle('is-active', floatingToolbarOpen);
         fullscreenDrawingToolbar.classList.toggle('is-open', floatingToolbarOpen);
         fullscreenDrawingToolbar.hidden = !fullscreenMode || !floatingToolbarOpen;
-        fullscreenDrawingToolbar.style.removeProperty('display');
         fullscreenToolbarToggle.setAttribute('aria-expanded', floatingToolbarOpen ? 'true' : 'false');
         if (floatingToolbarOpen) {
           requestAnimationFrame(() => {
@@ -4204,6 +4236,10 @@
       function handleFloatingToolbarPointerDown(event) {
         if (!fullscreenMode || !fullscreenToolbarToggle) return;
         if (event.pointerType === 'mouse' && event.button !== 0) return;
+        if (event.currentTarget === fullscreenDrawingToolbar) {
+          const interactiveTarget = event.target.closest('button, input, select, textarea, [type=range], [type=color]');
+          if (interactiveTarget) return;
+        }
         event.preventDefault();
         floatingToolbarDragging = true;
         floatingToolbarMoved = false;
@@ -4212,7 +4248,7 @@
           x: event.clientX - floatingToolbarPosition.x,
           y: event.clientY - floatingToolbarPosition.y
         };
-        fullscreenToolbarToggle.setPointerCapture(event.pointerId);
+        event.currentTarget.setPointerCapture(event.pointerId);
       }
 
       function handleFloatingToolbarPointerMove(event) {
@@ -4233,7 +4269,20 @@
       function handleFloatingToolbarPointerUp(event) {
         if (event.pointerId !== floatingToolbarPointerId) return;
         event.preventDefault();
-        releasePointerCapture(fullscreenToolbarToggle, event.pointerId);
+        try {
+          if (fullscreenToolbarToggle && fullscreenToolbarToggle.hasPointerCapture(event.pointerId)) {
+            fullscreenToolbarToggle.releasePointerCapture(event.pointerId);
+          }
+        } catch (error) {
+          // ignore
+        }
+        try {
+          if (fullscreenDrawingToolbar && fullscreenDrawingToolbar.hasPointerCapture(event.pointerId)) {
+            fullscreenDrawingToolbar.releasePointerCapture(event.pointerId);
+          }
+        } catch (error) {
+          // ignore
+        }
         floatingToolbarDragging = false;
         floatingToolbarPointerId = null;
         applyFloatingToolbarPosition();
@@ -5682,6 +5731,10 @@
       fullscreenButton.addEventListener('click', () => setFullscreenMode(true));
       fullscreenCloseButton.addEventListener('click', () => setFullscreenMode(false));
       fullscreenCloseToolbarBtn.addEventListener('click', () => setFullscreenMode(false));
+      fullscreenToolbarToggle.addEventListener('pointerdown', handleFloatingToolbarPointerDown, { passive: false });
+      fullscreenToolbarToggle.addEventListener('pointermove', handleFloatingToolbarPointerMove, { passive: false });
+      fullscreenToolbarToggle.addEventListener('pointerup', handleFloatingToolbarPointerUp, { passive: false });
+      fullscreenToolbarToggle.addEventListener('pointercancel', handleFloatingToolbarPointerUp, { passive: false });
       fullscreenDrawingToolbar.addEventListener('pointerdown', handleFloatingToolbarPointerDown, { passive: false });
       fullscreenDrawingToolbar.addEventListener('pointermove', handleFloatingToolbarPointerMove, { passive: false });
       fullscreenDrawingToolbar.addEventListener('pointerup', handleFloatingToolbarPointerUp, { passive: false });
