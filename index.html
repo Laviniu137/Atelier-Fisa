@@ -94,7 +94,7 @@
       border-radius: 18px;
       background: rgba(255, 253, 249, .9);
       box-shadow: 0 14px 30px rgba(59, 45, 27, .11);
-      overflow: hidden;
+      overflow: visible;
       display: grid;
       grid-template-rows: 170px auto;
       min-height: 320px;
@@ -243,6 +243,12 @@
       border-color: #f0c3ca;
       background: #feecef;
       color: #891a28;
+    }
+    .project-card-menu-separator {
+      height: 1px;
+      border: 0;
+      margin: 4px 6px;
+      background: linear-gradient(to right, rgba(160, 142, 117, 0), rgba(160, 142, 117, .52), rgba(160, 142, 117, 0));
     }
     .project-empty {
       border: 1px dashed #cebfa8;
@@ -1188,6 +1194,16 @@
       </div>
     </div>
   </div>
+  <div id="deleteProjectDialog" class="danger-dialog-backdrop" hidden>
+    <div class="danger-dialog" role="dialog" aria-modal="true" aria-labelledby="deleteProjectDialogTitle" aria-describedby="deleteProjectDialogDescription">
+      <h2 id="deleteProjectDialogTitle">Ștergi definitiv proiectul?</h2>
+      <p id="deleteProjectDialogDescription">Această acțiune nu poate fi anulată.</p>
+      <div class="danger-dialog-actions">
+        <button type="button" id="cancelDeleteProject">Anulează</button>
+        <button type="button" id="confirmDeleteProject" class="danger-confirm-image-btn">Șterge</button>
+      </div>
+    </div>
+  </div>
   <div id="fullscreenOverlay" class="fullscreen-overlay" hidden></div>
   <main class="app" hidden>
     <header>
@@ -1394,6 +1410,9 @@
       const deleteNoteDialog = document.getElementById('deleteNoteDialog');
       const cancelDeleteNoteButton = document.getElementById('cancelDeleteNote');
       const confirmDeleteNoteButton = document.getElementById('confirmDeleteNote');
+      const deleteProjectDialog = document.getElementById('deleteProjectDialog');
+      const cancelDeleteProjectButton = document.getElementById('cancelDeleteProject');
+      const confirmDeleteProjectButton = document.getElementById('confirmDeleteProject');
       const photo = document.getElementById('photo');
       const canvas = document.getElementById('drawingCanvas');
       const stage = document.getElementById('imageStage');
@@ -1464,6 +1483,7 @@
       let currentProjectName = 'Proiect nou';
       let activeProjectId = null;
       let pendingProjectNameAction = null;
+      let pendingDeleteProjectId = null;
       let interactiveNotes = [];
       let selectedNoteId = null;
       let draggingNoteId = null;
@@ -2101,18 +2121,27 @@
             { action: 'open', label: 'Deschide', icon: '📂' },
             { action: 'rename', label: 'Redenumește', icon: '✏️' },
             { action: 'duplicate', label: 'Duplică', icon: '📄' },
-            { action: 'export-project', label: 'Exportă proiect (.atf/.jsd)', icon: '📤' },
-            { action: 'export-image', label: 'Exportă imagine (PNG/JPG)', icon: '🖼️' },
-            {
-              action: 'export-pdf',
-              label: 'Exportă PDF',
-              icon: '📑',
-              disabled: typeof exportProjectAsPdf !== 'function'
-            },
+            { action: 'export-project', label: 'Exportă proiect (.atf)', icon: '📤' },
+            { action: 'export-image', label: 'Exportă imagine (PNG)', icon: '🖼️' },
+            { action: 'separator' },
             { action: 'delete', label: 'Șterge proiect', icon: '🗑️', danger: true }
           ];
 
+          if (typeof exportProjectAsPdf === 'function') {
+            menuActions.splice(5, 0, {
+              action: 'export-pdf',
+              label: 'Exportă PDF',
+              icon: '📑'
+            });
+          }
+
           menuActions.forEach((item) => {
+            if (item.action === 'separator') {
+              const separator = document.createElement('hr');
+              separator.className = 'project-card-menu-separator';
+              menuItems.appendChild(separator);
+              return;
+            }
             const itemButton = document.createElement('button');
             itemButton.type = 'button';
             itemButton.disabled = Boolean(item.disabled);
@@ -2195,13 +2224,28 @@
         showProjectManager();
       }
 
-      function chooseProjectExportExtension() {
-        const answer = window.prompt('Alege extensia exportului: atf sau jsd', 'atf');
-        if (answer === null) return null;
-        const normalized = String(answer || '').trim().toLowerCase().replace('.', '');
-        if (normalized === 'jsd') return 'jsd';
-        if (normalized === 'atf') return 'atf';
-        return 'atf';
+      function openDeleteProjectDialog(projectId) {
+        pendingDeleteProjectId = projectId;
+        deleteProjectDialog.hidden = false;
+        requestAnimationFrame(() => {
+          cancelDeleteProjectButton.focus();
+        });
+      }
+
+      function closeDeleteProjectDialog() {
+        deleteProjectDialog.hidden = true;
+        pendingDeleteProjectId = null;
+      }
+
+      async function confirmDeleteProjectFromDialog() {
+        const targetProjectId = pendingDeleteProjectId;
+        closeDeleteProjectDialog();
+        if (!targetProjectId) return;
+        await deleteProjectRecord(targetProjectId);
+        if (activeProjectId === targetProjectId) {
+          await closeActiveProjectSafely();
+        }
+        await renderProjectCards();
       }
 
       async function handleProjectCardAction(record, action) {
@@ -2248,9 +2292,7 @@
         }
 
         if (action === 'export-project') {
-          const exportExtension = chooseProjectExportExtension();
-          if (!exportExtension) return;
-          await exportProjectPayload(record.payload, record.name || 'Proiect', { extension: exportExtension });
+          await exportProjectPayload(record.payload, record.name || 'Proiect', { extension: 'atf' });
           return;
         }
 
@@ -2261,7 +2303,11 @@
             return;
           }
           await openProjectById(record.id);
-          openExportImageDialog();
+          const formatPngInput = document.querySelector('input[name="exportFormat"][value="png"]');
+          if (formatPngInput) {
+            formatPngInput.checked = true;
+          }
+          await exportCurrentImage();
           return;
         }
 
@@ -2273,13 +2319,7 @@
         }
 
         if (action === 'delete') {
-          const shouldDelete = window.confirm(`Stergi definitiv proiectul "${record.name || 'Proiect'}"?\n\nAceasta actiune nu poate fi anulata.`);
-          if (!shouldDelete) return;
-          await deleteProjectRecord(record.id);
-          if (activeProjectId === record.id) {
-            await closeActiveProjectSafely();
-          }
-          await renderProjectCards();
+          openDeleteProjectDialog(record.id);
         }
       }
 
@@ -4625,6 +4665,11 @@
           closeDeleteNoteDialog();
           return;
         }
+        if (!deleteProjectDialog.hidden && event.key === 'Escape') {
+          event.preventDefault();
+          closeDeleteProjectDialog();
+          return;
+        }
         if (!pencilUnsavedDialog.hidden && event.key === 'Escape') {
           event.preventDefault();
           closePencilUnsavedDialog();
@@ -4751,6 +4796,14 @@
         if (event.target !== deleteNoteDialog) return;
         closeDeleteNoteDialog();
       });
+      cancelDeleteProjectButton.addEventListener('click', closeDeleteProjectDialog);
+      confirmDeleteProjectButton.addEventListener('click', async () => {
+        await confirmDeleteProjectFromDialog();
+      });
+      deleteProjectDialog.addEventListener('pointerdown', (event) => {
+        if (event.target !== deleteProjectDialog) return;
+        closeDeleteProjectDialog();
+      });
       cancelProjectSaveButton.addEventListener('click', closeSaveProjectDialog);
       confirmProjectSaveButton.addEventListener('click', async () => {
         await submitProjectNameDialog();
@@ -4810,6 +4863,18 @@
         if (event.key === 'Escape') {
           event.preventDefault();
           closeDeleteNoteDialog();
+        }
+      });
+      cancelDeleteProjectButton.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeDeleteProjectDialog();
+        }
+      });
+      confirmDeleteProjectButton.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeDeleteProjectDialog();
         }
       });
       addNoteButton.addEventListener('click', addNote);
