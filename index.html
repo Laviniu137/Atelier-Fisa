@@ -1811,6 +1811,8 @@
       let selectedNoteMode = 'text';
       let brushColor = '#000000';
       let brushSize = 4;
+      let lastPenSize = 4;
+      let lastEraserSize = 8;
       let isErasing = false;
       let redoStack = [];
       let zoomLevel = 1;
@@ -1871,7 +1873,7 @@
       const projectStore = 'projects';
       const metaStore = 'meta';
       const projectVersion = 2;
-      const APP_VERSION = '1.2.8';
+      const APP_VERSION = '1.3.3';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
       const activeProjectMetaKey = 'active-project-id';
@@ -2108,6 +2110,8 @@
         const drawSettings = source.drawSettings && typeof source.drawSettings === 'object' ? source.drawSettings : {};
         const colorValue = typeof drawSettings.color === 'string' && drawSettings.color ? drawSettings.color : '#000000';
         const sizeValue = Number(drawSettings.size);
+        const penSizeValue = Number(drawSettings.lastPenSize);
+        const eraserSizeValue = Number(drawSettings.lastEraserSize);
         return {
           id: source.id || createNoteId(),
           name: source.name || '',
@@ -2125,7 +2129,9 @@
           drawSettings: {
             color: colorValue,
             size: Number.isFinite(sizeValue) ? clamp(sizeValue, 1, 20) : 4,
-            eraser: Boolean(drawSettings.eraser)
+            eraser: Boolean(drawSettings.eraser),
+            lastPenSize: Number.isFinite(penSizeValue) ? clamp(penSizeValue, 1, 20) : 4,
+            lastEraserSize: Number.isFinite(eraserSizeValue) ? clamp(eraserSizeValue, 1, 20) : 8
           }
         };
       }
@@ -2353,7 +2359,9 @@
           drawSettings: image.drawSettings && typeof image.drawSettings === 'object' ? image.drawSettings : {
             color: '#000000',
             size: 4,
-            eraser: false
+            eraser: false,
+            lastPenSize: 4,
+            lastEraserSize: 8
           }
         })).filter(isValidProjectImageEntry);
 
@@ -2772,7 +2780,9 @@
               drawSettings: {
                 color: imageRecord.drawSettings && typeof imageRecord.drawSettings.color === 'string' ? imageRecord.drawSettings.color : brushColor,
                 size: Number.isFinite(Number(imageRecord.drawSettings && imageRecord.drawSettings.size)) ? clamp(Number(imageRecord.drawSettings.size), 1, 20) : brushSize,
-                eraser: Boolean(imageRecord.drawSettings && imageRecord.drawSettings.eraser)
+                eraser: Boolean(imageRecord.drawSettings && imageRecord.drawSettings.eraser),
+                lastPenSize: Number.isFinite(Number(imageRecord.drawSettings && imageRecord.drawSettings.lastPenSize)) ? clamp(Number(imageRecord.drawSettings.lastPenSize), 1, 20) : lastPenSize,
+                lastEraserSize: Number.isFinite(Number(imageRecord.drawSettings && imageRecord.drawSettings.lastEraserSize)) ? clamp(Number(imageRecord.drawSettings.lastEraserSize), 1, 20) : lastEraserSize
               }
             };
           }))
@@ -4624,6 +4634,8 @@
         selectedNoteMode = 'text';
         redoStack = [];
         brushColor = '#000000';
+        lastPenSize = 4;
+        lastEraserSize = 8;
         brushSize = 4;
         isErasing = false;
         zoomLevel = 1;
@@ -4698,7 +4710,9 @@
         currentProjectImage.drawSettings = {
           color: brushColor,
           size: brushSize,
-          eraser: isErasing
+          eraser: isErasing,
+          lastPenSize,
+          lastEraserSize
         };
       }
 
@@ -4765,8 +4779,10 @@
             selectedNoteMode = currentImage.selectedNoteMode === 'pencil' ? 'pencil' : 'text';
             const savedSettings = currentImage.drawSettings && typeof currentImage.drawSettings === 'object' ? currentImage.drawSettings : {};
             brushColor = typeof savedSettings.color === 'string' && savedSettings.color ? savedSettings.color : '#000000';
-            brushSize = Number.isFinite(Number(savedSettings.size)) ? clamp(Number(savedSettings.size), 1, 20) : 4;
+            lastPenSize = Number.isFinite(Number(savedSettings.lastPenSize)) ? clamp(Number(savedSettings.lastPenSize), 1, 20) : 4;
+            lastEraserSize = Number.isFinite(Number(savedSettings.lastEraserSize)) ? clamp(Number(savedSettings.lastEraserSize), 1, 20) : 8;
             isErasing = Boolean(savedSettings.eraser);
+            brushSize = isErasing ? lastEraserSize : lastPenSize;
             redoStack = [];
             zoomLevel = typeof currentImage.zoom === 'number' ? currentImage.zoom : 1;
             panOffset = currentImage.pan && typeof currentImage.pan.x === 'number' && typeof currentImage.pan.y === 'number'
@@ -4823,7 +4839,9 @@
             drawSettings: {
               color: brushColor,
               size: brushSize,
-              eraser: isErasing
+              eraser: isErasing,
+              lastPenSize,
+              lastEraserSize
             }
           };
           projectImages.push(imageEntry);
@@ -5083,18 +5101,26 @@
       fullscreenColorPicker.addEventListener('input', (event) => {
         brushColor = event.target.value;
         isErasing = false;
+        brushSize = lastPenSize;
         applyCurrentBrushSettings();
         syncBrushControls();
         scheduleSave();
       });
       fullscreenBrushSize.addEventListener('input', (event) => {
-        brushSize = Number(event.target.value) || 4;
+        const nextSize = clamp(Number(event.target.value) || 4, 1, 20);
+        if (isErasing) {
+          lastEraserSize = nextSize;
+        } else {
+          lastPenSize = nextSize;
+        }
+        brushSize = nextSize;
         applyCurrentBrushSettings();
         syncBrushControls();
         scheduleSave();
       });
       fullscreenEraserBtn.addEventListener('click', () => {
         isErasing = !isErasing;
+        brushSize = isErasing ? lastEraserSize : lastPenSize;
         applyCurrentBrushSettings();
         syncBrushControls();
         scheduleSave();
@@ -5114,6 +5140,7 @@
           if (!selectedColor) return;
           brushColor = selectedColor;
           isErasing = false;
+          brushSize = lastPenSize;
           applyCurrentBrushSettings();
           syncBrushControls();
           scheduleSave();
