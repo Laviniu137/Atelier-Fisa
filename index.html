@@ -1261,6 +1261,8 @@
       border-color: rgba(173, 227, 255, .8);
       background: linear-gradient(165deg, rgba(127, 220, 255, .28), rgba(86, 177, 237, .24));
       box-shadow: inset 0 0 0 1px rgba(228, 246, 255, .34), 0 0 0 1px rgba(255,255,255,.14), 0 10px 18px rgba(54, 120, 152, .25);
+      outline: 1px solid rgba(120, 195, 255, .62);
+      outline-offset: 1px;
     }
     .drawing-tool-button.active svg { color: #f7fdff; }
     .drawing-tool-button.danger {
@@ -1360,6 +1362,28 @@
       font-size: .68rem;
       letter-spacing: .04em;
     }
+    .save-toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%) translateY(12px);
+      z-index: 2000;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(50, 70, 58, .95);
+      color: #f8fdf8;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, .2);
+      font-size: .84rem;
+      font-weight: 650;
+      letter-spacing: .01em;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .22s ease, transform .22s ease;
+    }
+    .save-toast.is-visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
     .project-manager-version {
       margin-top: 10px;
       justify-self: end;
@@ -1371,6 +1395,7 @@
   </style>
 </head>
 <body>
+  <div id="saveToast" class="save-toast" role="status" aria-live="polite" aria-atomic="true"></div>
   <div id="projectManagerView" class="project-manager-view">
     <section class="project-manager-header" aria-label="Branding și acțiuni proiecte">
       <div class="project-manager-brand">
@@ -1797,6 +1822,7 @@
       const imagePanel = document.querySelector('.image-panel');
       const appVersionLabel = document.getElementById('appVersion');
       const appVersionLabels = Array.from(document.querySelectorAll('[data-app-version-label]'));
+      const saveToast = document.getElementById('saveToast');
       const noteCanvasCtx = noteCanvas.getContext('2d');
       const pencilEditorCtx = pencilEditorCanvas.getContext('2d');
       const ctx = canvas.getContext('2d');
@@ -1890,7 +1916,7 @@
       const projectStore = 'projects';
       const metaStore = 'meta';
       const projectVersion = 2;
-      const APP_VERSION = '1.3.6';
+      const APP_VERSION = '1.3.8';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
       const activeProjectMetaKey = 'active-project-id';
@@ -3058,6 +3084,7 @@
           return;
         }
         activeDrawMode = nextMode;
+        isErasing = false;
         if (fullscreenLineBtn) {
           fullscreenLineBtn.classList.toggle('active', activeDrawMode === 'line');
           fullscreenLineBtn.setAttribute('aria-pressed', activeDrawMode === 'line' ? 'true' : 'false');
@@ -3429,6 +3456,16 @@
         if (activeStroke) drawStroke(activeStroke);
       }
 
+      function showSaveToast(message = 'Proiect salvat cu succes') {
+        if (!saveToast) return;
+        saveToast.textContent = message;
+        saveToast.classList.add('is-visible');
+        window.clearTimeout(showSaveToast.timeoutId);
+        showSaveToast.timeoutId = window.setTimeout(() => {
+          saveToast.classList.remove('is-visible');
+        }, 2400);
+      }
+
       function syncBrushControls() {
         if (fullscreenColorPicker) {
           fullscreenColorPicker.value = brushColor;
@@ -3440,8 +3477,9 @@
           fullscreenBrushSizeValue.textContent = `${brushSize} px`;
         }
         if (fullscreenLineBtn) {
-          fullscreenLineBtn.classList.toggle('active', activeDrawMode === 'line');
-          fullscreenLineBtn.setAttribute('aria-pressed', activeDrawMode === 'line' ? 'true' : 'false');
+          const lineActive = activeDrawMode === 'line' && !isErasing;
+          fullscreenLineBtn.classList.toggle('active', lineActive);
+          fullscreenLineBtn.setAttribute('aria-pressed', lineActive ? 'true' : 'false');
         }
         if (fullscreenEraserBtn) {
           fullscreenEraserBtn.classList.toggle('active', isErasing);
@@ -5210,6 +5248,7 @@
         await saveLastWork();
         markProjectClean();
         await renderProjectCards();
+        showSaveToast();
       }
 
       async function exportCurrentProject(extension = 'atf') {
@@ -5290,8 +5329,9 @@
         setActiveDrawMode(activeDrawMode === 'line' ? 'freehand' : 'line');
       });
       fullscreenEraserBtn.addEventListener('click', () => {
-        isErasing = !isErasing;
-        brushSize = isErasing ? lastEraserSize : lastPenSize;
+        setActiveDrawMode('freehand');
+        isErasing = true;
+        brushSize = lastEraserSize;
         applyCurrentBrushSettings();
         syncBrushControls();
         scheduleSave();
@@ -5430,6 +5470,7 @@
       });
       drawModeButton.addEventListener('click', () => {
         setActiveTool('draw');
+        isErasing = false;
         setActiveDrawMode('freehand');
       });
       notesModeButton.addEventListener('click', () => setActiveTool('notes'));
