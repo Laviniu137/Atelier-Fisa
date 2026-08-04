@@ -1100,21 +1100,21 @@
       display: none;
       flex-direction: column;
       align-items: stretch;
-      gap: 8px;
-      transform: translateY(8px) scale(.96);
+      gap: 6px;
+      transform: translateY(6px) scale(.97);
       transform-origin: left top;
       opacity: 0;
       pointer-events: none;
-      width: min(92vw, 440px);
-      max-width: calc(100vw - 24px);
+      width: min(86vw, 390px);
+      max-width: calc(100vw - 16px);
       min-height: auto;
-      padding: 10px 11px;
+      padding: 8px 9px;
       border: 1px solid var(--panel-line);
-      border-radius: 20px;
+      border-radius: 16px;
       background: var(--panel-fill);
       color: var(--panel-text);
-      box-shadow: 0 20px 40px rgba(2, 6, 13, .34), inset 0 1px 0 rgba(255, 255, 255, .16);
-      backdrop-filter: blur(28px) saturate(170%);
+      box-shadow: 0 16px 30px rgba(2, 6, 13, .28), inset 0 1px 0 rgba(255, 255, 255, .16);
+      backdrop-filter: blur(24px) saturate(160%);
       transition: opacity .16s ease, transform .16s ease;
     }
     .fullscreen-drawing-toolbar.is-open {
@@ -1126,14 +1126,14 @@
     .drawing-toolbar-row {
       display: flex;
       align-items: flex-start;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
       width: 100%;
     }
     .drawing-tool-group {
       display: flex;
       flex-direction: column;
-      gap: 7px;
+      gap: 5px;
       padding: 0;
       background: transparent;
       min-width: 0;
@@ -1158,17 +1158,17 @@
     .drawing-tool-group-row {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       flex-wrap: wrap;
-      row-gap: 6px;
+      row-gap: 5px;
       width: 100%;
     }
     .tool-label {
-      margin-left: 2px;
+      margin-left: 1px;
       color: rgba(231, 238, 247, .84);
-      font-size: .66rem;
+      font-size: .6rem;
       font-weight: 680;
-      letter-spacing: .18em;
+      letter-spacing: .14em;
       text-transform: uppercase;
       user-select: none;
     }
@@ -1178,12 +1178,12 @@
       background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, .22), rgba(255, 255, 255, 0));
       margin: 2px 4px;
     }
-    .quick-colors { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .quick-colors { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
     .quick-color-button {
-      width: 34px;
-      height: 34px;
-      min-width: 34px;
-      min-height: 34px;
+      width: 30px;
+      height: 30px;
+      min-width: 30px;
+      min-height: 30px;
       padding: 0;
       border: 1.5px solid rgba(255, 255, 255, .42);
       border-radius: 999px;
@@ -1202,13 +1202,13 @@
       transform: translateY(-2px) scale(1.1);
     }
     #fullscreenColorPicker {
-      width: 44px;
-      height: 44px;
-      min-width: 44px;
-      min-height: 44px;
+      width: 40px;
+      height: 40px;
+      min-width: 40px;
+      min-height: 40px;
       padding: 0;
       border: 1px solid rgba(255, 255, 255, .32);
-      border-radius: 14px;
+      border-radius: 12px;
       background: rgba(255, 255, 255, .08);
       overflow: hidden;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 4px 10px rgba(0, 0, 0, .16);
@@ -1216,9 +1216,9 @@
     #fullscreenColorPicker::-webkit-color-swatch-wrapper { padding: 0; }
     #fullscreenColorPicker::-webkit-color-swatch { border: 0; border-radius: 9px; }
     #fullscreenBrushSize {
-      flex: 1 1 132px;
-      min-width: 112px;
-      width: 132px;
+      flex: 1 1 108px;
+      min-width: 92px;
+      width: 108px;
       height: 4px;
       margin: 0;
       -webkit-appearance: none;
@@ -1260,30 +1260,30 @@
       transition: transform .16s ease;
     }
     #fullscreenBrushSizeValue {
-      min-width: 52px;
+      min-width: 46px;
       flex-shrink: 0;
       color: rgba(246, 251, 255, .96);
-      font-size: .75rem;
+      font-size: .72rem;
       font-weight: 700;
       letter-spacing: .02em;
       text-align: center;
-      padding: 5px 8px;
+      padding: 4px 7px;
       border: 1px solid rgba(255,255,255,.16);
       border-radius: 999px;
       background: rgba(255,255,255,.1);
       box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
     }
     .drawing-tool-button {
-      width: 50px;
-      height: 50px;
-      min-width: 50px;
-      min-height: 50px;
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      min-height: 44px;
       padding: 0;
       border: 1px solid rgba(255, 255, 255, .25);
-      border-radius: 14px;
+      border-radius: 12px;
       background: linear-gradient(165deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, .05));
       color: rgba(236, 243, 255, .94);
-      box-shadow: 0 4px 10px rgba(0, 0, 0, .18);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, .16);
       transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease, color .16s ease;
     }
     .drawing-tool-button svg { width: 20px; height: 20px; stroke-width: 2; }
@@ -1327,11 +1327,11 @@
       }
       .drawing-tool-group-row { gap: 6px; }
       .tool-label { font-size: .58rem; letter-spacing: .11em; }
-      .drawing-tool-button { width: 46px; height: 46px; min-width: 46px; min-height: 46px; border-radius: 12px; }
-      #fullscreenColorPicker { width: 40px; height: 40px; min-width: 40px; min-height: 40px; }
-      #fullscreenBrushSize { width: 104px; }
-      #fullscreenBrushSizeValue { min-width: 44px; font-size: .74rem; }
-      .quick-color-button { width: 30px; height: 30px; min-width: 30px; min-height: 30px; }
+      .drawing-tool-button { width: 42px; height: 42px; min-width: 42px; min-height: 42px; border-radius: 11px; }
+      #fullscreenColorPicker { width: 38px; height: 38px; min-width: 38px; min-height: 38px; }
+      #fullscreenBrushSize { width: 96px; }
+      #fullscreenBrushSizeValue { min-width: 42px; font-size: .7rem; }
+      .quick-color-button { width: 28px; height: 28px; min-width: 28px; min-height: 28px; }
       .fullscreen-toolbar-toggle { width: 52px; height: 52px; min-width: 52px; min-height: 52px; border-radius: 16px; }
     }
     @media (max-width: 640px) {
@@ -1968,7 +1968,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.4.3';
+      const APP_VERSION = '1.4.4';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -3337,7 +3337,8 @@
         redraw();
       }
 
-      function setActiveDrawMode(mode) {
+      function setActiveDrawMode(mode, options = {}) {
+        const shouldErase = Boolean(options.erasing);
         const nextMode = mode === 'line' ? 'line' : 'freehand';
         if (nextMode === 'line' && activeDrawMode === 'line' && lineDraftStartPoint) {
           finalizeLineDraft();
@@ -3345,10 +3346,10 @@
           return;
         }
         activeDrawMode = nextMode;
-        isErasing = false;
+        isErasing = shouldErase;
         if (fullscreenLineBtn) {
-          fullscreenLineBtn.classList.toggle('active', activeDrawMode === 'line');
-          fullscreenLineBtn.setAttribute('aria-pressed', activeDrawMode === 'line' ? 'true' : 'false');
+          fullscreenLineBtn.classList.toggle('active', activeDrawMode === 'line' && !isErasing);
+          fullscreenLineBtn.setAttribute('aria-pressed', activeDrawMode === 'line' && !isErasing ? 'true' : 'false');
         }
         if (activeDrawMode !== 'line') {
           clearLineToolPreview();
@@ -3361,10 +3362,14 @@
         drawModeButton.classList.toggle('active', tool === 'draw');
         notesModeButton.classList.toggle('active', tool === 'notes');
         canvas.style.cursor = tool === 'draw' ? 'crosshair' : 'default';
+        if (tool === 'draw') {
+          isErasing = false;
+        }
         if (tool !== 'draw') {
           clearLineToolPreview();
         }
         setControls();
+        syncBrushControls();
       }
 
       function configureCanvas() {
@@ -5645,11 +5650,10 @@
         scheduleSave();
       });
       fullscreenLineBtn.addEventListener('click', () => {
-        setActiveDrawMode(activeDrawMode === 'line' ? 'freehand' : 'line');
+        setActiveDrawMode(activeDrawMode === 'line' ? 'freehand' : 'line', { erasing: false });
       });
       fullscreenEraserBtn.addEventListener('click', () => {
-        setActiveDrawMode('freehand');
-        isErasing = true;
+        setActiveDrawMode('freehand', { erasing: true });
         brushSize = lastEraserSize;
         applyCurrentBrushSettings();
         syncBrushControls();
@@ -5669,7 +5673,7 @@
           const selectedColor = button.dataset.color;
           if (!selectedColor) return;
           brushColor = selectedColor;
-          isErasing = false;
+          setActiveDrawMode('freehand', { erasing: false });
           brushSize = lastPenSize;
           applyCurrentBrushSettings();
           syncBrushControls();
@@ -5789,8 +5793,7 @@
       });
       drawModeButton.addEventListener('click', () => {
         setActiveTool('draw');
-        isErasing = false;
-        setActiveDrawMode('freehand');
+        setActiveDrawMode('freehand', { erasing: false });
       });
       notesModeButton.addEventListener('click', () => setActiveTool('notes'));
       if (undo) {
