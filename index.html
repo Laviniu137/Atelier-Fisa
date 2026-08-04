@@ -1662,7 +1662,7 @@
       const projectStore = 'projects';
       const metaStore = 'meta';
       const projectVersion = 2;
-      const APP_VERSION = '1.2.2';
+      const APP_VERSION = '1.2.3';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
       const activeProjectMetaKey = 'active-project-id';
@@ -2345,8 +2345,8 @@
         await setActiveProjectId(record.id);
         currentProjectUpdatedAt = record.updatedAt || record?.payload?.updatedAt || null;
         setProjectName(record.name || record.payload.projectName || 'Proiect nou');
-        await applyProjectState(record.payload);
         showEditor();
+        await applyProjectState(record.payload);
       }
 
       async function createProjectAndOpen(name) {
@@ -2355,9 +2355,9 @@
         const record = buildProjectRecordFromPayload(payload, { name: projectName });
         await saveProjectRecord(record);
         await setActiveProjectId(record.id);
+        showEditor();
         await applyProjectState(record.payload);
         markProjectClean();
-        showEditor();
       }
 
       async function closeActiveProjectSafely() {
@@ -2779,6 +2779,25 @@
         ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
         ctx.imageSmoothingEnabled = true;
         redraw();
+      }
+
+      function restoreActiveImagePresentation() {
+        if (!sourceImage || stage.hidden) return;
+        configureCanvas();
+        configureNoteCanvas();
+        redraw();
+        renderNotes();
+        updateImageTransform();
+        setControls();
+      }
+
+      function restoreActiveImagePresentationAfterLoad() {
+        requestAnimationFrame(() => {
+          restoreActiveImagePresentation();
+          requestAnimationFrame(() => {
+            restoreActiveImagePresentation();
+          });
+        });
       }
 
       function syncCanvasViewportToPhoto() {
@@ -4469,16 +4488,13 @@
             emptyState.hidden = true;
             stage.hidden = false;
             noteLayer.hidden = !interactiveNotes.length;
-            configureCanvas();
-            renderNotes();
+            restoreActiveImagePresentationAfterLoad();
             renderNoteList();
             renderImageThumbnails();
             syncSelectedNoteForm();
             syncBrushControls();
             setActiveTool(activeTool);
             setSelectedNoteMode(selectedNoteMode);
-            updateImageTransform();
-            setControls();
             if (persist) {
               scheduleSave();
             }
