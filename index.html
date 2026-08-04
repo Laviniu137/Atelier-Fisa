@@ -413,15 +413,38 @@
     .mode-switcher { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 12px 0 8px; }
     .mode-switcher button { width: 100%; min-height: 44px; }
     .mode-switcher button.active { border-color: #8b5e3c; background: #fbf2e8; color: #5a3a22; }
-    .notes { display: flex; flex-direction: column; min-height: 0; padding: clamp(18px, 2.3vw, 25px); }
-    .notes-toolbar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
+    .notes { display: flex; flex-direction: column; min-height: 0; padding: clamp(20px, 2.5vw, 30px); }
+    .notes-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+      color: #4f4334;
+      font-size: .92rem;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      position: relative;
+    }
+    .notes-title::after {
+      content: '';
+      display: block;
+      width: 118px;
+      height: 1px;
+      margin-left: 10px;
+      background: rgba(119, 103, 83, .28);
+      border-radius: 999px;
+    }
+    .notes-toolbar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
     .notes-toolbar button {
       width: 100%;
       min-height: 48px;
       border-radius: 15px;
       justify-content: center;
+      font-size: .95rem;
       transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease, color .16s ease;
     }
+    .notes-toolbar button svg { width: 21px; height: 21px; }
     #addNote {
       border-color: #4b4133;
       background: #4b4133;
@@ -454,9 +477,38 @@
       background: #fdd8df;
       transform: translateY(1px) scale(.985);
     }
-    .note-list { display: grid; gap: 10px; margin-bottom: 14px; }
+    .note-list { display: grid; gap: 10px; margin-bottom: 18px; }
     .note-list-item { width: 100%; border: 1px solid #e3ddd3; border-radius: 14px; padding: 12px 13px; background: #fdfcf9; text-align: left; color: #322c23; box-shadow: inset 0 1px 0 rgba(255,255,255,.4); cursor: pointer; }
     .note-list-item.selected { border-color: #8b5e3c; background: #fbf2e8; }
+    .note-list-item.note-list-empty {
+      cursor: default;
+      border: 1px solid #e8e1d5;
+      border-radius: 16px;
+      padding: 22px 18px;
+      background: linear-gradient(180deg, #fffdfa, #faf6ef);
+      text-align: center;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
+      display: grid;
+      gap: 6px;
+      place-items: center;
+    }
+    .note-list-empty-icon {
+      font-size: 1.1rem;
+      opacity: .7;
+    }
+    .note-list-empty-title {
+      margin: 0;
+      color: #493f31;
+      font-size: .98rem;
+      font-weight: 700;
+    }
+    .note-list-empty-subtitle {
+      margin: 0;
+      color: #857968;
+      font-size: .86rem;
+      line-height: 1.45;
+      max-width: 32ch;
+    }
     .note-list-title-row { display: flex; align-items: center; gap: 8px; min-height: 32px; }
     .note-list-index {
       min-width: 2ch;
@@ -470,13 +522,65 @@
     .note-list-name { display: block; width: 100%; min-height: 32px; padding: 4px 8px; border: 1px solid transparent; border-radius: 8px; background: transparent; font-size: .95rem; font-weight: 700; color: #2f2922; outline: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; appearance: none; -webkit-appearance: none; }
     .note-list-name:focus { outline: none; border-color: #8b5e3c; background: #fffdf9; }
     .note-list-item.selected .note-list-name { color: #5b3a22; }
-    .note-form { display: grid; gap: 10px; }
+    .note-form { display: grid; gap: 14px; }
     .note-form label { color: #655947; font-size: .72rem; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
+    .note-editor-fields { display: grid; gap: 8px; }
+    .note-editor-empty {
+      border: 1px solid #e7dfd2;
+      border-radius: 16px;
+      padding: 22px 16px;
+      background: linear-gradient(180deg, #fffdfa, #faf6ef);
+      color: #726554;
+      font-size: .92rem;
+      line-height: 1.5;
+      text-align: center;
+    }
     .note-form input, .note-form textarea { width: 100%; border: 1px solid #e2dbd1; border-radius: 12px; padding: 12px 13px; color: #322c23; background: linear-gradient(#fffefa, #fbf8f2); font-size: 15px; }
-    .note-form textarea { min-height: 120px; resize: vertical; }
-    .note-input-toolbar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 6px; }
-    .note-input-toolbar button { min-height: 42px; padding-inline: 10px; }
-    .note-input-toolbar button.active { border-color: #8b5e3c; background: #fbf2e8; color: #5a3a22; }
+    #noteContent {
+      min-height: 136px;
+      resize: vertical;
+      border-radius: 16px;
+      padding: 14px 16px;
+      border: 1px solid #e3dbcf;
+      background: linear-gradient(180deg, #fffefb, #fbf8f2);
+      color: #322c23;
+      font-size: 1rem;
+      line-height: 1.5;
+      transition: border-color .18s ease, box-shadow .18s ease;
+    }
+    #noteContent::placeholder { color: #a29788; }
+    #noteContent:focus {
+      outline: none;
+      border-color: #8b6f4f;
+      box-shadow: 0 0 0 3px rgba(139, 111, 79, .16);
+    }
+    .note-input-toolbar {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+      margin-bottom: 10px;
+      padding: 4px;
+      border: 1px solid #e1d7ca;
+      border-radius: 14px;
+      background: #f5f1e8;
+    }
+    .note-input-toolbar button {
+      min-height: 44px;
+      border-radius: 10px;
+      padding-inline: 12px;
+      border: 1px solid rgba(139, 117, 88, .22);
+      background: #fffdf9;
+      color: #5f5242;
+      font-weight: 650;
+      box-shadow: none;
+      transition: background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+    .note-input-toolbar button.active {
+      border-color: #5f4c38;
+      background: #5b4a38;
+      color: #fffdf8;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.15), 0 4px 12px rgba(73, 54, 34, .2);
+    }
     .handwriting-panel { display: none; }
     .handwriting-panel canvas { width: 100%; min-height: 220px; border: 1px solid #e3ddd3; border-radius: 10px; background: #fffdf9; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
     .handwriting-actions { display: flex; gap: 8px; }
@@ -1159,6 +1263,13 @@
       .layout { grid-template-columns: 1fr; gap: 20px; padding-top: 20px; }
       .canvas-shell { min-height: min(58vh, 580px); }
       #notes { min-height: 300px; }
+      .notes { padding: 20px; }
+      .notes-title { font-size: .98rem; }
+      .notes-toolbar { gap: 12px; margin-bottom: 18px; }
+      .notes-toolbar button { min-height: 52px; font-size: .98rem; }
+      .note-form { gap: 16px; }
+      .note-input-toolbar button { min-height: 52px; font-size: .96rem; }
+      #noteContent { min-height: 150px; font-size: 1.02rem; }
     }
     @media (max-width: 520px) {
       .toolbar { grid-template-columns: 1fr; }
@@ -1426,31 +1537,34 @@
       </section>
 
       <section class="notes" aria-labelledby="notesLabel">
-        <label class="section-label" id="notesLabel">Notițe interactive</label>
+        <label class="section-label notes-title" id="notesLabel">📝 Notițe interactive</label>
         <div class="notes-toolbar">
           <button type="button" id="addNote"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg><span>Adaugă notă</span></button>
           <button type="button" id="deleteSelectedNote" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg><span>Șterge nota</span></button>
         </div>
         <div class="note-list" id="noteList" aria-live="polite"></div>
         <div class="note-form">
-          <label for="noteContent">Conținut</label>
-          <div class="note-input-toolbar" role="toolbar" aria-label="Mod conținut notă">
-            <button type="button" id="textModeBtn" class="active">Text</button>
-            <button type="button" id="pencilModeBtn">✏️ Scrie cu Apple Pencil</button>
-          </div>
-          <textarea id="noteContent" placeholder="Scrie observații, măsurători sau idei pentru această zonă…"></textarea>
-          <div class="handwriting-preview" id="handwritingPreview" hidden>
-            <div class="handwriting-preview-header">
-              <span>Scris de mână</span>
-              <button type="button" id="openPencilEditor">Editează</button>
+          <div id="noteEditorEmptyState" class="note-editor-empty" hidden>📝 Selectează o notă sau creează una nouă pentru a începe editarea.</div>
+          <div id="noteEditorFields" class="note-editor-fields">
+            <label for="noteContent">Conținut</label>
+            <div class="note-input-toolbar" role="toolbar" aria-label="Mod conținut notă">
+              <button type="button" id="textModeBtn" class="active">Text</button>
+              <button type="button" id="pencilModeBtn">✏️ Scrie cu Apple Pencil</button>
             </div>
-            <canvas id="noteHandwritingPreview" aria-label="Previzualizare scris de mână"></canvas>
-            <p id="handwritingPreviewEmpty" class="handwriting-preview-empty">Nu există încă scris de mână. Apasă Editează pentru a începe.</p>
-          </div>
-          <div class="handwriting-panel" id="handwritingPanel" hidden>
-            <canvas id="noteCanvas" aria-label="Zonă de scriere cu Apple Pencil"></canvas>
-            <div class="handwriting-actions">
-              <button type="button" id="clearPencilInput">Șterge scrierea</button>
+            <textarea id="noteContent" placeholder="Scrie observații, măsurători sau idei pentru această zonă…"></textarea>
+            <div class="handwriting-preview" id="handwritingPreview" hidden>
+              <div class="handwriting-preview-header">
+                <span>Scris de mână</span>
+                <button type="button" id="openPencilEditor">Editează</button>
+              </div>
+              <canvas id="noteHandwritingPreview" aria-label="Previzualizare scris de mână"></canvas>
+              <p id="handwritingPreviewEmpty" class="handwriting-preview-empty">Nu există încă scris de mână. Apasă Editează pentru a începe.</p>
+            </div>
+            <div class="handwriting-panel" id="handwritingPanel" hidden>
+              <canvas id="noteCanvas" aria-label="Zonă de scriere cu Apple Pencil"></canvas>
+              <div class="handwriting-actions">
+                <button type="button" id="clearPencilInput">Șterge scrierea</button>
+              </div>
             </div>
           </div>
         </div>
@@ -1568,6 +1682,8 @@
       const addNoteButton = document.getElementById('addNote');
       const deleteSelectedNoteButton = document.getElementById('deleteSelectedNote');
       const noteList = document.getElementById('noteList');
+      const noteEditorFields = document.getElementById('noteEditorFields');
+      const noteEditorEmptyState = document.getElementById('noteEditorEmptyState');
       const noteContentTextarea = document.getElementById('noteContent');
       const textModeButton = document.getElementById('textModeBtn');
       const pencilModeButton = document.getElementById('pencilModeBtn');
@@ -1683,7 +1799,7 @@
       const projectStore = 'projects';
       const metaStore = 'meta';
       const projectVersion = 2;
-      const APP_VERSION = '1.2.5';
+      const APP_VERSION = '1.2.6';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
       const activeProjectMetaKey = 'active-project-id';
@@ -3528,8 +3644,8 @@
         noteList.innerHTML = '';
         if (!interactiveNotes.length) {
           const empty = document.createElement('div');
-          empty.className = 'note-list-item';
-          empty.innerHTML = '<strong>Nu există încă note</strong><small>Adaugă una pentru a marca zone importante pe imagine.</small>';
+          empty.className = 'note-list-item note-list-empty';
+          empty.innerHTML = '<span class="note-list-empty-icon">📄</span><p class="note-list-empty-title">Nu există încă nicio notă</p><p class="note-list-empty-subtitle">Adaugă una pentru a marca observații importante pe imagine.</p>';
           noteList.appendChild(empty);
           return;
         }
@@ -3606,6 +3722,23 @@
 
       function syncSelectedNoteForm() {
         const note = interactiveNotes.find((item) => item.id === selectedNoteId);
+        const hasSelection = Boolean(note);
+        if (!hasSelection) {
+          selectedNoteId = null;
+        }
+        if (noteEditorFields) {
+          noteEditorFields.hidden = !hasSelection;
+        }
+        if (noteEditorEmptyState) {
+          noteEditorEmptyState.hidden = hasSelection;
+        }
+        if (!hasSelection) {
+          noteContentTextarea.value = '';
+          setSelectedNoteMode('text');
+          renderHandwritingPreview();
+          renderHandwritingCanvas();
+          return;
+        }
         noteContentTextarea.value = note ? note.content : '';
         setSelectedNoteMode(note && note.inputMode === 'pencil' ? 'pencil' : 'text');
         renderHandwritingPreview();
@@ -3908,6 +4041,28 @@
 
       function setSelectedNoteMode(mode, options = {}) {
         const { openEditor = false } = options;
+        const hasSelection = interactiveNotes.some((item) => item.id === selectedNoteId);
+        if (noteEditorFields) {
+          noteEditorFields.hidden = !hasSelection;
+        }
+        if (noteEditorEmptyState) {
+          noteEditorEmptyState.hidden = hasSelection;
+        }
+
+        if (!hasSelection) {
+          selectedNoteMode = 'text';
+          textModeButton.classList.add('active');
+          pencilModeButton.classList.remove('active');
+          noteContentTextarea.hidden = true;
+          handwritingPanel.hidden = true;
+          handwritingPreview.hidden = true;
+          if (pencilEditorOpen) {
+            closePencilEditor({ saveChanges: true });
+          }
+          setPencilInteractionLock(false);
+          return;
+        }
+
         selectedNoteMode = mode === 'pencil' ? 'pencil' : 'text';
         textModeButton.classList.toggle('active', selectedNoteMode === 'text');
         pencilModeButton.classList.toggle('active', selectedNoteMode === 'pencil');
