@@ -1968,7 +1968,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.4.2';
+      const APP_VERSION = '1.4.3';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2285,6 +2285,10 @@
             payload: nextPayload
           };
 
+          const existingPayloadImages = Array.isArray(record?.payload?.images) ? record.payload.images : [];
+          const normalizedPayloadImages = Array.isArray(nextPayload.images) ? nextPayload.images : [];
+          const existingActiveImageIndex = Number(record?.payload?.activeImageIndex ?? record?.activeImageIndex ?? 0);
+          const normalizedActiveImageIndex = Number(nextPayload.activeImageIndex ?? 0);
           const needsMigration = Boolean(
             !record
             || Number(record?.payload?.version || record?.version || 0) < projectVersion
@@ -2294,6 +2298,9 @@
             || record?.thumbnail !== nextRecord.thumbnail
             || record?.stats?.images !== nextRecord.stats.images
             || record?.stats?.notes !== nextRecord.stats.notes
+            || existingPayloadImages.length !== normalizedPayloadImages.length
+            || existingActiveImageIndex !== normalizedActiveImageIndex
+            || JSON.stringify(existingPayloadImages) !== JSON.stringify(normalizedPayloadImages)
           );
 
           if (!needsMigration) {
@@ -2384,22 +2391,37 @@
         };
       }
 
-      function isValidProjectImageEntry(image) {
+      function hasProjectImagePayload(image) {
+        return Boolean(image && typeof image === 'object' && typeof image.dataUrl === 'string' && image.dataUrl.trim());
+      }
+
+      function hasProjectImageState(image) {
         if (!image || typeof image !== 'object') return false;
-        const hasDataUrl = typeof image.dataUrl === 'string' && image.dataUrl.trim();
-        const hasState = Boolean(
-          image.id
-          || image.name
-          || (Array.isArray(image.strokes) && image.strokes.length)
+        return Boolean(
+          (Array.isArray(image.strokes) && image.strokes.length)
           || (Array.isArray(image.notes) && image.notes.length)
-          || image.activeTool
-          || image.selectedNoteId
-          || image.selectedNoteMode
-          || image.pan
-          || image.zoom !== undefined
-          || image.drawSettings
+          || (image.drawSettings && typeof image.drawSettings === 'object')
+          || (typeof image.zoom === 'number')
+          || (image.pan && typeof image.pan.x === 'number' && typeof image.pan.y === 'number')
+          || (typeof image.activeTool === 'string' && image.activeTool)
+          || (typeof image.selectedNoteId === 'string' && image.selectedNoteId)
+          || (typeof image.selectedNoteMode === 'string' && image.selectedNoteMode)
         );
-        return hasDataUrl || hasState;
+      }
+
+      function isValidProjectImageEntry(image) {
+        return hasProjectImagePayload(image) || hasProjectImageState(image);
+      }
+
+      function resolveActiveImageIndex(images = [], preferredIndex = 0) {
+        if (!Array.isArray(images) || !images.length) return 0;
+        const safePreferredIndex = Number.isFinite(Number(preferredIndex)) ? Number(preferredIndex) : 0;
+        const clampedPreferredIndex = clamp(safePreferredIndex, 0, Math.max(images.length - 1, 0));
+        if (isValidProjectImageEntry(images[clampedPreferredIndex])) {
+          return clampedPreferredIndex;
+        }
+        const fallbackIndex = images.findIndex((image) => isValidProjectImageEntry(image));
+        return fallbackIndex >= 0 ? fallbackIndex : 0;
       }
 
       function sanitizeProjectImagesCollection() {
@@ -2408,12 +2430,12 @@
           activeImageIndex = 0;
           return;
         }
-        projectImages = projectImages.filter(isValidProjectImageEntry);
+        projectImages = projectImages.filter((image) => isValidProjectImageEntry(image));
         if (!projectImages.length) {
           activeImageIndex = 0;
           return;
         }
-        activeImageIndex = clamp(activeImageIndex, 0, projectImages.length - 1);
+        activeImageIndex = resolveActiveImageIndex(projectImages, activeImageIndex);
       }
 
       function markManualProjectExported(timestamp = Date.now()) {
@@ -3024,7 +3046,7 @@
                 const blob = await response.blob();
                 dataUrl = await blobToDataUrl(blob);
               } catch (error) {
-                dataUrl = '';
+                dataUrl = imageRecord.dataUrl || '';
               }
             }
             return {
@@ -3209,10 +3231,9 @@
           return;
         }
 
-        activeImageIndex = clamp(
-          Number.isFinite(Number(normalizedProject.activeImageIndex)) ? Number(normalizedProject.activeImageIndex) : 0,
-          0,
-          Math.max(projectImages.length - 1, 0)
+        activeImageIndex = resolveActiveImageIndex(
+          projectImages,
+          Number.isFinite(Number(normalizedProject.activeImageIndex)) ? Number(normalizedProject.activeImageIndex) : 0
         );
         await activateImageAt(activeImageIndex, { persist: false });
         markProjectClean();
@@ -5183,7 +5204,8 @@
         }
 
         const previousIndex = activeImageIndex;
-        const targetIndex = ((index % projectImages.length) + projectImages.length) % projectImages.length;
+        const requestedIndex = Number.isFinite(Number(index)) ? Number(index) : 0;
+        const targetIndex = resolveActiveImageIndex(projectImages, requestedIndex);
 
         if (sourceImage && projectImages[previousIndex] && previousIndex !== targetIndex) {
           await saveCurrentImageState();
