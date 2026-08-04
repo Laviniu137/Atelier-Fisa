@@ -1631,6 +1631,9 @@
               <div class="drawing-tool-group edit-group">
                 <span class="tool-label">Editare</span>
                 <div class="drawing-tool-group-row">
+                  <button type="button" id="fullscreenPencilBtn" class="drawing-tool-button" aria-label="Creion" title="Creion" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-1 10-10a2.2 2.2 0 0 0 0-3.1l-.1-.1a2.2 2.2 0 0 0-3.1 0L5 15.7 4 20z"></path><path d="m13.4 7.4 3.2 3.2"></path></svg>
+                  </button>
                   <button type="button" id="fullscreenLineBtn" class="drawing-tool-button" aria-label="Linie" title="Linie" aria-pressed="false">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5"></path></svg>
                   </button>
@@ -1810,6 +1813,7 @@
       const fullscreenColorPicker = document.getElementById('fullscreenColorPicker');
       const fullscreenBrushSize = document.getElementById('fullscreenBrushSize');
       const fullscreenBrushSizeValue = document.getElementById('fullscreenBrushSizeValue');
+      const fullscreenPencilBtn = document.getElementById('fullscreenPencilBtn');
       const fullscreenLineBtn = document.getElementById('fullscreenLineBtn');
       const fullscreenEraserBtn = document.getElementById('fullscreenEraserBtn');
       const fullscreenUndoBtn = document.getElementById('fullscreenUndoBtn');
@@ -3421,6 +3425,11 @@
         notesModeButton.classList.toggle('active', nextTool === 'notes');
         canvas.style.cursor = nextTool === 'draw' ? 'crosshair' : 'default';
 
+        if (fullscreenPencilBtn) {
+          const pencilActive = nextTool === 'draw' && normalizedDrawMode === 'freehand' && !nextErasing;
+          fullscreenPencilBtn.classList.toggle('active', pencilActive);
+          fullscreenPencilBtn.setAttribute('aria-pressed', pencilActive ? 'true' : 'false');
+        }
         if (fullscreenLineBtn) {
           const lineActive = nextTool === 'draw' && normalizedDrawMode === 'line' && !nextErasing;
           fullscreenLineBtn.classList.toggle('active', lineActive);
@@ -3428,6 +3437,7 @@
         }
         if (fullscreenEraserBtn) {
           fullscreenEraserBtn.classList.toggle('active', nextErasing);
+          fullscreenEraserBtn.setAttribute('aria-pressed', nextErasing ? 'true' : 'false');
         }
 
         setControls();
@@ -3826,13 +3836,20 @@
         if (fullscreenBrushSizeValue) {
           fullscreenBrushSizeValue.textContent = `${brushSize} px`;
         }
+        if (fullscreenPencilBtn) {
+          const pencilActive = activeDrawMode === 'freehand' && !isErasing;
+          fullscreenPencilBtn.classList.toggle('active', pencilActive);
+          fullscreenPencilBtn.setAttribute('aria-pressed', pencilActive ? 'true' : 'false');
+        }
         if (fullscreenLineBtn) {
           const lineActive = activeDrawMode === 'line' && !isErasing;
           fullscreenLineBtn.classList.toggle('active', lineActive);
           fullscreenLineBtn.setAttribute('aria-pressed', lineActive ? 'true' : 'false');
         }
         if (fullscreenEraserBtn) {
-          fullscreenEraserBtn.classList.toggle('active', isErasing);
+          const eraserActive = isErasing;
+          fullscreenEraserBtn.classList.toggle('active', eraserActive);
+          fullscreenEraserBtn.setAttribute('aria-pressed', eraserActive ? 'true' : 'false');
         }
         document.querySelectorAll('.quick-color-button').forEach((button) => {
           const isActive = button.dataset.color && button.dataset.color.toLowerCase() === brushColor.toLowerCase();
@@ -5761,6 +5778,15 @@
         syncBrushControls();
         scheduleSave();
       });
+      if (fullscreenPencilBtn) {
+        fullscreenPencilBtn.addEventListener('click', () => {
+          setActiveDrawMode('freehand', { erasing: false });
+          brushSize = lastPenSize;
+          applyCurrentBrushSettings();
+          syncBrushControls();
+          scheduleSave();
+        });
+      }
       fullscreenLineBtn.addEventListener('click', () => {
         setActiveDrawMode(activeDrawMode === 'line' ? 'freehand' : 'line', { erasing: false });
       });
