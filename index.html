@@ -377,6 +377,10 @@
     .image-panel { padding: clamp(10px, 1.3vw, 14px); }
     .section-label { display: flex; align-items: center; margin: 0 0 8px; color: #6f6554; font-size: .68rem; font-weight: 760; letter-spacing: .12em; text-transform: uppercase; }
     .section-label::after { height: 1px; flex: 1; margin-left: 12px; background: #e8e2d9; content: ""; }
+    .image-title-text { cursor: text; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60vw; }
+    .image-title-edit-btn { border: 0; background: transparent; padding: 0 0 0 6px; margin: 0; font-size: .75rem; line-height: 1; cursor: pointer; opacity: .5; flex: 0 0 auto; }
+    .image-title-edit-btn:hover { opacity: 1; }
+    .image-title-input { font: inherit; padding: 2px 6px; border: 1px solid rgba(140, 111, 75, .5); border-radius: 6px; background: #fffdf9; color: #2d261f; width: 100%; max-width: 220px; }
     .canvas-shell { min-height: clamp(360px, 54vh, 640px); display: grid; place-items: center; overflow: hidden; border: 1px solid rgba(219, 211, 197, .95); border-radius: 18px; background: linear-gradient(180deg, #f8f4eb 0%, #f3ece2 100%); box-shadow: inset 0 1px 1px rgba(71, 56, 35, .04), 0 6px 18px rgba(70, 56, 38, .04); overscroll-behavior: contain; padding: 8px; }
     .image-stage { position: relative; display: inline-block; max-width: 100%; line-height: 0; box-shadow: 0 10px 24px rgba(56, 43, 26, .12); border-radius: 14px; overflow: hidden; }
     #photo { display: block; max-width: 100%; max-height: min(66vh, 760px); width: auto; height: auto; }
@@ -419,15 +423,18 @@
       box-shadow: 0 8px 16px rgba(67, 53, 35, .1);
     }
     .fullscreen-inline button svg { width: 17px; height: 17px; }
-    .image-gallery { display: flex; align-items: center; gap: 8px; margin-top: 4px; padding-top: 0; }
+    .image-gallery { display: flex; align-items: flex-start; gap: 8px; margin-top: 4px; padding-top: 0; }
     .thumbnail-strip { display: flex; gap: 8px; overflow-x: auto; padding: 0 0 2px; scrollbar-width: thin; scrollbar-color: rgba(111, 98, 84, .4) transparent; flex: 1; }
     .thumbnail-strip::-webkit-scrollbar { height: 7px; }
     .thumbnail-strip::-webkit-scrollbar-thumb { background: rgba(111, 98, 84, .35); border-radius: 999px; }
+    .image-thumb-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 0 0 84px; width: 84px; }
     .image-thumb { position: relative; flex: 0 0 84px; width: 84px; height: 84px; border: 1px solid rgba(208, 193, 173, .65); border-radius: 14px; background: #f8f4ee; overflow: hidden; box-shadow: 0 4px 10px rgba(48, 38, 28, .06); cursor: pointer; transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease; }
     .image-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
     .image-thumb:hover:not(.is-active) { transform: translateY(-1px); box-shadow: 0 8px 16px rgba(48, 38, 28, .08); border-color: rgba(163, 129, 88, .35); }
     .image-thumb.is-active { border-color: rgba(140, 111, 75, .75); background: #fcf5eb; box-shadow: 0 10px 18px rgba(109, 76, 46, .12); transform: translateY(-1px); }
     .image-thumb.is-active::after { position: absolute; inset: 7px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, .86); content: ''; pointer-events: none; }
+    .image-thumb-caption { display: flex; align-items: center; justify-content: center; max-width: 84px; width: 100%; }
+    .image-thumb-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; font-size: .68rem; color: #5b5142; text-align: center; }
     .thumbnail-add-btn { flex: 0 0 auto; min-width: 104px; min-height: 84px; padding: 8px 10px; border-style: dashed; border-color: rgba(163, 129, 88, .3); background: linear-gradient(180deg, #fbf7f1 0%, #f4eadf 100%); color: #4f4131; border-radius: 14px; box-shadow: inset 0 1px 0 rgba(255,255,255,.5); transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
     .thumbnail-add-btn:hover:not(:disabled) { transform: translateY(-1px); border-color: rgba(163, 129, 88, .5); box-shadow: 0 8px 16px rgba(62, 49, 31, .08); }
     .mode-switcher {
@@ -1029,6 +1036,27 @@
     body.fullscreen-mode .fullscreen-toolbar-toggle { display: inline-flex; }
     body.fullscreen-mode .fullscreen-drawing-toolbar:not(.is-open) { display: none; }
     body.fullscreen-mode .fullscreen-drawing-toolbar.is-open { display: flex; }
+    .fullscreen-image-title { display: none; }
+    body.fullscreen-mode .image-panel.fullscreen-panel .fullscreen-image-title {
+      display: block;
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 0px) + 14px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1450;
+      max-width: 70vw;
+      padding: 4px 14px;
+      color: rgba(255, 255, 255, .85);
+      font-size: .8rem;
+      font-weight: 600;
+      letter-spacing: .03em;
+      text-align: center;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, .55);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      pointer-events: none;
+    }
     .fullscreen-close-btn {
       position: fixed;
       top: calc(env(safe-area-inset-top, 0px) + 18px);
@@ -1586,6 +1614,7 @@
     <div class="layout">
       <section class="image-panel" aria-labelledby="imageLabel">
         <span class="section-label" id="imageLabel">Imagine</span>
+        <div class="fullscreen-image-title" id="fullscreenImageTitle" aria-hidden="true"></div>
         <div class="canvas-shell" id="canvasShell">
           <div class="empty" id="emptyState">Adaugă o fotografie pentru a putea desena pe ea.</div>
           <div class="image-stage" id="imageStage" hidden>
@@ -1822,6 +1851,8 @@
       const fullscreenCloseToolbarBtn = document.getElementById('fullscreenCloseToolbarBtn');
       const thumbnailStrip = document.getElementById('thumbnailStrip');
       const thumbnailAddImageButton = document.getElementById('thumbnailAddImage');
+      const imageTitleLabel = document.getElementById('imageLabel');
+      const fullscreenImageTitle = document.getElementById('fullscreenImageTitle');
       const addNoteButton = document.getElementById('addNote');
       const deleteSelectedNoteButton = document.getElementById('deleteSelectedNote');
       const noteList = document.getElementById('noteList');
@@ -1867,6 +1898,7 @@
       let saveTimer = null;
       let projectImages = [];
       let activeImageIndex = 0;
+      let imageTitleCounter = 0;
       let currentProjectName = 'Proiect nou';
       let currentProjectUpdatedAt = null;
       let activeProjectId = null;
@@ -1953,7 +1985,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.4.12';
+      const APP_VERSION = '1.4.13';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2405,6 +2437,7 @@
         return {
           id: source.id || createNoteId(),
           name: source.name || '',
+          title: typeof source.title === 'string' ? source.title : '',
           dataUrl: resolvedDataUrl,
           type: source.type || 'image/png',
           strokes: cloneProjectData(Array.isArray(source.strokes) ? source.strokes : []),
@@ -2644,6 +2677,25 @@
         return `Imagine ${index + 1}`;
       }
 
+      function getNextAutoImageTitle() {
+        imageTitleCounter += 1;
+        return `Imagine ${imageTitleCounter}`;
+      }
+
+      function computeImageTitleCounter(images, storedCounter) {
+        let maxNumeric = 0;
+        (Array.isArray(images) ? images : []).forEach((image) => {
+          const match = /^Imagine (\d+)$/.exec(String(image?.title || '').trim());
+          if (match) {
+            const value = Number(match[1]);
+            if (Number.isFinite(value) && value > maxNumeric) maxNumeric = value;
+          }
+        });
+        const storedValue = Number(storedCounter);
+        const imagesLength = Array.isArray(images) ? images.length : 0;
+        return Math.max(maxNumeric, imagesLength, Number.isFinite(storedValue) ? storedValue : 0);
+      }
+
       function normalizeIncomingProject(project) {
         if (!project || typeof project !== 'object') {
           return {
@@ -2651,7 +2703,8 @@
             updatedAt: new Date().toISOString(),
             projectName: 'Proiect nou',
             activeImageIndex: 0,
-            images: []
+            images: [],
+            imageTitleCounter: 0
           };
         }
 
@@ -2674,6 +2727,7 @@
         const images = sourceImages.map((image, index) => cloneProjectImageState({
           id: image.id || createNoteId(),
           name: image.name || getProjectImageName(index),
+          title: typeof image.title === 'string' && image.title.trim() ? image.title.trim() : getProjectImageName(index),
           dataUrl: image.dataUrl || '',
           type: image.type || 'image/png',
           strokes: Array.isArray(image.strokes) ? image.strokes : [],
@@ -2701,7 +2755,8 @@
           updatedAt: typeof project.updatedAt === 'string' ? project.updatedAt : new Date().toISOString(),
           projectName: normalizeProjectName(project.projectName || project.name || 'Proiect nou'),
           activeImageIndex: clamp(nextActiveImageIndex, 0, Math.max(images.length - 1, 0)),
-          images
+          images,
+          imageTitleCounter: computeImageTitleCounter(images, project.imageTitleCounter)
         };
       }
 
@@ -3084,6 +3139,7 @@
           updatedAt: new Date().toISOString(),
           projectName: currentProjectName,
           activeImageIndex: clamp(activeImageIndex, 0, Math.max(projectImages.length - 1, 0)),
+          imageTitleCounter,
           images: await Promise.all(projectImages.map(async (image, index) => {
             const imageRecord = cloneProjectImageState(image);
             let dataUrl = imageRecord.dataUrl || '';
@@ -3093,6 +3149,7 @@
             return {
               id: imageRecord.id || createNoteId(),
               name: imageRecord.name || getProjectImageName(index),
+              title: imageRecord.title && imageRecord.title.trim() ? imageRecord.title.trim() : getProjectImageName(index),
               type: imageRecord.type || 'image/png',
               dataUrl,
               strokes: cloneProjectData(imageRecord.strokes),
@@ -3285,9 +3342,11 @@
             resetCurrentProject({ persist: false });
             currentProjectUpdatedAt = normalizedProject.updatedAt || project?.updatedAt || null;
             setProjectName(normalizedProject.projectName);
+            imageTitleCounter = Number.isFinite(Number(normalizedProject.imageTitleCounter)) ? Number(normalizedProject.imageTitleCounter) : 0;
             return;
           }
 
+          imageTitleCounter = Number.isFinite(Number(normalizedProject.imageTitleCounter)) ? Number(normalizedProject.imageTitleCounter) : 0;
           activeImageIndex = resolveActiveImageIndex(
             projectImages,
             Number.isFinite(Number(normalizedProject.activeImageIndex)) ? Number(normalizedProject.activeImageIndex) : 0
@@ -3337,32 +3396,141 @@
         deleteSelectedNoteButton.disabled = !ready || !selectedNoteId || activeTool !== 'notes';
       }
 
+      function getImageDisplayTitle(image, index) {
+        if (!image) return getProjectImageName(index);
+        return image.title && image.title.trim() ? image.title.trim() : getProjectImageName(index);
+      }
+
+      function beginImageTitleEdit(imageId, containerEl) {
+        if (!containerEl) return;
+        const image = projectImages.find((img) => img.id === imageId);
+        if (!image) return;
+        if (containerEl.querySelector('.image-title-input')) return;
+
+        const indexOfImage = projectImages.indexOf(image);
+        const currentTitle = getImageDisplayTitle(image, indexOfImage);
+        containerEl.innerHTML = '';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'image-title-input';
+        input.maxLength = 60;
+        input.value = currentTitle;
+        containerEl.appendChild(input);
+        input.focus();
+        input.select();
+
+        let settled = false;
+        const finish = (commit) => {
+          if (settled) return;
+          settled = true;
+          if (commit) {
+            const nextValue = input.value.trim();
+            if (nextValue) {
+              image.title = nextValue;
+            }
+            scheduleSave();
+          }
+          containerEl.innerHTML = '';
+          renderImageThumbnails();
+        };
+        input.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            finish(true);
+          } else if (event.key === 'Escape') {
+            event.preventDefault();
+            finish(false);
+          }
+        });
+        input.addEventListener('blur', () => finish(true));
+        input.addEventListener('click', (event) => event.stopPropagation());
+        input.addEventListener('dblclick', (event) => event.stopPropagation());
+      }
+
+      function syncActiveImageTitleDisplay() {
+        const currentImage = projectImages[activeImageIndex];
+        if (imageTitleLabel && !imageTitleLabel.querySelector('.image-title-input')) {
+          imageTitleLabel.innerHTML = '';
+          if (currentImage) {
+            const titleText = getImageDisplayTitle(currentImage, activeImageIndex);
+            const textSpan = document.createElement('span');
+            textSpan.className = 'image-title-text';
+            textSpan.textContent = titleText;
+            textSpan.title = titleText;
+            textSpan.addEventListener('dblclick', (event) => {
+              event.stopPropagation();
+              beginImageTitleEdit(currentImage.id, imageTitleLabel);
+            });
+            const editBtn = document.createElement('button');
+            editBtn.type = 'button';
+            editBtn.className = 'image-title-edit-btn';
+            editBtn.setAttribute('aria-label', 'Redenumește imaginea');
+            editBtn.title = 'Redenumește imaginea';
+            editBtn.textContent = '✏️';
+            editBtn.addEventListener('click', (event) => {
+              event.stopPropagation();
+              beginImageTitleEdit(currentImage.id, imageTitleLabel);
+            });
+            imageTitleLabel.appendChild(textSpan);
+            imageTitleLabel.appendChild(editBtn);
+          } else {
+            imageTitleLabel.textContent = 'Imagine';
+          }
+        }
+        if (fullscreenImageTitle) {
+          fullscreenImageTitle.textContent = currentImage ? getImageDisplayTitle(currentImage, activeImageIndex) : '';
+        }
+      }
+
       function renderImageThumbnails() {
         if (!thumbnailStrip) return;
         sanitizeProjectImagesCollection();
         thumbnailStrip.innerHTML = '';
-        if (!projectImages.length) return;
+        if (!projectImages.length) {
+          syncActiveImageTitleDisplay();
+          return;
+        }
 
         projectImages.forEach((image, index) => {
+          const displayTitle = getImageDisplayTitle(image, index);
+
+          const wrap = document.createElement('div');
+          wrap.className = 'image-thumb-wrap';
+
           const button = document.createElement('button');
           button.type = 'button';
           button.className = `image-thumb${index === activeImageIndex ? ' is-active' : ''}`;
-          button.title = image.name || getProjectImageName(index);
-          button.setAttribute('aria-label', image.name || getProjectImageName(index));
+          button.title = displayTitle;
+          button.setAttribute('aria-label', displayTitle);
           button.addEventListener('click', () => {
             if (index === activeImageIndex) return;
             activateImageAt(index, { persist: false });
           });
 
           const preview = document.createElement('img');
-          preview.alt = image.name || getProjectImageName(index);
+          preview.alt = displayTitle;
           preview.src = image.dataUrl || '';
           if (!image.dataUrl) {
             preview.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22 viewBox=%220 0 80 80%22%3E%3Crect width=%2280%22 height=%2280%22 fill=%22%23efe7dc%22/%3E%3Cpath d=%22M20 50l12-12 10 10 18-22 12 20v14H20z%22 fill=%22%23d3c5b5%22/%3E%3C/svg%3E';
           }
           button.appendChild(preview);
-          thumbnailStrip.appendChild(button);
+
+          const caption = document.createElement('div');
+          caption.className = 'image-thumb-caption';
+
+          const captionText = document.createElement('span');
+          captionText.className = 'image-thumb-title';
+          captionText.textContent = displayTitle;
+          captionText.title = displayTitle;
+
+          caption.appendChild(captionText);
+
+          wrap.appendChild(button);
+          wrap.appendChild(caption);
+          thumbnailStrip.appendChild(wrap);
         });
+
+        syncActiveImageTitleDisplay();
       }
 
       function finalizeLineDraft() {
@@ -5232,6 +5400,7 @@
         interactiveNotes = [];
         projectImages = [];
         activeImageIndex = 0;
+        imageTitleCounter = 0;
         selectedNoteId = null;
         draggingNoteId = null;
         isDrawing = false;
@@ -5482,6 +5651,7 @@
           const imageEntry = {
             id: createNoteId(),
             name: file.name || getProjectImageName(projectImages.length),
+            title: getNextAutoImageTitle(),
             dataUrl,
             type: file.type || 'image/png',
             strokes: cloneProjectData(storedStrokes),
