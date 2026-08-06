@@ -5494,6 +5494,34 @@
         };
       }
 
+      function showImageUnavailableState() {
+        imageActivationToken += 1;
+        photo.onload = null;
+        photo.onerror = null;
+        if (currentObjectUrl && currentObjectUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(currentObjectUrl);
+        }
+        if (photo.src && photo.src.startsWith('blob:')) {
+          photo.removeAttribute('src');
+        }
+        sourceImage = null;
+        imageBlob = null;
+        currentObjectUrl = null;
+        strokes = [];
+        interactiveNotes = [];
+        selectedNoteId = null;
+        redoStack = [];
+        noteLayer.innerHTML = '';
+        noteList.innerHTML = '';
+        emptyState.hidden = false;
+        stage.hidden = true;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        noteCanvasCtx.clearRect(0, 0, noteCanvas.width, noteCanvas.height);
+        renderImageThumbnails();
+        syncSelectedNoteForm();
+        setControls();
+      }
+
       async function activateImageAt(index, { persist = true } = {}) {
         const activationToken = ++imageActivationToken;
         sanitizeProjectImagesCollection();
@@ -5524,7 +5552,8 @@
         ));
 
         if (!currentImage || !hasImageState) {
-          resetCurrentProject({ persist });
+          console.warn('Intrarea de imagine curentă nu conține date valide; se păstrează restul proiectului neschimbat.');
+          showImageUnavailableState();
           return;
         }
 
@@ -5571,8 +5600,8 @@
           const response = await fetch(currentImage.dataUrl);
           blob = await response.blob();
         } catch (error) {
-          console.warn('Imaginea activă nu a putut fi încărcată.', error);
-          resetCurrentProject({ persist });
+          console.warn('Imaginea activă nu a putut fi încărcată; se păstrează restul proiectului neschimbat.', error);
+          showImageUnavailableState();
           return;
         }
         if (activationToken !== imageActivationToken) return;
@@ -5633,8 +5662,8 @@
               resolve();
               return;
             }
-            console.warn('Imaginea activă nu a putut fi afișată.');
-            resetCurrentProject({ persist });
+            console.warn('Imaginea activă nu a putut fi afișată; se păstrează restul proiectului neschimbat.');
+            showImageUnavailableState();
             resolve();
           };
           photo.src = currentObjectUrl;
