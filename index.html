@@ -1463,6 +1463,12 @@
       letter-spacing: .04em;
       line-height: 1.3;
     }
+
+    .cloud-account-dialog { max-width: 470px; }
+    .cloud-account-status { margin: -2px 0 14px; color: #6f6455; font-size: .9rem; line-height: 1.45; }
+    .cloud-account-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #pmCloudAccount { border-color: #9fb8ad; background: linear-gradient(180deg, #f6fbf8, #e9f3ee); color: #2f624c; }
+    #pmCloudAccount:hover:not(:disabled) { border-color: #6f9b86; background: linear-gradient(180deg, #f7fcf9, #def0e6); }
   </style>
 </head>
 <body>
@@ -1476,6 +1482,7 @@
         </div>
       </div>
       <div class="project-manager-actions">
+        <button type="button" id="pmCloudAccount"><span>☁️ Cont & sincronizare</span></button>
         <button type="button" id="pmImportProject"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg><span>Importă proiect</span></button>
         <button type="button" id="pmNewProject"><span>➕ Proiect nou</span></button>
       </div>
@@ -1492,6 +1499,24 @@
         Nu există proiecte încă. Creează un proiect nou sau importă un fișier existent.
       </div>
     </section>
+  </div>
+  <div id="cloudAccountDialog" class="save-dialog-backdrop" hidden>
+    <div class="save-dialog cloud-account-dialog" role="dialog" aria-modal="true" aria-labelledby="cloudAccountDialogTitle">
+      <h2 id="cloudAccountDialogTitle">Cont și sincronizare</h2>
+      <p id="cloudAccountStatus" class="cloud-account-status">Intră în cont pentru a-ți sincroniza proiectele între PC și tabletă.</p>
+      <label for="cloudEmail">E-mail</label>
+      <input id="cloudEmail" type="email" autocomplete="email" inputmode="email" placeholder="nume@email.ro">
+      <label for="cloudPassword">Parolă</label>
+      <input id="cloudPassword" type="password" autocomplete="current-password" placeholder="Parola contului">
+      <div class="save-dialog-actions cloud-account-actions">
+        <button type="button" id="cloudLogin">Intră în cont</button>
+        <button type="button" id="cloudSyncNow">Sincronizează acum</button>
+      </div>
+      <div class="save-dialog-actions cloud-account-actions">
+        <button type="button" id="cloudLogout">Ieși din cont</button>
+        <button type="button" id="closeCloudAccount">Închide</button>
+      </div>
+    </div>
   </div>
   <div id="saveProjectDialog" class="save-dialog-backdrop" hidden>
     <div class="save-dialog" role="dialog" aria-modal="true" aria-labelledby="saveDialogTitle">
@@ -1795,6 +1820,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     (() => {
       const projectManagerView = document.getElementById('projectManagerView');
@@ -1805,6 +1831,15 @@
       const editorProjectMetaLabel = document.getElementById('editorProjectMeta');
       const newProjectButton = document.getElementById('pmNewProject');
       const managerImportProjectButton = document.getElementById('pmImportProject');
+      const cloudAccountButton = document.getElementById('pmCloudAccount');
+      const cloudAccountDialog = document.getElementById('cloudAccountDialog');
+      const cloudAccountStatus = document.getElementById('cloudAccountStatus');
+      const cloudEmailInput = document.getElementById('cloudEmail');
+      const cloudPasswordInput = document.getElementById('cloudPassword');
+      const cloudLoginButton = document.getElementById('cloudLogin');
+      const cloudSyncNowButton = document.getElementById('cloudSyncNow');
+      const cloudLogoutButton = document.getElementById('cloudLogout');
+      const closeCloudAccountButton = document.getElementById('closeCloudAccount');
       const appMain = document.querySelector('main.app');
       const saveDialogTitle = document.getElementById('saveDialogTitle');
       const addImage = document.getElementById('addImage');
@@ -2004,7 +2039,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.4.24';
+      const APP_VERSION = '1.4.25';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2021,6 +2056,199 @@
       }
 
       syncAppVersionLabels();
+
+
+      const SUPABASE_URL = 'https://juqrgrtobuybmewekaox.supabase.co';
+      const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_f5HkeYFeuovMtpyPqr2iYQ_E2RSmW88';
+      const cloudProjectTable = 'atelier_projects';
+      let cloudClient = null;
+      let cloudUser = null;
+      let cloudRealtimeChannel = null;
+      let cloudSyncTimer = null;
+      const pendingCloudRecords = new Map();
+
+      function isCloudReady() {
+        return Boolean(window.supabase && SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY);
+      }
+
+      function getCloudStatusMessage() {
+        if (!isCloudReady()) return 'Sincronizarea nu este disponibilă momentan. Proiectele locale rămân în siguranță pe acest dispozitiv.';
+        if (!cloudUser) return 'Intră în cont pentru a-ți sincroniza proiectele între PC și tabletă.';
+        return 'Ești conectat. Proiectele se salvează local și se sincronizează automat în contul tău.';
+      }
+
+      function updateCloudAccountUi() {
+        const message = getCloudStatusMessage();
+        if (cloudAccountStatus) cloudAccountStatus.textContent = message;
+        if (cloudAccountButton) cloudAccountButton.innerHTML = '<span>' + (cloudUser ? '☁️ Sincronizat' : '☁️ Cont & sincronizare') + '</span>';
+        if (cloudLoginButton) cloudLoginButton.hidden = Boolean(cloudUser);
+        if (cloudSyncNowButton) cloudSyncNowButton.hidden = !cloudUser;
+        if (cloudLogoutButton) cloudLogoutButton.hidden = !cloudUser;
+        if (cloudEmailInput) cloudEmailInput.hidden = Boolean(cloudUser);
+        if (cloudPasswordInput) cloudPasswordInput.hidden = Boolean(cloudUser);
+      }
+
+      function openCloudAccountDialog() {
+        updateCloudAccountUi();
+        cloudAccountDialog.hidden = false;
+        if (!cloudUser) window.setTimeout(() => cloudEmailInput?.focus(), 0);
+      }
+
+      function closeCloudAccountDialog() {
+        cloudAccountDialog.hidden = true;
+      }
+
+      function getRecordUpdatedAt(record) {
+        const value = record?.payload?.updatedAt || record?.updatedAt || record?.updated_at || 0;
+        const timestamp = Date.parse(value);
+        return Number.isFinite(timestamp) ? timestamp : 0;
+      }
+
+      async function applyCloudProjectRecord(remoteRecord) {
+        if (!remoteRecord?.id || !remoteRecord?.payload) return null;
+        const localRecord = await readProjectRecord(remoteRecord.id);
+        const remoteUpdatedAt = getRecordUpdatedAt(remoteRecord);
+        if (localRecord && getRecordUpdatedAt(localRecord) > remoteUpdatedAt) return localRecord;
+
+        const nextRecord = buildProjectRecordFromPayload(cloneProjectData(remoteRecord.payload), {
+          id: remoteRecord.id,
+          name: remoteRecord.name || remoteRecord?.payload?.projectName || 'Proiect nou',
+          createdAt: remoteRecord.created_at || remoteRecord?.payload?.updatedAt
+        });
+        nextRecord.updatedAt = remoteRecord?.payload?.updatedAt || remoteRecord.updated_at || nextRecord.updatedAt;
+        nextRecord.payload.updatedAt = nextRecord.updatedAt;
+        await persistProjectRecord(nextRecord);
+
+        if (nextRecord.id === activeProjectId && !projectDirty) {
+          await applyProjectState(nextRecord.payload);
+        }
+        return nextRecord;
+      }
+
+      async function uploadProjectToCloud(record) {
+        if (!cloudClient || !cloudUser || !record?.id) return;
+        const remoteRecord = {
+          id: record.id,
+          owner_id: cloudUser.id,
+          name: normalizeProjectName(record.name || record?.payload?.projectName || 'Proiect nou'),
+          payload: cloneProjectData(record.payload || {})
+        };
+        const { error } = await cloudClient.from(cloudProjectTable).upsert(remoteRecord, { onConflict: 'id' });
+        if (error) throw error;
+      }
+
+      function scheduleCloudProjectSync(record) {
+        if (!cloudUser || !record?.id) return;
+        pendingCloudRecords.set(record.id, cloneProjectData(record));
+        window.clearTimeout(cloudSyncTimer);
+        cloudSyncTimer = window.setTimeout(async () => {
+          const records = Array.from(pendingCloudRecords.values());
+          pendingCloudRecords.clear();
+          for (const item of records) {
+            try {
+              await uploadProjectToCloud(item);
+            } catch (error) {
+              console.warn('Proiectul rămâne salvat local; sincronizarea în cloud va reîncerca.', error);
+              pendingCloudRecords.set(item.id, item);
+            }
+          }
+          if (pendingCloudRecords.size) scheduleCloudProjectSync(pendingCloudRecords.values().next().value);
+        }, 900);
+      }
+
+      async function deleteProjectFromCloud(projectId) {
+        if (!cloudClient || !cloudUser || !projectId) return;
+        const { error } = await cloudClient.from(cloudProjectTable).delete().eq('id', projectId);
+        if (error) console.warn('Proiectul a fost șters local, dar nu a putut fi șters încă din cloud.', error);
+      }
+
+      async function synchronizeCloudProjects() {
+        if (!cloudClient || !cloudUser) return;
+        const { data: remoteRecords, error } = await cloudClient.from(cloudProjectTable).select('*').order('updated_at', { ascending: false });
+        if (error) throw error;
+        const remoteById = new Map((remoteRecords || []).map((record) => [record.id, record]));
+        const localRecords = await readAllProjectRecords();
+
+        for (const remoteRecord of remoteRecords || []) {
+          await applyCloudProjectRecord(remoteRecord);
+        }
+        for (const localRecord of localRecords) {
+          const remoteRecord = remoteById.get(localRecord.id);
+          if (!remoteRecord || getRecordUpdatedAt(localRecord) > getRecordUpdatedAt(remoteRecord)) {
+            await uploadProjectToCloud(localRecord);
+          }
+        }
+        projectManagerNeedsRefresh = true;
+        await refreshProjectManagerIfNeeded();
+      }
+
+      function subscribeToCloudProjects() {
+        if (!cloudClient || !cloudUser) return;
+        if (cloudRealtimeChannel) cloudClient.removeChannel(cloudRealtimeChannel);
+        cloudRealtimeChannel = cloudClient
+          .channel('atelier-projects-' + cloudUser.id)
+          .on('postgres_changes', {
+            event: '*',
+            schema: 'public',
+            table: cloudProjectTable,
+            filter: 'owner_id=eq.' + cloudUser.id
+          }, async (change) => {
+            if (change.eventType === 'DELETE') return;
+            await applyCloudProjectRecord(change.new);
+            projectManagerNeedsRefresh = true;
+            await refreshProjectManagerIfNeeded();
+          })
+          .subscribe();
+      }
+
+      async function setCloudSession(session) {
+        cloudUser = session?.user || null;
+        updateCloudAccountUi();
+        if (!cloudUser) {
+          if (cloudRealtimeChannel && cloudClient) cloudClient.removeChannel(cloudRealtimeChannel);
+          cloudRealtimeChannel = null;
+          return;
+        }
+        await synchronizeCloudProjects();
+        subscribeToCloudProjects();
+      }
+
+      async function initializeCloudSync() {
+        if (!isCloudReady()) {
+          updateCloudAccountUi();
+          return;
+        }
+        cloudClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+        const { data } = await cloudClient.auth.getSession();
+        await setCloudSession(data?.session || null);
+        cloudClient.auth.onAuthStateChange((_event, session) => {
+          window.setTimeout(() => setCloudSession(session).catch((error) => console.warn('Sincronizarea nu a putut fi pornită.', error)), 0);
+        });
+      }
+
+      async function signInToCloud() {
+        if (!cloudClient) return;
+        const email = cloudEmailInput.value.trim();
+        const password = cloudPasswordInput.value;
+        if (!email || !password) {
+          cloudAccountStatus.textContent = 'Completează e-mailul și parola.';
+          return;
+        }
+        cloudLoginButton.disabled = true;
+        try {
+          const { data, error } = await cloudClient.auth.signInWithPassword({ email, password });
+          if (error) throw error;
+          await setCloudSession(data.session);
+          cloudPasswordInput.value = '';
+          closeCloudAccountDialog();
+          showSaveToast('Cont conectat. Proiectele se sincronizează acum.');
+        } catch (error) {
+          cloudAccountStatus.textContent = 'Nu am putut intra în cont. Verifică e-mailul și parola.';
+          console.warn('Autentificarea în cloud a eșuat.', error);
+        } finally {
+          cloudLoginButton.disabled = false;
+        }
+      }
 
       function openDatabase() {
         return new Promise((resolve, reject) => {
@@ -2183,6 +2411,7 @@
         }
         try {
           await persistProjectRecord(record);
+          scheduleCloudProjectSync(record);
         } catch (error) {
           console.warn('Salvarea proiectului a eșuat; se restaurează backup-ul.', error);
           if (existingRecord) {
@@ -2200,6 +2429,7 @@
           const store = transaction.objectStore(projectStore);
           await requestAsPromise(store.delete(projectId));
           await transactionAsPromise(transaction);
+          void deleteProjectFromCloud(projectId);
         } finally {
           database.close();
         }
@@ -3453,6 +3683,7 @@
 
       async function initializeProjectManagerStartup() {
         await migrateStoredProjectsIfNeeded();
+        await initializeCloudSync();
         const storedActiveProjectId = await getStoredActiveProjectId();
         if (storedActiveProjectId) {
           activeProjectId = storedActiveProjectId;
@@ -6178,6 +6409,27 @@
       window.addEventListener('pagehide', () => {
         if (!projectDirty) return;
         flushAutosave({ force: true });
+      });
+      cloudAccountButton.addEventListener('click', openCloudAccountDialog);
+      closeCloudAccountButton.addEventListener('click', closeCloudAccountDialog);
+      cloudLoginButton.addEventListener('click', signInToCloud);
+      cloudSyncNowButton.addEventListener('click', async () => {
+        try {
+          await synchronizeCloudProjects();
+          showSaveToast('Proiectele sunt sincronizate.');
+          closeCloudAccountDialog();
+        } catch (error) {
+          cloudAccountStatus.textContent = 'Sincronizarea nu a reușit acum. Proiectele locale nu au fost modificate.';
+          console.warn('Sincronizarea manuală a eșuat.', error);
+        }
+      });
+      cloudLogoutButton.addEventListener('click', async () => {
+        if (!cloudClient) return;
+        await cloudClient.auth.signOut();
+        closeCloudAccountDialog();
+      });
+      cloudAccountDialog.addEventListener('pointerdown', (event) => {
+        if (event.target === cloudAccountDialog) closeCloudAccountDialog();
       });
       newProjectButton.addEventListener('click', () => {
         openSaveProjectDialog({
