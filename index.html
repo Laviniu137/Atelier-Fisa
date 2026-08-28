@@ -407,6 +407,22 @@
       box-shadow: 0 8px 16px rgba(64, 52, 35, .11);
     }
     .fullscreen-inline { display: flex; gap: 8px; margin: 6px 0 8px; flex-wrap: wrap; }
+    .fullscreen-inline #fullscreenBtn {
+      min-height: 46px;
+      border-color: #5d4933;
+      background: linear-gradient(135deg, #65513a, #423326);
+      color: #fffdf8;
+      font-weight: 760;
+      letter-spacing: .01em;
+      box-shadow: 0 8px 18px rgba(66, 48, 31, .18);
+    }
+    .fullscreen-inline #fullscreenBtn::before { content: '⛶'; font-size: 1.2rem; line-height: 1; }
+    .fullscreen-inline #fullscreenBtn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      border-color: #3f3023;
+      background: linear-gradient(135deg, #735d43, #4d3a2b);
+      box-shadow: 0 12px 22px rgba(66, 48, 31, .24);
+    }
     .fullscreen-inline button {
       flex: 1;
       min-height: 38px;
@@ -1988,7 +2004,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.4.19';
+      const APP_VERSION = '1.4.20';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
