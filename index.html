@@ -2046,7 +2046,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.4.27';
+      const APP_VERSION = '1.4.28';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2072,7 +2072,9 @@
       let cloudUser = null;
       let cloudRealtimeChannel = null;
       let cloudSyncTimer = null;
+      let cloudPollingTimer = null;
       const pendingCloudRecords = new Map();
+      const pendingCloudDeletes = new Set();
 
       function isCloudReady() {
         return Boolean(window.supabase && SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY);
@@ -2178,17 +2180,39 @@
       async function deleteProjectFromCloud(projectId) {
         if (!cloudClient || !cloudUser || !projectId) return;
         const { error } = await cloudClient.from(cloudProjectTable).delete().eq('id', projectId);
-        if (error) console.warn('Proiectul a fost șters local, dar nu a putut fi șters încă din cloud.', error);
+        if (error) throw error;
+      }
+
+      function startCloudPolling() {
+        window.clearInterval(cloudPollingTimer);
+        if (!cloudClient || !cloudUser) return;
+        cloudPollingTimer = window.setInterval(() => {
+          synchronizeCloudProjects().catch((error) => console.warn('Verificarea automată a sincronizării a eșuat.', error));
+        }, 10000);
+      }
+
+      function stopCloudPolling() {
+        window.clearInterval(cloudPollingTimer);
+        cloudPollingTimer = null;
       }
 
       async function synchronizeCloudProjects() {
         if (!cloudClient || !cloudUser) return;
+        for (const projectId of Array.from(pendingCloudDeletes)) {
+          try {
+            await deleteProjectFromCloud(projectId);
+            pendingCloudDeletes.delete(projectId);
+          } catch (error) {
+            console.warn('Ștergerea proiectului va fi reîncercată când revine conexiunea.', error);
+          }
+        }
         const { data: remoteRecords, error } = await cloudClient.from(cloudProjectTable).select('*').order('updated_at', { ascending: false });
         if (error) throw error;
         const remoteById = new Map((remoteRecords || []).map((record) => [record.id, record]));
         const localRecords = await readAllProjectRecords();
 
         for (const remoteRecord of remoteRecords || []) {
+          if (pendingCloudDeletes.has(remoteRecord.id)) continue;
           await applyCloudProjectRecord(remoteRecord);
         }
         for (const localRecord of localRecords) {
@@ -2221,7 +2245,20 @@
             table: cloudProjectTable,
             filter: 'owner_id=eq.' + cloudUser.id
           }, async (change) => {
-            if (change.eventType === 'DELETE') return;
+            if (change.eventType === 'DELETE') {
+              const deletedProjectId = change.old?.id;
+              if (deletedProjectId) {
+                await deleteProjectRecord(deletedProjectId, { syncCloud: false });
+                if (deletedProjectId === activeProjectId) {
+                  await setActiveProjectId(null);
+                  resetCurrentProject({ persist: false });
+                  showProjectManager();
+                }
+              }
+              await renderProjectCards();
+              projectManagerNeedsRefresh = false;
+              return;
+            }
             await applyCloudProjectRecord(change.new);
             await renderProjectCards();
             projectManagerNeedsRefresh = false;
@@ -2235,6 +2272,7 @@
         if (!cloudUser) {
           if (cloudRealtimeChannel && cloudClient) cloudClient.removeChannel(cloudRealtimeChannel);
           cloudRealtimeChannel = null;
+          stopCloudPolling();
           return;
         }
         try {
@@ -2246,6 +2284,7 @@
           }
         }
         subscribeToCloudProjects();
+        startCloudPolling();
       }
 
       async function initializeCloudSync() {
@@ -2456,7 +2495,7 @@
         }
       }
 
-      async function deleteProjectRecord(projectId) {
+      async function deleteProjectRecord(projectId, { syncCloud = true } = {}) {
         if (!projectId) return;
         const database = await openDatabase();
         try {
@@ -2464,9 +2503,19 @@
           const store = transaction.objectStore(projectStore);
           await requestAsPromise(store.delete(projectId));
           await transactionAsPromise(transaction);
-          void deleteProjectFromCloud(projectId);
         } finally {
           database.close();
+        }
+
+        pendingCloudRecords.delete(projectId);
+        if (!syncCloud || !cloudUser) return;
+        try {
+          await deleteProjectFromCloud(projectId);
+          pendingCloudDeletes.delete(projectId);
+        } catch (error) {
+          // Keep the deletion queued; a project marked for deletion must never be uploaded again.
+          pendingCloudDeletes.add(projectId);
+          console.warn('Proiectul a fost șters local și va fi șters din cloud când revine conexiunea.', error);
         }
       }
 
