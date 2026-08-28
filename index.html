@@ -2902,6 +2902,7 @@
             { action: 'duplicate', label: 'Duplică', icon: '📄' },
             { action: 'export-project-atf', label: 'Exportă proiect (.atf)', icon: '📦' },
             { action: 'export-project-json', label: 'Exportă proiect (.json)', icon: '📄' },
+            { action: 'restore-backup', label: 'Restaurează ultimul backup', icon: '↩️' },
             { action: 'separator' },
             { action: 'delete', label: 'Șterge proiect', icon: '🗑️', danger: true }
           ];
@@ -3080,6 +3081,19 @@
 
         if (action === 'export-project-json') {
           await exportProjectPayload(record.payload, record.name || 'Proiect', { extension: 'json' });
+          return;
+        }
+
+        if (action === 'restore-backup') {
+          const restoredRecord = await restoreProjectBackup(record.id);
+          if (!restoredRecord) {
+            window.alert('Nu există încă un backup disponibil pentru acest proiect.');
+            return;
+          }
+          await renderProjectCards();
+          if (record.id === activeProjectId) {
+            await openProjectById(record.id);
+          }
           return;
         }
 
