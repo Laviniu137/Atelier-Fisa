@@ -1,12 +1,12 @@
-const CACHE_NAME = 'fisa-atelier-v36';
+const CACHE_NAME = 'fisa-atelier-v37';
 const APP_FILES = [
   './',
   './index.html',
   './sw.js',
   './manifest.webmanifest',
-  './icon-180.png',
-  './icon-192.png',
-  './icon-512.png',
+  './icon-180.png?v=1.4.24',
+  './icon-192.png?v=1.4.24',
+  './icon-512.png?v=1.4.24',
   './startup-ipad-portrait.png',
   './startup-ipad-landscape.png',
   './sample.png'
