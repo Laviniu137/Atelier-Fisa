@@ -2004,7 +2004,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.4.22';
+      const APP_VERSION = '1.4.23';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2254,42 +2254,53 @@
         return backupEntry;
       }
 
-      async function restoreProjectBackup(projectId) {
+      async function readLatestProjectBackup(projectId) {
         if (!projectId) return null;
-        try {
-          const backupPayload = localStorage.getItem(`fisa-atelier-backup-${projectId}`);
-          if (backupPayload) {
-            const backupEntry = JSON.parse(backupPayload);
-            if (backupEntry?.record) {
-              await saveProjectRecord(cloneProjectData(backupEntry.record));
-              return backupEntry.record;
-            }
-          }
-        } catch (error) {
-          console.warn('Backup-ul proiectului nu a putut fi restaurat din localStorage.', error);
-        }
 
+        let storedBackups = [];
         try {
           const database = await openDatabase();
           try {
             const transaction = database.transaction(projectBackupStore, 'readonly');
             const store = transaction.objectStore(projectBackupStore);
             const entries = await requestAsPromise(store.getAll());
-            const relevant = Array.isArray(entries)
-              ? entries.filter((entry) => entry?.projectId === projectId).sort((first, second) => Date.parse(second?.createdAt || '0') - Date.parse(first?.createdAt || '0'))
+            storedBackups = Array.isArray(entries)
+              ? entries.filter((entry) => entry?.projectId === projectId && entry?.record)
               : [];
-            if (relevant[0]?.record) {
-              await saveProjectRecord(cloneProjectData(relevant[0].record));
-              return relevant[0].record;
-            }
           } finally {
             database.close();
           }
         } catch (error) {
-          console.warn('Backup-ul proiectului nu a putut fi restaurat din IndexedDB.', error);
+          console.warn('Backup-urile proiectului nu au putut fi citite din IndexedDB.', error);
         }
 
-        return null;
+        try {
+          const backupPayload = localStorage.getItem(`fisa-atelier-backup-${projectId}`);
+          const localBackup = backupPayload ? JSON.parse(backupPayload) : null;
+          if (localBackup?.record) {
+            storedBackups.push(localBackup);
+          }
+        } catch (error) {
+          console.warn('Backup-ul proiectului nu a putut fi citit din localStorage.', error);
+        }
+
+        storedBackups.sort((first, second) => Date.parse(second?.createdAt || '0') - Date.parse(first?.createdAt || '0'));
+        return storedBackups[0]?.record ? cloneProjectData(storedBackups[0].record) : null;
+      }
+
+      async function restoreProjectBackup(projectId) {
+        const backupRecord = await readLatestProjectBackup(projectId);
+        if (!backupRecord?.payload) return null;
+
+        // A recovery must never overwrite the original.  It becomes a new project.
+        const sourceName = normalizeProjectName(backupRecord.name || backupRecord.payload.projectName || 'Proiect');
+        const restoredName = normalizeProjectName(`${sourceName} – recuperat`);
+        const restoredRecord = buildProjectRecordFromPayload(
+          cloneProjectData(backupRecord.payload),
+          { name: restoredName }
+        );
+        await saveProjectRecord(restoredRecord);
+        return restoredRecord;
       }
 
       async function migrateStoredProjectsIfNeeded() {
@@ -2354,7 +2365,7 @@
               }
             } catch (error) {
               console.warn('Migrarea proiectului a eșuat, se restaurează backup-ul.', error);
-              await restoreProjectBackup(record?.id);
+              // The existing project is kept untouched if a migration fails.
             }
           }
 
@@ -2953,7 +2964,7 @@
             { action: 'duplicate', label: 'Duplică', icon: '📄' },
             { action: 'export-project-atf', label: 'Exportă proiect (.atf)', icon: '📦' },
             { action: 'export-project-json', label: 'Exportă proiect (.json)', icon: '📄' },
-            { action: 'restore-backup', label: 'Restaurează ultimul backup', icon: '↩️' },
+            { action: 'restore-backup', label: 'Recuperează ultimul backup într-un proiect nou', icon: '↩️' },
             { action: 'separator' },
             { action: 'delete', label: 'Șterge proiect', icon: '🗑️', danger: true }
           ];
@@ -3142,9 +3153,8 @@
             return;
           }
           await renderProjectCards();
-          if (record.id === activeProjectId) {
-            await openProjectById(record.id);
-          }
+          await openProjectById(restoredRecord.id);
+          showSaveToast('Backup recuperat într-un proiect nou. Originalul a rămas neschimbat.');
           return;
         }
 
