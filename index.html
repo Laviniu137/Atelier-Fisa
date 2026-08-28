@@ -20,7 +20,7 @@
     :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #29261f; background: #edeae4; }
     * { box-sizing: border-box; }
     body { min-width: 320px; margin: 0; background: radial-gradient(circle at 0% 0%, #f8f5ee 0, transparent 38%), linear-gradient(135deg, #ebe8e1 0%, #f5f2ec 55%, #e9e4db 100%); }
-    #projectManagerView[hidden], #editorView[hidden] { display: none !important; }
+    #projectManagerView[hidden], #editorView[hidden], .notes[hidden] { display: none !important; }
     button, textarea { font: inherit; }
     button { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; border: 1px solid #d8d1c6; border-radius: 13px; background: #fdfcf9; color: #423d33; padding: 11px 17px; font-size: .92rem; font-weight: 650; letter-spacing: -.01em; box-shadow: 0 1px 2px rgba(55, 46, 34, .05); transition: transform .16s ease, box-shadow .16s ease, background .16s ease, border-color .16s ease; -webkit-tap-highlight-color: transparent; }
     button svg { width: 19px; height: 19px; flex: 0 0 auto; stroke: currentColor; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
@@ -1986,7 +1986,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.4.16';
+      const APP_VERSION = '1.4.18';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2902,6 +2902,7 @@
             { action: 'duplicate', label: 'Duplică', icon: '📄' },
             { action: 'export-project-atf', label: 'Exportă proiect (.atf)', icon: '📦' },
             { action: 'export-project-json', label: 'Exportă proiect (.json)', icon: '📄' },
+            { action: 'restore-backup', label: 'Restaurează ultimul backup', icon: '↩️' },
             { action: 'separator' },
             { action: 'delete', label: 'Șterge proiect', icon: '🗑️', danger: true }
           ];
@@ -3080,6 +3081,19 @@
 
         if (action === 'export-project-json') {
           await exportProjectPayload(record.payload, record.name || 'Proiect', { extension: 'json' });
+          return;
+        }
+
+        if (action === 'restore-backup') {
+          const restoredRecord = await restoreProjectBackup(record.id);
+          if (!restoredRecord) {
+            window.alert('Nu există încă un backup disponibil pentru acest proiect.');
+            return;
+          }
+          await renderProjectCards();
+          if (record.id === activeProjectId) {
+            await openProjectById(record.id);
+          }
           return;
         }
 
