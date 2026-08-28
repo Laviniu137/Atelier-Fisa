@@ -2046,7 +2046,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.4.30';
+      const APP_VERSION = '1.4.31';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2178,8 +2178,19 @@
         }, 900);
       }
 
+      async function recordCloudProjectDeletion(projectId) {
+        if (!cloudClient || !cloudUser || !projectId) return;
+        const { error } = await cloudClient
+          .from(cloudTombstoneTable)
+          .insert({ project_id: projectId, owner_id: cloudUser.id });
+        // A repeated delete already has its marker. That is the intended result.
+        if (error && error.code !== '23505') throw error;
+      }
+
       async function deleteProjectFromCloud(projectId) {
         if (!cloudClient || !cloudUser || !projectId) return;
+        // Save the deletion intent first, so an older device can never upload it again.
+        await recordCloudProjectDeletion(projectId);
         const { error } = await cloudClient.from(cloudProjectTable).delete().eq('id', projectId);
         if (error) throw error;
       }
