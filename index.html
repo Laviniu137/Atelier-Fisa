@@ -1467,6 +1467,7 @@
     .cloud-account-dialog { max-width: 470px; }
     .cloud-account-status { margin: -2px 0 14px; color: #6f6455; font-size: .9rem; line-height: 1.45; }
     .cloud-account-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .cloud-account-dialog [hidden] { display: none !important; }
     #pmCloudAccount { border-color: #9fb8ad; background: linear-gradient(180deg, #f6fbf8, #e9f3ee); color: #2f624c; }
     #pmCloudAccount:hover:not(:disabled) { border-color: #6f9b86; background: linear-gradient(180deg, #f7fcf9, #def0e6); }
   </style>
@@ -2039,7 +2040,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.4.25';
+      const APP_VERSION = '1.4.26';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2178,8 +2179,9 @@
             await uploadProjectToCloud(localRecord);
           }
         }
-        projectManagerNeedsRefresh = true;
-        await refreshProjectManagerIfNeeded();
+        // Render immediately after recovery so cloud projects are visible on a new device.
+        await renderProjectCards();
+        projectManagerNeedsRefresh = false;
       }
 
       function subscribeToCloudProjects() {
@@ -2195,8 +2197,8 @@
           }, async (change) => {
             if (change.eventType === 'DELETE') return;
             await applyCloudProjectRecord(change.new);
-            projectManagerNeedsRefresh = true;
-            await refreshProjectManagerIfNeeded();
+            await renderProjectCards();
+            projectManagerNeedsRefresh = false;
           })
           .subscribe();
       }
@@ -2209,7 +2211,14 @@
           cloudRealtimeChannel = null;
           return;
         }
-        await synchronizeCloudProjects();
+        try {
+          await synchronizeCloudProjects();
+        } catch (error) {
+          console.warn('Proiectele nu au putut fi descărcate din cloud.', error);
+          if (cloudAccountStatus) {
+            cloudAccountStatus.textContent = 'Cont conectat, dar proiectele nu s-au descărcat încă. Apasă „Sincronizează acum”.';
+          }
+        }
         subscribeToCloudProjects();
       }
 
@@ -6419,7 +6428,7 @@
           showSaveToast('Proiectele sunt sincronizate.');
           closeCloudAccountDialog();
         } catch (error) {
-          cloudAccountStatus.textContent = 'Sincronizarea nu a reușit acum. Proiectele locale nu au fost modificate.';
+          cloudAccountStatus.textContent = 'Sincronizarea nu a reușit acum. Proiectele locale nu au fost modificate. Verifică din nou conexiunea și încearcă peste câteva secunde.';
           console.warn('Sincronizarea manuală a eșuat.', error);
         }
       });
