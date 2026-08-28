@@ -1706,7 +1706,7 @@
         <p class="help">Selectează modul Desen pentru a utiliza Apple Pencil sau degetul pe imagine. În modul Note poți muta marcatorii și edita textul.</p>
       </section>
 
-      <section class="notes" aria-labelledby="notesLabel">
+      <section class="notes" id="notesPanel" aria-labelledby="notesLabel" hidden>
         <label class="section-label notes-title" id="notesLabel">📝 Notițe interactive</label>
         <div class="notes-toolbar">
           <button type="button" id="addNote"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg><span>Adaugă notă</span></button>
@@ -1835,6 +1835,7 @@
       const saveImage = document.getElementById('saveImage');
       const drawModeButton = document.getElementById('drawModeBtn');
       const notesModeButton = document.getElementById('notesModeBtn');
+      const notesPanel = document.getElementById('notesPanel');
       const fullscreenButton = document.getElementById('fullscreenBtn');
       const fullscreenCloseButton = document.getElementById('fullscreenCloseButton');
       const fullscreenToolbarToggle = document.getElementById('fullscreenToolbarToggle');
@@ -3379,6 +3380,10 @@
         showProjectManager();
       }
 
+      function updateNotesPanelVisibility() {
+        notesPanel.hidden = activeTool !== 'notes' && interactiveNotes.length === 0;
+      }
+
       function setControls() {
         const ready = Boolean(sourceImage);
         if (undo) {
@@ -3592,6 +3597,7 @@
         drawModeButton.classList.toggle('active', nextTool === 'draw');
         notesModeButton.classList.toggle('active', nextTool === 'notes');
         canvas.style.cursor = nextTool === 'draw' ? 'crosshair' : 'default';
+        updateNotesPanelVisibility();
 
         if (fullscreenPencilBtn) {
           const pencilActive = nextTool === 'draw' && normalizedDrawMode === 'freehand' && !nextErasing;
@@ -3629,6 +3635,7 @@
       function setActiveTool(tool) {
         if (tool === 'notes') {
           applyDrawingToolState({ tool: 'notes', drawMode: 'freehand', erasing: false });
+          notesPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
           return;
         }
         applyDrawingToolState({ tool: 'draw', drawMode: 'freehand', erasing: false });
@@ -5000,6 +5007,7 @@
       }
 
       function renderNotes() {
+        updateNotesPanelVisibility();
         noteLayer.innerHTML = '';
         noteLayer.hidden = !interactiveNotes.length;
         const frame = getActiveImageFrame();
