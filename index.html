@@ -2046,7 +2046,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.4.29';
+      const APP_VERSION = '1.4.30';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2068,6 +2068,7 @@
       const SUPABASE_URL = 'https://juqrgrtobuybmewekaox.supabase.co';
       const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_f5HkeYFeuovMtpyPqr2iYQ_E2RSmW88';
       const cloudProjectTable = 'atelier_projects';
+      const cloudTombstoneTable = 'atelier_project_tombstones';
       let cloudClient = null;
       let cloudUser = null;
       let cloudRealtimeChannel = null;
@@ -2198,6 +2199,16 @@
 
       async function synchronizeCloudProjects() {
         if (!cloudClient || !cloudUser) return;
+        const { data: tombstones, error: tombstoneError } = await cloudClient.from(cloudTombstoneTable).select('project_id');
+        if (tombstoneError) throw tombstoneError;
+        const deletedProjectIds = new Set((tombstones || []).map((item) => item.project_id).filter(Boolean));
+
+        for (const projectId of deletedProjectIds) {
+          pendingCloudRecords.delete(projectId);
+          pendingCloudDeletes.delete(projectId);
+          await deleteProjectRecord(projectId, { syncCloud: false });
+        }
+
         for (const projectId of Array.from(pendingCloudDeletes)) {
           try {
             await deleteProjectFromCloud(projectId);
@@ -2212,11 +2223,12 @@
         const localRecords = await readAllProjectRecords();
 
         for (const remoteRecord of remoteRecords || []) {
-          if (pendingCloudDeletes.has(remoteRecord.id)) continue;
+          if (pendingCloudDeletes.has(remoteRecord.id) || deletedProjectIds.has(remoteRecord.id)) continue;
           await applyCloudProjectRecord(remoteRecord);
         }
         for (const localRecord of localRecords) {
           const remoteRecord = remoteById.get(localRecord.id);
+          if (deletedProjectIds.has(localRecord.id)) continue;
           if (!remoteRecord) {
             await uploadProjectToCloud(localRecord);
             continue;
