@@ -2004,7 +2004,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.4.20';
+      const APP_VERSION = '1.4.21';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2391,6 +2391,39 @@
           reader.onerror = () => reject(reader.error);
           reader.readAsDataURL(blob);
         });
+      }
+
+      async function optimizeImageForStorage(file) {
+        const maxDimension = 1920;
+        const maxOriginalBytes = 2 * 1024 * 1024;
+        if (!file || file.type === 'image/svg+xml' || file.size <= maxOriginalBytes) return file;
+
+        const objectUrl = URL.createObjectURL(file);
+        try {
+          const image = await new Promise((resolve, reject) => {
+            const element = new Image();
+            element.onload = () => resolve(element);
+            element.onerror = () => reject(new Error('Imaginea nu a putut fi pregătită pentru salvare.'));
+            element.src = objectUrl;
+          });
+          const sourceWidth = image.naturalWidth || image.width;
+          const sourceHeight = image.naturalHeight || image.height;
+          const scale = Math.min(1, maxDimension / Math.max(sourceWidth, sourceHeight));
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(sourceWidth * scale));
+          canvas.height = Math.max(1, Math.round(sourceHeight * scale));
+          const context = canvas.getContext('2d');
+          context.drawImage(image, 0, 0, canvas.width, canvas.height);
+          const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.84));
+          if (!blob) return file;
+          const baseName = (file.name || 'imagine').replace(/\.[^.]+$/, '');
+          return new File([blob], `${baseName}.jpg`, { type: 'image/jpeg', lastModified: Date.now() });
+        } catch (error) {
+          console.warn('Imaginea va fi salvată în formatul original.', error);
+          return file;
+        } finally {
+          URL.revokeObjectURL(objectUrl);
+        }
       }
 
       function cloneProjectData(value) {
@@ -3243,6 +3276,7 @@
           }
         } catch (error) {
           console.warn('Lucrarea nu a putut fi salvată local.', error);
+          throw error;
         }
       }
 
@@ -3291,6 +3325,12 @@
               flushAutosave();
             }, AUTOSAVE_DEBOUNCE_MS);
           }
+        } catch (error) {
+          projectDirty = true;
+          console.warn('Proiectul rămâne nesalvat local; autosave-ul va reîncerca.', error);
+          showSaveToast('Spațiul local este plin. Proiectul nu a fost șters; salvează un export de rezervă.');
+          window.clearTimeout(saveTimer);
+          saveTimer = window.setTimeout(() => flushAutosave({ force: true }), 12000);
         } finally {
           autosaveInProgress = false;
         }
@@ -5716,13 +5756,14 @@
             resolve();
             return;
           }
-          const dataUrl = await blobToDataUrl(file);
+          const storedFile = await optimizeImageForStorage(file);
+          const dataUrl = await blobToDataUrl(storedFile);
           const imageEntry = {
             id: createNoteId(),
             name: file.name || getProjectImageName(projectImages.length),
             title: getNextAutoImageTitle(),
             dataUrl,
-            type: file.type || 'image/png',
+            type: storedFile.type || file.type || 'image/png',
             strokes: cloneProjectData(storedStrokes),
             notes: cloneProjectData(storedNotes),
             zoom: 1,
