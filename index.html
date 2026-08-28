@@ -3328,6 +3328,7 @@
         } catch (error) {
           projectDirty = true;
           console.warn('Proiectul rămâne nesalvat local; autosave-ul va reîncerca.', error);
+          showSaveToast('Spațiul local este plin. Proiectul nu a fost șters; salvează un export de rezervă.');
           window.clearTimeout(saveTimer);
           saveTimer = window.setTimeout(() => flushAutosave({ force: true }), 12000);
         } finally {
