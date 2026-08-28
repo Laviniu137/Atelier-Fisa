@@ -2046,7 +2046,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.4.28';
+      const APP_VERSION = '1.4.29';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -3399,10 +3399,18 @@
         const targetProjectId = pendingDeleteProjectId;
         closeDeleteProjectDialog();
         if (!targetProjectId) return;
-        await deleteProjectRecord(targetProjectId);
+
+        // Finish any active save before deleting. Saving after deletion recreates the project.
         if (activeProjectId === targetProjectId) {
-          await closeActiveProjectSafely();
+          if (projectDirty) {
+            await flushAutosave({ force: true });
+          }
+          await setActiveProjectId(null);
+          resetCurrentProject({ persist: false });
+          showProjectManager();
         }
+
+        await deleteProjectRecord(targetProjectId);
         await renderProjectCards();
       }
 
