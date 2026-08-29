@@ -1393,10 +1393,15 @@
       .project-manager-actions {
         width: 100%;
         justify-content: flex-start;
+        flex-wrap: wrap;
       }
       .project-manager-actions button {
         flex: 1 1 auto;
+        min-width: 0;
         min-height: 50px;
+      }
+      #pmImportProject, #pmNewProject {
+        min-width: 0;
       }
       .project-grid { grid-template-columns: 1fr; }
       .app > header { align-items: stretch; flex-direction: column; padding: 14px; gap: 12px; min-height: unset; }
@@ -2046,7 +2051,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.4.31';
+      const APP_VERSION = '1.4.32';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2189,8 +2194,13 @@
 
       async function deleteProjectFromCloud(projectId) {
         if (!cloudClient || !cloudUser || !projectId) return;
-        // Save the deletion intent first, so an older device can never upload it again.
-        await recordCloudProjectDeletion(projectId);
+        // The database also records this marker when the delete succeeds. Do not leave
+        // a project in the cloud merely because the optional first marker retry failed.
+        try {
+          await recordCloudProjectDeletion(projectId);
+        } catch (error) {
+          console.warn('Marcajul de ștergere va fi creat de server odată cu ștergerea proiectului.', error);
+        }
         const { error } = await cloudClient.from(cloudProjectTable).delete().eq('id', projectId);
         if (error) throw error;
       }
