@@ -1818,6 +1818,10 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
   <script>
     (() => {
       const projectManagerView = document.getElementById('projectManagerView');
@@ -2042,7 +2046,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.7.5';
+      const APP_VERSION = '1.8.0';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2071,6 +2075,11 @@
       const googleDriveTombstonesKey = 'google-drive-tombstones-v1';
       const googleDriveFileName = 'atelier-fisa-projecte-v1.json';
       const googleIdentityScriptUrl = 'https://accounts.google.com/gsi/client';
+      const firebaseConfig = { apiKey: 'AIzaSyCMUavm_4Uc66Gv0BFjsm6UsPXIAeu6kYE', authDomain: 'atelier-mobila-cloud.firebaseapp.com', projectId: 'atelier-mobila-cloud', appId: '1:242123502161:web:590fd44106e4cc67533e70' };
+      const firebaseSyncCollection = 'atelierFisaSyncV1';
+      const firebaseChunkSize = 480000;
+      let firebaseApp = null, firebaseAuth = null, firebaseDb = null, firebaseUser = null, firebaseManifestRef = null, firebaseManifest = null, firebaseManifestUnsubscribe = null, firebaseSyncTimer = null, firebaseRunning = false, firebaseInitialized = false, firebaseLastRemoteUpdatedAt = '';
+
       let googleDriveToken = null, googleDriveTokenExpires = 0, googleDriveFileId = null, googleDriveRemoteModified = '', googleDriveConnected = false, googleDriveAuthorizationNeeded = false, googleDriveTimer = null, googleDrivePoller = null, googleDriveRunning = false;
       let cloudClient = null;
       let cloudUser = null;
@@ -2082,14 +2091,14 @@
       const pendingCloudDeletes = new Set();
 
       function isCloudReady() { return Boolean(window.supabase && SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY); }
-      function getCloudStatusMessage() { if (!googleDriveConnected) return 'Conectează Google Drive o singură dată pe fiecare dispozitiv pentru sincronizare automată.'; return googleDriveAuthorizationNeeded ? 'Google Drive este configurat. Apasă „Sincronizează acum” pentru a reîmprospăta accesul.' : 'Google Drive este conectat. Proiectele se salvează local și se actualizează automat între tabletă și PC.'; }
+      function getCloudStatusMessage() { if (firebaseUser) return 'Sincronizare live activă prin Firebase între tabletă și PC.'; if (firebaseInitialized) return 'Conectează contul Google pentru sincronizare live între tabletă și PC.'; if (!googleDriveConnected) return 'Conectează Google Drive o singură dată pe fiecare dispozitiv pentru sincronizare automată.'; return googleDriveAuthorizationNeeded ? 'Google Drive este configurat. Apasă „Sincronizează acum” pentru a reîmprospăta accesul.' : 'Google Drive este conectat. Proiectele se salvează local și se actualizează automat între tabletă și PC.'; }
       function updateCloudAccountUi() {
         if (cloudAccountStatus) cloudAccountStatus.textContent = getCloudStatusMessage();
         if (cloudAccountButton) cloudAccountButton.innerHTML = '<span>' + (googleDriveConnected ? '☁️ Google Drive conectat' : '☁️ Google Drive') + '</span>';
-        if (cloudLoginButton) { cloudLoginButton.hidden = googleDriveConnected && !googleDriveAuthorizationNeeded; cloudLoginButton.textContent = googleDriveConnected ? 'Reîmprospătează accesul Google Drive' : 'Conectează Google Drive'; }
-        if (cloudSyncNowButton) cloudSyncNowButton.hidden = !googleDriveConnected;
-        if (cloudUploadDeviceButton) cloudUploadDeviceButton.hidden = !googleDriveConnected;
-        if (cloudLogoutButton) { cloudLogoutButton.hidden = !googleDriveConnected; cloudLogoutButton.textContent = 'Deconectează Google Drive'; }
+        if (cloudLoginButton) { cloudLoginButton.hidden = Boolean(firebaseUser) || (googleDriveConnected && !googleDriveAuthorizationNeeded); cloudLoginButton.textContent = firebaseInitialized ? 'Conectează Google pentru sincronizare live' : (googleDriveConnected ? 'Reîmprospătează accesul Google Drive' : 'Conectează Google Drive'); }
+        if (cloudSyncNowButton) cloudSyncNowButton.hidden = !(firebaseUser || googleDriveConnected);
+        if (cloudUploadDeviceButton) cloudUploadDeviceButton.hidden = !(firebaseUser || googleDriveConnected);
+        if (cloudLogoutButton) { cloudLogoutButton.hidden = !(firebaseUser || googleDriveConnected); cloudLogoutButton.textContent = firebaseUser ? 'Deconectează sincronizarea' : 'Deconectează Google Drive'; }
         [cloudEmailInput, cloudPasswordInput, document.querySelector('label[for="cloudEmail"]'), document.querySelector('label[for="cloudPassword"]')].forEach((el) => { if (el) el.hidden = true; });
       }
       function openCloudAccountDialog() { updateCloudAccountUi(); cloudAccountDialog.hidden = false; }
@@ -2135,6 +2144,107 @@
           await applyProjectState(nextRecord.payload);
         }
         return nextRecord;
+      }
+
+      function firebaseAvailable() { return Boolean(window.firebase?.initializeApp && window.firebase?.auth && window.firebase?.firestore); }
+      function firebaseChunkId(projectId, index) { return encodeURIComponent(projectId).replace(/%/g, '_') + '-' + index; }
+      function firebaseRecordUpdatedAt(record) { return new Date(getRecordUpdatedAt(record) || 0).toISOString(); }
+      async function firebaseLoadRecord(meta) {
+        const reads = [];
+        for (let index = 0; index < Number(meta?.chunks || 0); index += 1) reads.push(firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid).collection('chunks').doc(firebaseChunkId(meta.id, index)).get());
+        const chunks = await Promise.all(reads);
+        const text = chunks.map((item) => item.exists ? String(item.data()?.data || '') : '').join('');
+        return text ? JSON.parse(text) : null;
+      }
+      async function firebaseUploadRecord(record) {
+        if (!firebaseUser || !firebaseDb || !record?.id) return;
+        const text = JSON.stringify(cloneProjectData(record));
+        const chunks = Math.max(1, Math.ceil(text.length / firebaseChunkSize));
+        const batch = firebaseDb.batch();
+        const parent = firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid);
+        for (let index = 0; index < chunks; index += 1) batch.set(parent.collection('chunks').doc(firebaseChunkId(record.id, index)), { data: text.slice(index * firebaseChunkSize, (index + 1) * firebaseChunkSize), updatedAt: record.updatedAt || new Date().toISOString() });
+        await batch.commit();
+        const nextManifest = firebaseManifest || { version: 1, records: {}, tombstones: {} };
+        const tombstones = { ...(nextManifest.tombstones || {}) };
+        const deletedAt = Date.parse(tombstones[record.id] || '') || 0;
+        if (deletedAt > getRecordUpdatedAt(record)) return;
+        delete tombstones[record.id];
+        const records = { ...(nextManifest.records || {}), [record.id]: { id: record.id, updatedAt: record.updatedAt || new Date().toISOString(), chunks } };
+        firebaseManifest = { ...nextManifest, version: 1, updatedAt: new Date().toISOString(), records, tombstones };
+        await parent.collection('state').doc('manifest').set(firebaseManifest);
+      }
+      async function firebaseRecordDeletion(projectId) {
+        if (!firebaseUser || !firebaseDb || !projectId) return;
+        const nextManifest = firebaseManifest || { version: 1, records: {}, tombstones: {} };
+        const records = { ...(nextManifest.records || {}) }; delete records[projectId];
+        const tombstones = { ...(nextManifest.tombstones || {}), [projectId]: new Date().toISOString() };
+        firebaseManifest = { ...nextManifest, version: 1, updatedAt: new Date().toISOString(), records, tombstones };
+        await firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid).collection('state').doc('manifest').set(firebaseManifest);
+      }
+      async function firebaseReconcile(remote) {
+        if (!firebaseUser || !remote || firebaseRunning) return;
+        firebaseRunning = true;
+        try {
+          firebaseManifest = remote;
+          const local = await readAllProjectRecords();
+          const localMap = new Map(local.map((item) => [item.id, item]));
+          for (const [id, deletedAt] of Object.entries(remote.tombstones || {})) {
+            const localRecord = localMap.get(id);
+            if (localRecord && (Date.parse(deletedAt) || 0) >= getRecordUpdatedAt(localRecord)) await deleteProjectRecord(id, { syncCloud: false });
+          }
+          for (const meta of Object.values(remote.records || {})) {
+            const localRecord = localMap.get(meta.id);
+            if (!localRecord || Date.parse(meta.updatedAt || '') > getRecordUpdatedAt(localRecord)) {
+              const remoteRecord = await firebaseLoadRecord(meta);
+              if (remoteRecord) await persistProjectRecord(remoteRecord);
+            }
+          }
+          const refreshed = await readAllProjectRecords();
+          for (const localRecord of refreshed) {
+            const remoteMeta = remote.records?.[localRecord.id];
+            const tombstoneAt = Date.parse(remote.tombstones?.[localRecord.id] || '') || 0;
+            if (tombstoneAt > getRecordUpdatedAt(localRecord)) continue;
+            if (!remoteMeta || getRecordUpdatedAt(localRecord) > Date.parse(remoteMeta.updatedAt || '')) await firebaseUploadRecord(localRecord);
+          }
+          await renderProjectCards();
+        } finally { firebaseRunning = false; }
+      }
+      function scheduleFirebaseSync(record) {
+        if (!firebaseUser || !record?.id) return;
+        window.clearTimeout(firebaseSyncTimer);
+        firebaseSyncTimer = window.setTimeout(() => firebaseUploadRecord(record).catch((error) => console.warn('Proiectul rămâne salvat local până revine sincronizarea Firebase.', error)), 750);
+      }
+      async function initializeFirebaseSync() {
+        if (!firebaseAvailable() || firebaseInitialized) return;
+        firebaseInitialized = true;
+        firebaseApp = window.firebase.apps?.length ? window.firebase.app() : window.firebase.initializeApp(firebaseConfig);
+        firebaseAuth = window.firebase.auth();
+        firebaseDb = window.firebase.firestore();
+        await firebaseAuth.setPersistence(window.firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
+        await firebaseAuth.getRedirectResult().catch((error) => console.warn('Conectarea Firebase nu a fost finalizată.', error));
+        firebaseAuth.onAuthStateChanged(async (user) => {
+          firebaseUser = user || null;
+          if (firebaseManifestUnsubscribe) { firebaseManifestUnsubscribe(); firebaseManifestUnsubscribe = null; }
+          firebaseManifest = null;
+          updateCloudAccountUi();
+          if (!firebaseUser) return;
+          firebaseManifestRef = firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid).collection('state').doc('manifest');
+          firebaseManifestUnsubscribe = firebaseManifestRef.onSnapshot((snapshot) => {
+            const data = snapshot.data();
+            if (!data) { firebaseReconcile({ version: 1, records: {}, tombstones: {} }).catch(() => {}); return; }
+            if (data.updatedAt && data.updatedAt === firebaseLastRemoteUpdatedAt) return;
+            firebaseLastRemoteUpdatedAt = data.updatedAt || '';
+            firebaseReconcile(data).catch((error) => console.warn('Actualizarea live Firebase a eșuat.', error));
+          }, (error) => console.warn('Conexiunea live Firebase a eșuat.', error));
+        });
+      }
+      async function connectFirebaseSync() {
+        await initializeFirebaseSync();
+        if (!firebaseAuth) throw new Error('Firebase nu este disponibil.');
+        const provider = new window.firebase.auth.GoogleAuthProvider();
+        const isAppleMobile = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        if (isAppleMobile) return firebaseAuth.signInWithRedirect(provider);
+        return firebaseAuth.signInWithPopup(provider);
       }
 
       async function loadGoogleDriveIdentity() {
@@ -2268,6 +2378,7 @@
       }
 
       function scheduleCloudProjectSync(record) {
+        if (firebaseUser) return scheduleFirebaseSync(record);
         if (googleDriveConnected) return scheduleGoogleDriveSync();
         if (!cloudUser || !record?.id) return;
         pendingCloudRecords.set(record.id, cloneProjectData(record));
@@ -2470,6 +2581,7 @@
       }
 
       async function signInToCloud() {
+        if (firebaseInitialized) return connectFirebaseSync();
         return connectGoogleDrive();
       }
 
@@ -2683,6 +2795,10 @@
         pendingCloudRecords.delete(projectId);
         // Marcăm imediat ștergerea, inclusiv dacă Drive este temporar deconectat.
         // Astfel o copie veche din celălalt dispozitiv nu poate readuce proiectul.
+        if (syncCloud && firebaseUser) {
+          await firebaseRecordDeletion(projectId);
+          return;
+        }
         if (syncCloud) {
           const deleted = (await getMetaValue(googleDriveTombstonesKey)) || {};
           deleted[projectId] = new Date().toISOString();
@@ -3961,8 +4077,11 @@
 
       async function initializeProjectManagerStartup() {
         await migrateStoredProjectsIfNeeded();
-        await initializeGoogleDrive();
-        if (!googleDriveConnected) await initializeCloudSync();
+        await initializeFirebaseSync();
+        if (!firebaseInitialized) {
+          await initializeGoogleDrive();
+          if (!googleDriveConnected) await initializeCloudSync();
+        }
         const storedActiveProjectId = await getStoredActiveProjectId();
         if (storedActiveProjectId) {
           activeProjectId = storedActiveProjectId;
@@ -6778,7 +6897,10 @@
       cloudLoginButton.addEventListener('click', signInToCloud);
       cloudSyncNowButton.addEventListener('click', async () => {
         try {
-          if (googleDriveConnected) {
+          if (firebaseUser) {
+            const remote = await firebaseManifestRef.get();
+            await firebaseReconcile(remote.data() || { version: 1, records: {}, tombstones: {} });
+          } else if (googleDriveConnected) {
             await googleDriveTokenFor(true);
             googleDriveAuthorizationNeeded = false;
             await googleDriveSync();
@@ -6808,6 +6930,7 @@
         }
       });
       cloudLogoutButton.addEventListener('click', async () => {
+        if (firebaseUser && firebaseAuth) { await firebaseAuth.signOut(); updateCloudAccountUi(); closeCloudAccountDialog(); return; }
         googleDriveToken = null; googleDriveTokenExpires = 0; googleDriveConnected = false; clearInterval(googleDrivePoller); await setMetaValue(googleDriveStateKey, false); updateCloudAccountUi(); closeCloudAccountDialog();
       });
       cloudAccountDialog.addEventListener('pointerdown', (event) => {
