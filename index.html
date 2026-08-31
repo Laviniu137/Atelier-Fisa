@@ -385,7 +385,8 @@
     .image-title-input { font: inherit; padding: 2px 6px; border: 1px solid rgba(140, 111, 75, .5); border-radius: 6px; background: #fffdf9; color: #2d261f; width: 100%; max-width: 220px; }
     .canvas-shell { min-height: clamp(360px, 54vh, 640px); display: grid; place-items: center; overflow: hidden; border: 1px solid rgba(219, 211, 197, .95); border-radius: 18px; background: linear-gradient(180deg, #f8f4eb 0%, #f3ece2 100%); box-shadow: inset 0 1px 1px rgba(71, 56, 35, .04), 0 6px 18px rgba(70, 56, 38, .04); overscroll-behavior: contain; padding: 8px; }
     .image-stage { position: relative; display: inline-block; max-width: 100%; line-height: 0; box-shadow: 0 10px 24px rgba(56, 43, 26, .12); border-radius: 14px; overflow: hidden; }
-    #photo { display: block; max-width: 100%; max-height: min(66vh, 760px); width: auto; height: auto; }
+    /* În editor, imaginea rămâne complet în interiorul cadrului; în ecran complet există o regulă separată. */
+    #photo { display: block; max-width: 100%; max-height: min(52vh, 600px); width: auto; height: auto; object-fit: contain; }
     #drawingCanvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
     .note-layer { position: absolute; inset: 0; pointer-events: none; }
     .image-stage { touch-action: none; }
@@ -2015,7 +2016,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.5.1';
+      const APP_VERSION = '1.5.2';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
