@@ -1159,7 +1159,7 @@
       display: flex;
       align-items: center;
       justify-content: flex-start;
-      width: min(94vw, 820px);
+      width: min(92vw, 1060px);
       min-height: 76px;
       padding: 10px;
       border: 1px solid var(--panel-line);
@@ -1177,9 +1177,9 @@
       align-items: center;
       justify-content: flex-start;
       gap: 8px;
-      flex-wrap: nowrap;
-      width: max-content;
-      min-width: 100%;
+      flex-wrap: wrap;
+      width: 100%;
+      min-width: 0;
     }
     .drawing-tool-group {
       display: flex;
@@ -1301,12 +1301,14 @@
 
     @media (max-width: 860px) {
       .fullscreen-drawing-toolbar-shell {
-        height: 82px;
+        width: min(96vw, 760px);
+        height: auto;
+        min-height: 74px;
         padding: 6px 8px;
         gap: 6px;
         border-radius: 14px;
       }
-      .drawing-toolbar-row { gap: 6px; }
+      .drawing-toolbar-row { gap: 6px; flex-wrap: wrap; }
       .drawing-tool-group { padding: 5px 7px; }
       .drawing-tool-group-row { gap: 4px; }
       .drawing-tool-button { width: 32px; height: 32px; min-width: 32px; min-height: 32px; border-radius: 9px; }
@@ -1318,8 +1320,8 @@
     }
     @media (max-width: 640px) {
       .fullscreen-drawing-toolbar-shell {
-        width: auto;
-        max-width: min(96vw, 640px);
+        width: min(96vw, 640px);
+        max-width: none;
         padding: 6px;
       }
       .drawing-toolbar-row { gap: 5px; }
@@ -2012,7 +2014,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.4.34';
+      const APP_VERSION = '1.4.35';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
