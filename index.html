@@ -2247,7 +2247,9 @@
         firebaseAuth = window.firebase.auth();
         firebaseDb = window.firebase.firestore();
         // Conexiune Firestore compatibilă cu Safari/iPad, inclusiv în rețele restrictive.
-        firebaseDb.settings({ experimentalAutoDetectLongPolling: true, useFetchStreams: false });
+        try { firebaseDb.settings({ experimentalAutoDetectLongPolling: true, useFetchStreams: false }); } catch (error) {
+          console.warn('Setările speciale Firestore nu au fost aplicate; folosesc conexiunea standard.', error);
+        }
         await firebaseAuth.setPersistence(window.firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
         await firebaseAuth.getRedirectResult().catch((error) => console.warn('Conectarea Firebase nu a fost finalizată.', error));
         firebaseAuth.onAuthStateChanged(async (user) => {
