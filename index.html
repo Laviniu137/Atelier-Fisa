@@ -2042,7 +2042,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.7.2';
+      const APP_VERSION = '1.7.3';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2070,6 +2070,7 @@
       const googleDriveStateKey = 'google-drive-sync-enabled-v1';
       const googleDriveTombstonesKey = 'google-drive-tombstones-v1';
       const googleDriveFileName = 'atelier-fisa-projecte-v1.json';
+      const googleIdentityScriptUrl = 'https://accounts.google.com/gsi/client';
       let googleDriveToken = null, googleDriveTokenExpires = 0, googleDriveFileId = null, googleDriveRemoteModified = '', googleDriveConnected = false, googleDriveTimer = null, googleDrivePoller = null, googleDriveRunning = false;
       let cloudClient = null;
       let cloudUser = null;
@@ -2136,10 +2137,29 @@
         return nextRecord;
       }
 
+      async function loadGoogleDriveIdentity() {
+        if (window.google?.accounts?.oauth2) return true;
+        const existing = document.querySelector('script[data-fisa-google-identity]');
+        // Dacă aplicația a pornit în mod avion, scriptul inițial a eșuat; îl încărcăm din nou
+        // după revenirea internetului.
+        if (existing && !window.google?.accounts?.oauth2) existing.remove();
+        return new Promise((resolve) => {
+          const script = document.createElement('script');
+          script.src = googleIdentityScriptUrl;
+          script.async = true;
+          script.defer = true;
+          script.dataset.fisaGoogleIdentity = 'true';
+          const finish = (ok) => resolve(Boolean(ok && window.google?.accounts?.oauth2));
+          script.addEventListener('load', () => finish(true), { once: true });
+          script.addEventListener('error', () => finish(false), { once: true });
+          document.head.appendChild(script);
+          window.setTimeout(() => finish(Boolean(window.google?.accounts?.oauth2)), 12000);
+        });
+      }
+
       async function googleDriveTokenFor(interactive = false) {
         if (googleDriveToken && Date.now() < googleDriveTokenExpires - 60000) return googleDriveToken;
-        for (let i = 0; i < 30 && !window.google?.accounts?.oauth2; i += 1) await new Promise((ok) => setTimeout(ok, 120));
-        if (!window.google?.accounts?.oauth2) throw new Error('Google Drive nu este disponibil.');
+        if (!await loadGoogleDriveIdentity()) throw new Error('Google Drive nu este disponibil.');
         return new Promise((resolve, reject) => {
           const client = window.google.accounts.oauth2.initTokenClient({ client_id: GOOGLE_DRIVE_CLIENT_ID, scope: 'https://www.googleapis.com/auth/drive.appdata', callback: (r) => {
             if (!r?.access_token) return reject(new Error(r?.error || 'Autorizare anulată'));
@@ -2322,7 +2342,15 @@
         }, 650);
       }
 
-      window.addEventListener('online', () => { if (googleDriveConnected) googleDriveSync().catch(() => {}); else retryCloudSyncAfterReconnect(); });
+      window.addEventListener('online', async () => {
+        const driveWasEnabled = Boolean(await getMetaValue(googleDriveStateKey));
+        if (driveWasEnabled) {
+          await initializeGoogleDrive();
+          if (googleDriveConnected) googleDriveSync().catch(() => {});
+          return;
+        }
+        retryCloudSyncAfterReconnect();
+      });
 
       async function synchronizeCloudProjects() {
         if (!cloudClient || !cloudUser) return;
