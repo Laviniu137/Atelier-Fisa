@@ -2014,7 +2014,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.4.36';
+      const APP_VERSION = '1.4.37';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -5340,9 +5340,18 @@
         selectedNoteMode = mode === 'pencil' ? 'pencil' : 'text';
         textModeButton.classList.toggle('active', selectedNoteMode === 'text');
         pencilModeButton.classList.toggle('active', selectedNoteMode === 'pencil');
+
+        // În Text se afișează numai câmpul de text. Previzualizarea scrisului de mână
+        // rămâne vizibilă doar dacă nota conține deja ceva desenat.
+        if (selectedNoteMode === 'text' && pencilEditorOpen) {
+          closePencilEditor({ saveChanges: true });
+        }
+        const selectedNote = interactiveNotes.find((item) => item.id === selectedNoteId);
+        const hasHandwriting = Boolean(selectedNote && Array.isArray(selectedNote.handwriting) && selectedNote.handwriting.length);
         noteContentTextarea.hidden = selectedNoteMode === 'pencil';
         handwritingPanel.hidden = true;
-        handwritingPreview.hidden = !selectedNoteId;
+        handwritingPreview.hidden = selectedNoteMode === 'text' && !hasHandwriting;
+
         if (selectedNoteMode === 'pencil') {
           dismissKeyboardAndSelection();
           setPencilInteractionLock(true);
@@ -5351,10 +5360,10 @@
             openPencilEditor();
           }
         } else {
-          if (pencilEditorOpen) {
-            closePencilEditor({ saveChanges: true });
-          }
           setPencilInteractionLock(false);
+          if (hasHandwriting) {
+            renderHandwritingPreview();
+          }
         }
       }
 
@@ -5363,7 +5372,7 @@
         if (!note) return;
         note.handwriting = [];
         renderHandwritingCanvas();
-        renderHandwritingPreview();
+        setSelectedNoteMode(selectedNoteMode);
         scheduleSave();
       }
 
