@@ -2014,7 +2014,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.4.38';
+      const APP_VERSION = '1.5.0';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2109,18 +2109,11 @@
         }
         await persistProjectRecord(nextRecord);
 
-        if (nextRecord.id === activeProjectId && !projectDirty) {
-          // Sincronizarea actualizează datele, fără să trimită utilizatorul pe altă imagine.
-          // Pagina deschisă local rămâne selectată chiar dacă dispozitivul celălalt a salvat
-          // proiectul având o altă imagine activă.
-          const activeImageId = projectImages[activeImageIndex]?.id || null;
-          const matchingImageIndex = activeImageId
-            ? nextRecord.payload.images?.findIndex((image) => image?.id === activeImageId)
-            : -1;
-          const payloadForCurrentView = matchingImageIndex >= 0
-            ? { ...nextRecord.payload, activeImageIndex: matchingImageIndex }
-            : nextRecord.payload;
-          await applyProjectState(payloadForCurrentView);
+        // Cât timp proiectul este deschis, nu reîncărcăm automat editorul din cloud.
+        // Astfel apăsarea pe Note sau pe o notă nu poate muta utilizatorul pe altă pagină.
+        const isEditingThisProject = nextRecord.id === activeProjectId && editorView && !editorView.hidden;
+        if (nextRecord.id === activeProjectId && !projectDirty && !isEditingThisProject) {
+          await applyProjectState(nextRecord.payload);
         }
         return nextRecord;
       }
@@ -4049,8 +4042,12 @@
 
       function setActiveTool(tool) {
         if (tool === 'notes') {
+          const wasAlreadyInNotes = activeTool === 'notes';
           applyDrawingToolState({ tool: 'notes', drawMode: 'freehand', erasing: false });
-          notesPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // Nu forțăm saltul paginii când nota este deja deschisă sau la o reafișare automată.
+          if (!wasAlreadyInNotes) {
+            notesPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
           return;
         }
         applyDrawingToolState({ tool: 'draw', drawMode: 'freehand', erasing: false });
