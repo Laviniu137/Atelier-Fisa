@@ -2068,7 +2068,7 @@
       const googleDriveStateKey = 'google-drive-sync-enabled-v1';
       const googleDriveTombstonesKey = 'google-drive-tombstones-v1';
       const googleDriveFileName = 'atelier-fisa-projecte-v1.json';
-      let googleDriveToken = null, googleDriveTokenExpires = 0, googleDriveFileId = null, googleDriveConnected = false, googleDriveTimer = null, googleDrivePoller = null, googleDriveRunning = false;
+      let googleDriveToken = null, googleDriveTokenExpires = 0, googleDriveFileId = null, googleDriveRemoteModified = '', googleDriveConnected = false, googleDriveTimer = null, googleDrivePoller = null, googleDriveRunning = false;
       let cloudClient = null;
       let cloudUser = null;
       let cloudRealtimeChannel = null;
@@ -2154,24 +2154,25 @@
       async function googleDriveRead() {
         if (!googleDriveFileId) {
           const q = encodeURIComponent("name = '" + googleDriveFileName + "' and 'appDataFolder' in parents and trashed = false");
-          const list = await googleDriveFetch('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=' + q + '&fields=files(id)');
-          const listed = await list.json(); googleDriveFileId = listed?.files?.[0]?.id || null;
+          const list = await googleDriveFetch('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=' + q + '&fields=files(id,modifiedTime)');
+          const listed = await list.json(); googleDriveFileId = listed?.files?.[0]?.id || null; googleDriveRemoteModified = listed?.files?.[0]?.modifiedTime || '';
         }
         if (!googleDriveFileId) return null;
         const response = await googleDriveFetch('https://www.googleapis.com/drive/v3/files/' + encodeURIComponent(googleDriveFileId) + '?alt=media');
         if (!response.ok) throw new Error('Citirea Google Drive a eșuat.');
-        return response.json();
+        const data = await response.json(); googleDriveRemoteModified = new Date().toISOString(); return data;
       }
       async function googleDriveWrite(data) {
         const boundary = 'atelier' + Math.random().toString(16).slice(2);
         const meta = { name: googleDriveFileName, parents: ['appDataFolder'], mimeType: 'application/json' };
         const body = '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(meta) + '\r\n--' + boundary + '\r\nContent-Type: application/json\r\n\r\n' + JSON.stringify(data) + '\r\n--' + boundary + '--';
-        const url = googleDriveFileId ? 'https://www.googleapis.com/upload/drive/v3/files/' + encodeURIComponent(googleDriveFileId) + '?uploadType=multipart' : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+        const url = googleDriveFileId ? 'https://www.googleapis.com/upload/drive/v3/files/' + encodeURIComponent(googleDriveFileId) + '?uploadType=multipart' : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,modifiedTime';
         const result = await googleDriveFetch(url, { method: googleDriveFileId ? 'PATCH' : 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + boundary }, body });
         if (!result.ok) throw new Error('Salvarea Google Drive a eșuat.');
-        googleDriveFileId = (await result.json()).id || googleDriveFileId;
+        const saved = await result.json(); googleDriveFileId = saved.id || googleDriveFileId; googleDriveRemoteModified = saved.modifiedTime || new Date().toISOString();
       }
-      async function googleDriveSync() {
+      async function googleDriveSync({ poll = false } = {}) {
+        if (poll && googleDriveFileId) { const check = await googleDriveFetch('https://www.googleapis.com/drive/v3/files/' + encodeURIComponent(googleDriveFileId) + '?fields=modifiedTime'); if (check.ok) { const meta = await check.json(); if (meta.modifiedTime && meta.modifiedTime === googleDriveRemoteModified) return; } }
         if (!googleDriveConnected || googleDriveRunning || navigator.onLine === false) return;
         googleDriveRunning = true;
         try {
@@ -2197,7 +2198,7 @@
         } finally { googleDriveRunning = false; }
       }
       function scheduleGoogleDriveSync() { if (!googleDriveConnected) return; clearTimeout(googleDriveTimer); googleDriveTimer = setTimeout(() => googleDriveSync().catch((e) => console.warn('Proiectele rămân salvate local.', e)), 1200); }
-      function startGoogleDrivePolling() { clearInterval(googleDrivePoller); googleDrivePoller = setInterval(() => googleDriveSync().catch(() => {}), 15000); }
+      function startGoogleDrivePolling() { clearInterval(googleDrivePoller); googleDrivePoller = setInterval(() => googleDriveSync({ poll: true }).catch(() => {}), 15000); }
       async function connectGoogleDrive() {
         try { await googleDriveTokenFor(true); googleDriveConnected = true; await setMetaValue(googleDriveStateKey, true); await googleDriveSync(); startGoogleDrivePolling(); updateCloudAccountUi(); closeCloudAccountDialog(); showSaveToast('Google Drive este conectat. Proiectele se sincronizează automat.'); }
         catch (e) { console.warn('Google Drive', e); if (cloudAccountStatus) cloudAccountStatus.textContent = 'Conectarea la Google Drive nu a reușit. Încearcă din nou.'; }
