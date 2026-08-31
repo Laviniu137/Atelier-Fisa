@@ -2016,7 +2016,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.5.3';
+      const APP_VERSION = '1.5.4';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -4581,42 +4581,10 @@
 
       function beginDrawing(event) {
         if (!sourceImage || activeTool !== 'draw' || event.altKey) return;
+        // În ecran complet, degetul sau palma nu pot începe o linie ori muta desenul.
+        // Apple Pencil folosește în continuare evenimentele precise, inclusiv punctele coalescate.
         if (event.pointerType === 'touch') {
-          if (!fullscreenMode) return;
           event.preventDefault();
-          if (activeDrawMode === 'line') {
-            const touchPoint = pointFromEvent(event);
-            if (!touchPoint) return;
-            if (!lineDraftStartPoint) {
-              lineDraftStartPoint = touchPoint;
-              lineDraftCurrentPoint = touchPoint;
-              activeStroke = {
-                points: [touchPoint, touchPoint],
-                color: brushColor,
-                size: brushSize,
-                eraser: isErasing,
-                type: 'line'
-              };
-              redraw();
-              return;
-            }
-            const endPoint = lineDraftCurrentPoint || touchPoint;
-            lineDraftCurrentPoint = endPoint;
-            if (activeStroke && activeStroke.type === 'line') {
-              activeStroke.points[1] = endPoint;
-            } else {
-              activeStroke = {
-                points: [lineDraftStartPoint, endPoint],
-                color: brushColor,
-                size: brushSize,
-                eraser: isErasing,
-                type: 'line'
-              };
-            }
-            finalizeLineDraft();
-            return;
-          }
-          registerTouchPointer(event);
           return;
         }
         if (event.pointerType === 'mouse' && event.button !== undefined && event.button !== 0) return;
@@ -4673,7 +4641,8 @@
       }
 
       function continueDrawing(event) {
-        if (event.pointerType === 'touch' && activeTouches.has(event.pointerId)) return;
+        // Respinge palma/degetul și dacă un Apple Pencil este deja în contact cu ecranul.
+        if (event.pointerType === 'touch') return;
         if (activeDrawMode === 'line' && lineDraftStartPoint) {
           const nextPoint = pointFromEvent(event);
           if (!nextPoint) return;
@@ -4705,13 +4674,6 @@
 
       function finishDrawing(event) {
         if (event.pointerType === 'touch') {
-          activeTouches.delete(event.pointerId);
-          if (activeTouches.size < 2) {
-            pinchStartDistance = 0;
-            pinchStartZoom = zoomLevel;
-            pinchCenter = null;
-            panOrigin = { ...panOffset };
-          }
           return;
         }
         if (event.pointerId !== undefined && event.pointerId !== activeDrawingPointerId) return;
