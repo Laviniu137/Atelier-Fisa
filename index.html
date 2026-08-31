@@ -460,6 +460,29 @@
     .image-thumb-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 0 0 84px; width: 84px; }
     .image-thumb { position: relative; flex: 0 0 84px; width: 84px; height: 84px; border: 1px solid rgba(208, 193, 173, .65); border-radius: 14px; background: #f8f4ee; overflow: hidden; box-shadow: 0 4px 10px rgba(48, 38, 28, .06); cursor: pointer; transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease; }
     .image-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .image-thumb-delete {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      z-index: 2;
+      display: grid;
+      place-items: center;
+      width: 29px;
+      height: 29px;
+      min-height: 29px;
+      padding: 0;
+      border: 1px solid rgba(255, 232, 232, .9);
+      border-radius: 10px;
+      background: rgba(147, 43, 45, .93);
+      color: #fff;
+      box-shadow: 0 4px 10px rgba(86, 29, 29, .26);
+      opacity: .92;
+      transition: transform .16s ease, opacity .16s ease, background .16s ease;
+    }
+    .image-thumb-delete svg { width: 16px; height: 16px; }
+    .image-thumb:hover .image-thumb-delete,
+    .image-thumb-delete:focus-visible { opacity: 1; transform: scale(1.06); background: #b3262d; }
+    .image-thumb-delete:focus-visible { outline: 3px solid rgba(78, 166, 222, .7); outline-offset: 2px; }
     .image-thumb:hover:not(.is-active) { transform: translateY(-1px); box-shadow: 0 8px 16px rgba(48, 38, 28, .08); border-color: rgba(163, 129, 88, .35); }
     .image-thumb.is-active { border-color: rgba(140, 111, 75, .75); background: #fcf5eb; box-shadow: 0 10px 18px rgba(109, 76, 46, .12); transform: translateY(-1px); }
     .image-thumb.is-active::after { position: absolute; inset: 7px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, .86); content: ''; pointer-events: none; }
@@ -1633,7 +1656,6 @@
       <div class="header-actions">
         <button type="button" id="backToProjects"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path><path d="M9 12h12"></path></svg><span>Proiectele mele</span></button>
         <button type="button" id="addImage"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="M7 8l5-5 5 5"></path><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"></path></svg><span>Adaugă imagine</span></button>
-        <button type="button" id="removeImage" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg><span>Șterge imaginea</span></button>
         <input class="sr-only" id="imageInput" type="file" accept="image/*" multiple>
       </div>
     </header>
@@ -1831,8 +1853,7 @@
       const saveDialogTitle = document.getElementById('saveDialogTitle');
       const addImage = document.getElementById('addImage');
       const backToProjectsButton = document.getElementById('backToProjects');
-      const removeImageButton = document.getElementById('removeImage');
-      const imageInput = document.getElementById('imageInput');
+            const imageInput = document.getElementById('imageInput');
       const projectInput = document.getElementById('projectInput');
       const saveProjectDialog = document.getElementById('saveProjectDialog');
       const autosaveRecoveryDialog = document.getElementById('autosaveRecoveryDialog');
@@ -1855,6 +1876,8 @@
       const cancelClearAllButton = document.getElementById('cancelClearAll');
       const confirmClearAllButton = document.getElementById('confirmClearAll');
       const removeImageDialog = document.getElementById('removeImageDialog');
+      const removeImageDialogTitle = document.getElementById('removeImageDialogTitle');
+      const removeImageDialogDescription = document.getElementById('removeImageDialogDescription');
       const cancelRemoveImageButton = document.getElementById('cancelRemoveImage');
       const confirmRemoveImageButton = document.getElementById('confirmRemoveImage');
       const deleteNoteDialog = document.getElementById('deleteNoteDialog');
@@ -1948,6 +1971,7 @@
       let pendingDeleteProjectId = null;
       let interactiveNotes = [];
       let selectedNoteId = null;
+      let removeImageIndex = null;
       let draggingNoteId = null;
       let draggingNotePointerId = null;
       let draggingNoteMarker = null;
@@ -2028,7 +2052,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.5.6';
+      const APP_VERSION = '1.5.7';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -3818,7 +3842,6 @@
         exportProjectButton.disabled = !activeProjectId;
         saveImage.disabled = !ready;
         fullscreenButton.disabled = !ready;
-        removeImageButton.disabled = !ready;
         addNoteButton.disabled = !ready || activeTool !== 'notes';
         deleteSelectedNoteButton.disabled = !ready || !selectedNoteId || activeTool !== 'notes';
       }
@@ -3940,7 +3963,19 @@
           if (!image.dataUrl) {
             preview.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22 viewBox=%220 0 80 80%22%3E%3Crect width=%2280%22 height=%2280%22 fill=%22%23efe7dc%22/%3E%3Cpath d=%22M20 50l12-12 10 10 18-22 12 20v14H20z%22 fill=%22%23d3c5b5%22/%3E%3C/svg%3E';
           }
+          const deleteButton = document.createElement('button');
+          deleteButton.type = 'button';
+          deleteButton.className = 'image-thumb-delete';
+          deleteButton.title = isBlankSheet(image) ? 'Șterge foaia albă' : 'Șterge imaginea';
+          deleteButton.setAttribute('aria-label', deleteButton.title);
+          deleteButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg>';
+          deleteButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            openRemoveImageDialog(index);
+          });
           button.appendChild(preview);
+          button.appendChild(deleteButton);
 
           const caption = document.createElement('div');
           caption.className = 'image-thumb-caption';
@@ -5909,8 +5944,18 @@
         }
       }
 
-      function openRemoveImageDialog() {
-        if (!sourceImage) return;
+      function openRemoveImageDialog(index = activeImageIndex) {
+        sanitizeProjectImagesCollection();
+        if (!Number.isInteger(index) || !projectImages[index]) return;
+
+        removeImageIndex = index;
+        const image = projectImages[index];
+        const isBlank = isBlankSheet(image);
+        removeImageDialogTitle.textContent = isBlank ? 'Ștergere foaie albă' : 'Ștergere imagine';
+        removeImageDialogDescription.textContent = isBlank
+          ? 'Ești sigur că dorești să ștergi această foaie albă? Vor fi eliminate și toate desenele și notițele asociate.'
+          : 'Ești sigur că dorești să ștergi această imagine? Vor fi eliminate și toate desenele și notițele asociate.';
+        confirmRemoveImageButton.textContent = isBlank ? 'Șterge foaia' : 'Șterge imaginea';
         removeImageDialog.hidden = false;
         requestAnimationFrame(() => {
           cancelRemoveImageButton.focus();
@@ -5918,24 +5963,24 @@
       }
 
       function closeRemoveImageDialog() {
+        removeImageIndex = null;
         removeImageDialog.hidden = true;
       }
 
       function confirmRemoveImage() {
         sanitizeProjectImagesCollection();
+        const targetIndex = Number.isInteger(removeImageIndex) ? removeImageIndex : activeImageIndex;
+        removeImageIndex = null;
+        if (!projectImages[targetIndex]) return closeRemoveImageDialog();
+
+        projectImages.splice(targetIndex, 1);
         if (!projectImages.length) {
           resetCurrentProject();
           return;
         }
-        if (projectImages.length > 1) {
-          projectImages.splice(activeImageIndex, 1);
-          activeImageIndex = clamp(activeImageIndex, 0, Math.max(projectImages.length - 1, 0));
-          if (projectImages.length) {
-            activateImageAt(activeImageIndex, { persist: true });
-            return;
-          }
-        }
-        resetCurrentProject();
+
+        activeImageIndex = clamp(targetIndex, 0, projectImages.length - 1);
+        activateImageAt(activeImageIndex, { persist: true });
       }
 
       function applyCurrentBrushSettings() {
@@ -6632,8 +6677,7 @@
         event.preventDefault();
         await navigateToProjectManagerFromEditor();
       });
-      removeImageButton.addEventListener('click', openRemoveImageDialog);
-      autosaveRecoveryContinueButton.addEventListener('click', () => resolveAutosaveRecoveryChoice('continue'));
+            autosaveRecoveryContinueButton.addEventListener('click', () => resolveAutosaveRecoveryChoice('continue'));
       autosaveRecoveryStartNewButton.addEventListener('click', () => resolveAutosaveRecoveryChoice('new'));
       autosaveRecoveryDialog.addEventListener('pointerdown', (event) => {
         if (event.target !== autosaveRecoveryDialog) return;
@@ -6678,8 +6722,8 @@
       });
       cancelRemoveImageButton.addEventListener('click', closeRemoveImageDialog);
       confirmRemoveImageButton.addEventListener('click', () => {
-        closeRemoveImageDialog();
         confirmRemoveImage();
+        closeRemoveImageDialog();
       });
       removeImageDialog.addEventListener('pointerdown', (event) => {
         if (event.target !== removeImageDialog) return;
