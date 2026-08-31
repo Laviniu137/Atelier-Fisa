@@ -2004,6 +2004,8 @@
       let isDraggingNote = false;
       let isPanning = false;
       let activeTouches = new Map();
+      let fullscreenSwipe = null;
+      let fullscreenImageSwitchInProgress = false;
       let pinchStartDistance = 0;
       let pinchStartZoom = 1;
       let pinchCenter = null;
@@ -2045,6 +2047,7 @@
       const DOUBLE_TAP_ZOOM_LEVEL = 4;
       const AUTOSAVE_DEBOUNCE_MS = 2000;
       const STROKE_SAMPLE_MIN_DISTANCE_PX = 0.35;
+      const FULLSCREEN_SWIPE_MIN_DISTANCE_PX = 72;
       const databaseName = 'fisa-atelier-offline';
       const databaseVersion = 3;
       const legacyAutosaveStore = 'lucrari';
@@ -2052,7 +2055,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.9.3';
+      const APP_VERSION = '1.9.4';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -4348,7 +4351,10 @@
           }
         }
         if (fullscreenImageTitle) {
-          fullscreenImageTitle.textContent = currentImage ? getImageDisplayTitle(currentImage, activeImageIndex) : '';
+          const imageTitle = currentImage ? getImageDisplayTitle(currentImage, activeImageIndex) : '';
+          fullscreenImageTitle.textContent = projectImages.length > 1 && imageTitle
+            ? imageTitle + ' • ' + (activeImageIndex + 1) + '/' + projectImages.length
+            : imageTitle;
         }
       }
 
@@ -5042,6 +5048,44 @@
         }
       }
 
+      function beginFullscreenSwipe(event) {
+        if (!fullscreenMode || !sourceImage || event.pointerType !== 'touch' || activeTouches.size > 0) return;
+        fullscreenSwipe = {
+          pointerId: event.pointerId,
+          startX: event.clientX,
+          startY: event.clientY,
+          currentX: event.clientX,
+          currentY: event.clientY
+        };
+      }
+
+      function updateFullscreenSwipe(event) {
+        if (!fullscreenSwipe || event.pointerId !== fullscreenSwipe.pointerId) return;
+        fullscreenSwipe.currentX = event.clientX;
+        fullscreenSwipe.currentY = event.clientY;
+        event.preventDefault();
+      }
+
+      async function finishFullscreenSwipe(event) {
+        if (!fullscreenSwipe || event.pointerId !== fullscreenSwipe.pointerId) return;
+        const swipe = fullscreenSwipe;
+        fullscreenSwipe = null;
+        const deltaX = event.clientX - swipe.startX;
+        const deltaY = event.clientY - swipe.startY;
+        const isHorizontalSwipe = Math.abs(deltaX) >= FULLSCREEN_SWIPE_MIN_DISTANCE_PX
+          && Math.abs(deltaX) > Math.abs(deltaY) * 1.35;
+        if (!fullscreenMode || !isHorizontalSwipe || fullscreenImageSwitchInProgress || projectImages.length < 2) return;
+        const nextIndex = clamp(activeImageIndex + (deltaX < 0 ? 1 : -1), 0, projectImages.length - 1);
+        if (nextIndex === activeImageIndex) return;
+        fullscreenImageSwitchInProgress = true;
+        try {
+          clearLineToolPreview();
+          await activateImageAt(nextIndex, { persist: true });
+        } finally {
+          fullscreenImageSwitchInProgress = false;
+        }
+      }
+
       function beginDrawing(event) {
         if (placePendingNoteAtEvent(event)) return;
         if (!sourceImage || activeTool !== 'draw' || event.altKey) return;
@@ -5049,6 +5093,7 @@
         // Apple Pencil folosește în continuare evenimentele precise, inclusiv punctele coalescate.
         if (event.pointerType === 'touch') {
           event.preventDefault();
+          beginFullscreenSwipe(event);
           return;
         }
         if (event.pointerType === 'mouse' && event.button !== undefined && event.button !== 0) return;
@@ -5108,7 +5153,10 @@
 
       function continueDrawing(event) {
         // Respinge palma/degetul și dacă un Apple Pencil este deja în contact cu ecranul.
-        if (event.pointerType === 'touch') return;
+        if (event.pointerType === 'touch') {
+          updateFullscreenSwipe(event);
+          return;
+        }
         if (activeDrawMode === 'line' && lineDraftStartPoint) {
           const nextPoint = pointFromEvent(event);
           if (!nextPoint) return;
@@ -5141,6 +5189,7 @@
 
       function finishDrawing(event) {
         if (event.pointerType === 'touch') {
+          finishFullscreenSwipe(event);
           return;
         }
         if (event.pointerId !== undefined && event.pointerId !== activeDrawingPointerId) return;
@@ -6325,7 +6374,7 @@
         brushColor = '#000000';
         lastPenSize = 3;
         lastEraserSize = 8;
-        brushSize = 4;
+        brushSize = 3;
         isErasing = false;
         zoomLevel = 1;
         panOffset = { x: 0, y: 0 };
