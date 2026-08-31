@@ -2014,7 +2014,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.4.35';
+      const APP_VERSION = '1.4.36';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2110,7 +2110,17 @@
         await persistProjectRecord(nextRecord);
 
         if (nextRecord.id === activeProjectId && !projectDirty) {
-          await applyProjectState(nextRecord.payload);
+          // Sincronizarea actualizează datele, fără să trimită utilizatorul pe altă imagine.
+          // Pagina deschisă local rămâne selectată chiar dacă dispozitivul celălalt a salvat
+          // proiectul având o altă imagine activă.
+          const activeImageId = projectImages[activeImageIndex]?.id || null;
+          const matchingImageIndex = activeImageId
+            ? nextRecord.payload.images?.findIndex((image) => image?.id === activeImageId)
+            : -1;
+          const payloadForCurrentView = matchingImageIndex >= 0
+            ? { ...nextRecord.payload, activeImageIndex: matchingImageIndex }
+            : nextRecord.payload;
+          await applyProjectState(payloadForCurrentView);
         }
         return nextRecord;
       }
@@ -2879,7 +2889,11 @@
           activeImageIndex = 0;
           return;
         }
-        projectImages = projectImages.filter((image) => isValidProjectImageEntry(image));
+        projectImages = projectImages
+          .filter((image) => isValidProjectImageEntry(image))
+          .map((image) => isBlankSheet(image)
+            ? { ...image, dataUrl: createBlankSheetDataUrl(), type: 'image/svg+xml' }
+            : image);
         if (!projectImages.length) {
           activeImageIndex = 0;
           return;
@@ -3910,7 +3924,7 @@
           button.setAttribute('aria-label', displayTitle);
           button.addEventListener('click', () => {
             if (index === activeImageIndex) return;
-            activateImageAt(index, { persist: false });
+            activateImageAt(index, { persist: true });
           });
 
           const preview = document.createElement('img');
@@ -6116,15 +6130,25 @@
         });
       }
 
+      function isBlankSheet(image) {
+        const title = String(image?.title || image?.name || '').trim();
+        return image?.type === 'image/svg+xml' && /^Foaie albă(?:\s+\d+)?$/i.test(title);
+      }
+
+      function createBlankSheetDataUrl() {
+        // 4:3 folosește mai bine spațiul editorului, pe PC și tabletă.
+        const blankSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900"><rect width="1200" height="900" fill="white"/></svg>';
+        return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(blankSvg);
+      }
+
       async function createBlankSheet() {
         const blankSheetNumber = projectImages.filter((image) => String(image?.title || '').startsWith('Foaie albă')).length + 1;
         const title = blankSheetNumber === 1 ? 'Foaie albă' : `Foaie albă ${blankSheetNumber}`;
-        const blankSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000"><rect width="1600" height="1000" fill="white"/></svg>';
         const imageEntry = {
           id: createNoteId(),
           name: title,
           title,
-          dataUrl: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(blankSvg),
+          dataUrl: createBlankSheetDataUrl(),
           type: 'image/svg+xml',
           strokes: [],
           notes: [],
