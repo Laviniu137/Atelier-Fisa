@@ -453,8 +453,11 @@
     .image-thumb.is-active::after { position: absolute; inset: 7px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, .86); content: ''; pointer-events: none; }
     .image-thumb-caption { display: flex; align-items: center; justify-content: center; max-width: 84px; width: 100%; }
     .image-thumb-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; font-size: .68rem; color: #5b5142; text-align: center; }
-    .thumbnail-add-btn { flex: 0 0 auto; min-width: 104px; min-height: 84px; padding: 8px 10px; border-style: dashed; border-color: rgba(163, 129, 88, .3); background: linear-gradient(180deg, #fbf7f1 0%, #f4eadf 100%); color: #4f4131; border-radius: 14px; box-shadow: inset 0 1px 0 rgba(255,255,255,.5); transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+    .gallery-add-actions { display: grid; grid-template-columns: repeat(2, minmax(104px, 1fr)); gap: 8px; flex: 0 0 auto; }
+    .thumbnail-add-btn { width: 100%; min-width: 104px; min-height: 84px; padding: 8px 10px; border-style: dashed; border-color: rgba(163, 129, 88, .3); background: linear-gradient(180deg, #fbf7f1 0%, #f4eadf 100%); color: #4f4131; border-radius: 14px; box-shadow: inset 0 1px 0 rgba(255,255,255,.5); transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+    .thumbnail-add-note-btn { border-color: rgba(105, 131, 116, .42); background: linear-gradient(180deg, #f7fbf8 0%, #e8f0e9 100%); color: #355343; }
     .thumbnail-add-btn:hover:not(:disabled) { transform: translateY(-1px); border-color: rgba(163, 129, 88, .5); box-shadow: 0 8px 16px rgba(62, 49, 31, .08); }
+    .thumbnail-add-note-btn:hover:not(:disabled) { border-color: rgba(71, 112, 90, .6); }
     .mode-switcher {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1683,7 +1686,10 @@
         </div>
         <div class="image-gallery" aria-label="Miniaturi imagini">
           <div class="thumbnail-strip" id="thumbnailStrip"></div>
-          <button type="button" id="thumbnailAddImage" class="thumbnail-add-btn">+ Adaugă imagine</button>
+          <div class="gallery-add-actions">
+            <button type="button" id="thumbnailAddBlankSheet" class="thumbnail-add-btn thumbnail-add-note-btn">+ Notă</button>
+            <button type="button" id="thumbnailAddImage" class="thumbnail-add-btn">+ Adaugă imagine</button>
+          </div>
         </div>
         <div class="mode-switcher" role="toolbar" aria-label="Mod de lucru">
           <button type="button" id="drawModeBtn" class="active">Desen</button>
@@ -1916,6 +1922,7 @@
       const fullscreenClearBtn = document.getElementById('fullscreenClearBtn');
       const fullscreenCloseToolbarBtn = document.getElementById('fullscreenCloseToolbarBtn');
       const thumbnailStrip = document.getElementById('thumbnailStrip');
+      const thumbnailAddBlankSheetButton = document.getElementById('thumbnailAddBlankSheet');
       const thumbnailAddImageButton = document.getElementById('thumbnailAddImage');
       const imageTitleLabel = document.getElementById('imageLabel');
       const fullscreenImageTitle = document.getElementById('fullscreenImageTitle');
@@ -2051,7 +2058,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.4.32';
+      const APP_VERSION = '1.4.33';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -6153,6 +6160,37 @@
         });
       }
 
+      async function createBlankSheet() {
+        const blankSheetNumber = projectImages.filter((image) => String(image?.title || '').startsWith('Foaie albă')).length + 1;
+        const title = blankSheetNumber === 1 ? 'Foaie albă' : `Foaie albă ${blankSheetNumber}`;
+        const blankSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000"><rect width="1600" height="1000" fill="white"/></svg>';
+        const imageEntry = {
+          id: createNoteId(),
+          name: title,
+          title,
+          dataUrl: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(blankSvg),
+          type: 'image/svg+xml',
+          strokes: [],
+          notes: [],
+          zoom: 1,
+          pan: { x: 0, y: 0 },
+          activeTool: 'draw',
+          selectedNoteId: null,
+          selectedNoteMode: 'text',
+          drawSettings: {
+            color: '#000000',
+            size: 4,
+            eraser: false,
+            lastPenSize: 4,
+            lastEraserSize: 8
+          }
+        };
+        projectImages.push(imageEntry);
+        sanitizeProjectImagesCollection();
+        activeImageIndex = projectImages.length - 1;
+        await activateImageAt(activeImageIndex, { persist: true });
+      }
+
       function clearCurrentImageData() {
         activeStroke = null;
         redoStack = [];
@@ -6387,6 +6425,12 @@
         event.preventDefault();
         imageInput.click();
       });
+      if (thumbnailAddBlankSheetButton) {
+        thumbnailAddBlankSheetButton.addEventListener('click', async (event) => {
+          event.preventDefault();
+          await createBlankSheet();
+        });
+      }
       thumbnailAddImageButton.addEventListener('click', (event) => {
         event.preventDefault();
         imageInput.click();
