@@ -2046,7 +2046,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.8.0';
+      const APP_VERSION = '1.8.1';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2242,8 +2242,8 @@
         await initializeFirebaseSync();
         if (!firebaseAuth) throw new Error('Firebase nu este disponibil.');
         const provider = new window.firebase.auth.GoogleAuthProvider();
-        const isAppleMobile = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-        if (isAppleMobile) return firebaseAuth.signInWithRedirect(provider);
+        // Pe iPad, redirect-ul Firebase folosește stocare între domenii, pe care Safari o blochează.
+        // O fereastră Google deschisă direct de atingerea utilizatorului păstrează sesiunea corect.
         return firebaseAuth.signInWithPopup(provider);
       }
 
