@@ -2039,7 +2039,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.5.8';
+      const APP_VERSION = '1.5.9';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -3951,7 +3951,7 @@
           if (!image.dataUrl) {
             preview.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22 viewBox=%220 0 80 80%22%3E%3Crect width=%2280%22 height=%2280%22 fill=%22%23efe7dc%22/%3E%3Cpath d=%22M20 50l12-12 10 10 18-22 12 20v14H20z%22 fill=%22%23d3c5b5%22/%3E%3C/svg%3E';
           }
-
+          button.appendChild(preview);
 
           const caption = document.createElement('div');
           caption.className = 'image-thumb-caption';
