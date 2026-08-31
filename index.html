@@ -2042,7 +2042,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.7.3';
+      const APP_VERSION = '1.7.4';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2679,11 +2679,16 @@
         }
 
         pendingCloudRecords.delete(projectId);
-        if (googleDriveConnected) {
-          if (syncCloud) { const deleted = (await getMetaValue(googleDriveTombstonesKey)) || {}; deleted[projectId] = new Date().toISOString(); await setMetaValue(googleDriveTombstonesKey, deleted); scheduleGoogleDriveSync(); }
+        // Marcăm imediat ștergerea, inclusiv dacă Drive este temporar deconectat.
+        // Astfel o copie veche din celălalt dispozitiv nu poate readuce proiectul.
+        if (syncCloud) {
+          const deleted = (await getMetaValue(googleDriveTombstonesKey)) || {};
+          deleted[projectId] = new Date().toISOString();
+          await setMetaValue(googleDriveTombstonesKey, deleted);
+          if (googleDriveConnected) scheduleGoogleDriveSync();
           return;
         }
-        if (!syncCloud || !cloudUser) return;
+        if (!cloudUser) return;
         try {
           await deleteProjectFromCloud(projectId);
           pendingCloudDeletes.delete(projectId);
