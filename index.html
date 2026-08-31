@@ -2164,10 +2164,12 @@
           const client = window.google.accounts.oauth2.initTokenClient({ client_id: GOOGLE_DRIVE_CLIENT_ID, scope: 'https://www.googleapis.com/auth/drive.appdata', callback: (r) => {
             if (!r?.access_token) return reject(new Error(r?.error || 'Autorizare anulată'));
             googleDriveToken = r.access_token; googleDriveTokenExpires = Date.now() + (Number(r.expires_in) || 3500) * 1000; resolve(googleDriveToken);
-          }});
+          }, error_callback: (error) => reject(new Error(error?.message || error?.type || 'Fereastra Google nu a putut fi deschisă')) });
           const timeout = window.setTimeout(() => reject(new Error('Google Drive nu a răspuns la timp.')), 15000);
           const originalCallback = client.callback;
+          const originalErrorCallback = client.error_callback;
           client.callback = (response) => { window.clearTimeout(timeout); originalCallback(response); };
+          client.error_callback = (error) => { window.clearTimeout(timeout); originalErrorCallback(error); };
           client.requestAccessToken({ prompt: interactive ? 'select_account' : '' });
         });
       }
