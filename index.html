@@ -2046,7 +2046,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.8.6';
+      const APP_VERSION = '1.8.7';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2078,7 +2078,7 @@
       const firebaseConfig = { apiKey: 'AIzaSyCMUavm_4Uc66Gv0BFjsm6UsPXIAeu6kYE', authDomain: 'atelier-mobila-cloud.firebaseapp.com', projectId: 'atelier-mobila-cloud', appId: '1:242123502161:web:590fd44106e4cc67533e70' };
       const firebaseSyncCollection = 'atelierFisaSyncV1';
       const firebaseChunkSize = 480000;
-      let firebaseApp = null, firebaseAuth = null, firebaseDb = null, firebaseUser = null, firebaseManifestRef = null, firebaseManifest = null, firebaseManifestUnsubscribe = null, firebaseSyncTimer = null, firebaseLiveRefreshTimer = null, firebaseRunning = false, firebasePendingRemote = null, firebaseInitialized = false, firebaseLastRemoteUpdatedAt = '';
+      let firebaseApp = null, firebaseAuth = null, firebaseDb = null, firebaseUser = null, firebaseManifestRef = null, firebaseManifest = null, firebaseManifestUnsubscribe = null, firebaseSyncTimer = null, firebaseLiveRefreshTimer = null, firebaseRunning = false, firebasePendingRemote = null, firebaseManagerRefreshTimer = null, firebaseManagerLastInteractionAt = Date.now(), firebaseInitialized = false, firebaseLastRemoteUpdatedAt = '';
 
       let googleDriveToken = null, googleDriveTokenExpires = 0, googleDriveFileId = null, googleDriveRemoteModified = '', googleDriveConnected = false, googleDriveAuthorizationNeeded = false, googleDriveTimer = null, googleDrivePoller = null, googleDriveRunning = false;
       let cloudClient = null;
@@ -2240,6 +2240,38 @@
         window.clearTimeout(firebaseSyncTimer);
         firebaseSyncTimer = window.setTimeout(() => firebaseUploadRecord(record).catch((error) => console.warn('Proiectul rămâne salvat local până revine sincronizarea Firebase.', error)), 750);
       }
+      function canAutoRefreshProjectManager() {
+        const blockingDialogs = [cloudAccountDialog, deleteProjectDialog, projectSaveDialog, autosaveRecoveryDialog, clearAllDialog, removeImageDialog, exportImageDialog, exportProjectDialog, deleteNoteDialog, pencilEditorOverlay, pencilUnsavedDialog];
+        return Boolean(
+          firebaseUser
+          && !projectManagerView.hidden
+          && !projectDirty
+          && document.visibilityState === 'visible'
+          && Date.now() - firebaseManagerLastInteractionAt > 4500
+          && !blockingDialogs.some((dialog) => dialog && !dialog.hidden)
+        );
+      }
+      async function refreshProjectManagerFromFirebaseFallback() {
+        if (!canAutoRefreshProjectManager()) return;
+        try {
+          const token = await firebaseUser.getIdToken();
+          const url = 'https://firestore.googleapis.com/v1/projects/' + encodeURIComponent(firebaseConfig.projectId) + '/databases/(default)/documents/' + firebaseSyncCollection + '/' + encodeURIComponent(firebaseUser.uid) + '/state/manifest';
+          const response = await fetch(url, { headers: { Authorization: 'Bearer ' + token }, cache: 'no-store' });
+          if (!response.ok) return;
+          const documentData = await response.json();
+          const remoteUpdatedAt = documentData?.fields?.updatedAt?.stringValue || '';
+          // Dacă listener-ul Safari a fost întrerupt, reîncărcăm doar lista, nu editorul.
+          // Pornirea aplicației preia ultima stare locală și din Firebase, fără intervenția utilizatorului.
+          if (remoteUpdatedAt && remoteUpdatedAt !== firebaseLastRemoteUpdatedAt) window.location.reload();
+        } catch (error) {
+          console.warn('Verificarea automată a proiectelor va reîncerca.', error);
+        }
+      }
+      function startFirebaseManagerRefreshFallback() {
+        window.clearInterval(firebaseManagerRefreshTimer);
+        firebaseManagerRefreshTimer = window.setInterval(refreshProjectManagerFromFirebaseFallback, 5000);
+      }
+
       async function firebaseRefreshFromCloud() {
         if (!firebaseUser || !firebaseDb || firebaseRunning) return;
         try {
@@ -2278,6 +2310,7 @@
           firebaseReconcile(data).catch((error) => console.warn('Actualizarea live Firebase a eșuat.', error));
         }, (error) => console.warn('Conexiunea live Firebase a eșuat.', error));
         startFirebaseLiveRefresh();
+        startFirebaseManagerRefreshFallback();
         await firebaseRefreshFromCloud();
       }
       async function initializeFirebaseSync() {
@@ -7304,6 +7337,8 @@
       canvas.addEventListener('pointerup', finishDrawing, { passive: false });
       canvas.addEventListener('pointercancel', finishDrawing, { passive: false });
       canvas.addEventListener('gesturestart', (event) => event.preventDefault(), { passive: false });
+      document.addEventListener('pointerdown', () => { firebaseManagerLastInteractionAt = Date.now(); }, { capture: true, passive: true });
+      document.addEventListener('keydown', () => { firebaseManagerLastInteractionAt = Date.now(); }, { capture: true });
       document.addEventListener('click', (event) => {
         const detailsList = document.querySelectorAll('.project-card-menu[open]');
         detailsList.forEach((details) => {
