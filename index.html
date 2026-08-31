@@ -392,6 +392,17 @@
     .image-stage { touch-action: none; }
     .note-marker { position: absolute; display: grid; place-items: center; width: 31px; height: 31px; transform: translate(-50%, -50%) scale(var(--note-marker-screen-scale, 1)); transform-origin: center; border: 0; border-radius: 999px; background: linear-gradient(140deg, #8b5e3c, #6a3d22); color: #fffdfa; font-weight: 800; font-size: .78rem; box-shadow: 0 6px 14px rgba(61, 39, 23, .22); cursor: grab; pointer-events: auto; touch-action: none; -webkit-tap-highlight-color: transparent; }
     .note-marker:active { cursor: grabbing; }
+    .note-marker.is-placement-pending {
+      outline: 3px solid rgba(121, 216, 255, .9);
+      outline-offset: 3px;
+      animation: note-placement-pulse 1.15s ease-in-out infinite;
+    }
+    @keyframes note-placement-pulse {
+      50% {
+        transform: translate(-50%, -50%) scale(calc(var(--note-marker-screen-scale, 1) * 1.16));
+        box-shadow: 0 0 0 9px rgba(121, 216, 255, .14), 0 8px 18px rgba(26, 82, 110, .28);
+      }
+    }
     .note-marker.selected { background: linear-gradient(140deg, #2f6f51, #1f4e3d); transform: translate(-50%, -50%) scale(calc(var(--note-marker-screen-scale, 1) * 1.03)); }
     .empty { max-width: 290px; padding: 24px; color: #7c7265; text-align: center; font-size: .92rem; line-height: 1.55; }
     .toolbar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
@@ -1942,6 +1953,7 @@
       let draggingNoteMarker = null;
       let pendingDraggedPointer = null;
       let noteDragAnimationFrame = null;
+    let pendingNotePlacementId = null;
       let activeTool = 'draw';
       let previousFullscreenTool = 'draw';
       let selectedNoteMode = 'text';
@@ -2016,7 +2028,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.5.5';
+      const APP_VERSION = '1.5.6';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -4580,6 +4592,7 @@
       }
 
       function beginDrawing(event) {
+        if (placePendingNoteAtEvent(event)) return;
         if (!sourceImage || activeTool !== 'draw' || event.altKey) return;
         // În ecran complet, degetul sau palma nu pot începe o linie ori muta desenul.
         // Apple Pencil folosește în continuare evenimentele precise, inclusiv punctele coalescate.
@@ -5419,7 +5432,7 @@
         interactiveNotes.forEach((note, index) => {
           const marker = document.createElement('button');
           marker.type = 'button';
-          marker.className = `note-marker${selectedNoteId === note.id ? ' selected' : ''}`;
+          marker.className = `note-marker${selectedNoteId === note.id ? ' selected' : ''}${pendingNotePlacementId === note.id ? ' is-placement-pending' : ''}`;
           marker.dataset.noteId = note.id;
           positionMarkerElement(marker, note, frame);
           marker.textContent = String(index + 1);
@@ -5432,6 +5445,9 @@
             if (event.button !== undefined && event.button !== 0) return;
             event.preventDefault();
             event.stopPropagation();
+            if (pendingNotePlacementId === note.id) {
+              pendingNotePlacementId = null;
+            }
             selectNote(note.id);
             draggingNoteId = note.id;
             draggingNotePointerId = event.pointerId;
@@ -5467,7 +5483,31 @@
         setControls();
       }
 
-      function addNote() {
+      function placePendingNoteAtEvent(event) {
+      if (!pendingNotePlacementId || activeTool !== 'notes') return false;
+      if (event.pointerType === 'mouse' && event.button !== undefined && event.button !== 0) return false;
+
+      const note = interactiveNotes.find((item) => item.id === pendingNotePlacementId);
+      const point = clientPointToImageCoordinates(event.clientX, event.clientY);
+      if (!note || !point) {
+        pendingNotePlacementId = null;
+        return false;
+      }
+
+      event.preventDefault();
+      note.x = point.x;
+      note.y = point.y;
+      pendingNotePlacementId = null;
+      renderNotes();
+      renderNoteList();
+      syncSelectedNoteForm();
+      setControls();
+      scheduleSave();
+      showSaveToast('Nota a fost plasată exact pe imagine.');
+      return true;
+    }
+
+    function addNote() {
         const newNote = {
           id: createNoteId(),
           name: '',
@@ -5479,12 +5519,16 @@
         };
         interactiveNotes.push(newNote);
         selectNote(newNote.id);
+        pendingNotePlacementId = newNote.id;
+        renderNotes();
         scheduleSave();
+        showSaveToast('Atinge cu Apple Pencil sau cu degetul locul exact pentru notă.');
       }
 
       function deleteSelectedNote() {
         if (!selectedNoteId) return;
         interactiveNotes = interactiveNotes.filter((note) => note.id !== selectedNoteId);
+        if (pendingNotePlacementId === selectedNoteId) pendingNotePlacementId = null;
         selectedNoteId = interactiveNotes[0] ? interactiveNotes[0].id : null;
         renderNotes();
         renderNoteList();
