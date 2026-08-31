@@ -606,6 +606,7 @@
     .note-form { display: grid; gap: 10px; }
     .note-form label { color: #655947; font-size: .72rem; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
     .note-editor-fields { display: grid; gap: 8px; }
+    .note-editor-fields[hidden] { display: none !important; }
     .note-editor-empty {
       display: none !important;
     }
@@ -2014,7 +2015,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.5.0';
+      const APP_VERSION = '1.5.1';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
