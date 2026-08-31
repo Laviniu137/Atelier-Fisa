@@ -2046,7 +2046,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.8.1';
+      const APP_VERSION = '1.8.2';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2094,10 +2094,10 @@
       function getCloudStatusMessage() { if (firebaseUser) return 'Sincronizare live activă prin Firebase între tabletă și PC.'; if (firebaseInitialized) return 'Conectează contul Google pentru sincronizare live între tabletă și PC.'; if (!googleDriveConnected) return 'Conectează Google Drive o singură dată pe fiecare dispozitiv pentru sincronizare automată.'; return googleDriveAuthorizationNeeded ? 'Google Drive este configurat. Apasă „Sincronizează acum” pentru a reîmprospăta accesul.' : 'Google Drive este conectat. Proiectele se salvează local și se actualizează automat între tabletă și PC.'; }
       function updateCloudAccountUi() {
         if (cloudAccountStatus) cloudAccountStatus.textContent = getCloudStatusMessage();
-        if (cloudAccountButton) cloudAccountButton.innerHTML = '<span>' + (googleDriveConnected ? '☁️ Google Drive conectat' : '☁️ Google Drive') + '</span>';
+        if (cloudAccountButton) cloudAccountButton.innerHTML = '<span>' + (firebaseUser ? '☁️ Sincronizare activă' : firebaseInitialized ? '☁️ Conectează Google' : (googleDriveConnected ? '☁️ Google Drive conectat' : '☁️ Google Drive')) + '</span>';
         if (cloudLoginButton) { cloudLoginButton.hidden = Boolean(firebaseUser) || (googleDriveConnected && !googleDriveAuthorizationNeeded); cloudLoginButton.textContent = firebaseInitialized ? 'Conectează Google pentru sincronizare live' : (googleDriveConnected ? 'Reîmprospătează accesul Google Drive' : 'Conectează Google Drive'); }
-        if (cloudSyncNowButton) cloudSyncNowButton.hidden = !(firebaseUser || googleDriveConnected);
-        if (cloudUploadDeviceButton) cloudUploadDeviceButton.hidden = !(firebaseUser || googleDriveConnected);
+        if (cloudSyncNowButton) cloudSyncNowButton.hidden = firebaseInitialized ? !firebaseUser : !googleDriveConnected;
+        if (cloudUploadDeviceButton) cloudUploadDeviceButton.hidden = firebaseInitialized ? !firebaseUser : !googleDriveConnected;
         if (cloudLogoutButton) { cloudLogoutButton.hidden = !(firebaseUser || googleDriveConnected); cloudLogoutButton.textContent = firebaseUser ? 'Deconectează sincronizarea' : 'Deconectează Google Drive'; }
         [cloudEmailInput, cloudPasswordInput, document.querySelector('label[for="cloudEmail"]'), document.querySelector('label[for="cloudPassword"]')].forEach((el) => { if (el) el.hidden = true; });
       }
@@ -2244,7 +2244,10 @@
         const provider = new window.firebase.auth.GoogleAuthProvider();
         // Pe iPad, redirect-ul Firebase folosește stocare între domenii, pe care Safari o blochează.
         // O fereastră Google deschisă direct de atingerea utilizatorului păstrează sesiunea corect.
-        return firebaseAuth.signInWithPopup(provider);
+        const result = await firebaseAuth.signInWithPopup(provider);
+        firebaseUser = result.user || firebaseAuth.currentUser || null;
+        updateCloudAccountUi();
+        return result;
       }
 
       async function loadGoogleDriveIdentity() {
@@ -6897,8 +6900,12 @@
       cloudLoginButton.addEventListener('click', signInToCloud);
       cloudSyncNowButton.addEventListener('click', async () => {
         try {
-          if (firebaseUser) {
-            const remote = await firebaseManifestRef.get();
+          if (firebaseInitialized && !firebaseUser) {
+            throw new Error('AUTH_REQUIRED');
+          } else if (firebaseUser) {
+            const remoteRef = firebaseManifestRef || firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid).collection('state').doc('manifest');
+            firebaseManifestRef = remoteRef;
+            const remote = await remoteRef.get();
             await firebaseReconcile(remote.data() || { version: 1, records: {}, tombstones: {} });
           } else if (googleDriveConnected) {
             await googleDriveTokenFor(true);
@@ -6913,7 +6920,9 @@
         } catch (error) {
           googleDriveAuthorizationNeeded = googleDriveConnected;
           updateCloudAccountUi();
-          cloudAccountStatus.textContent = 'Sincronizarea nu a reușit acum. Proiectele locale nu au fost modificate. Verifică din nou conexiunea și încearcă peste câteva secunde.';
+          cloudAccountStatus.textContent = error?.message === 'AUTH_REQUIRED'
+            ? 'Conectarea Google nu este încă activă. Apasă „Conectează Google pentru sincronizare live”, alege contul Google și încearcă din nou.'
+            : 'Nu am putut sincroniza acum. Proiectele locale nu au fost modificate. Verifică internetul și încearcă din nou.';
           console.warn('Sincronizarea manuală a eșuat.', error);
         }
       });
