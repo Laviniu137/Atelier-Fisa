@@ -2016,7 +2016,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.5.4';
+      const APP_VERSION = '1.5.5';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -4843,6 +4843,9 @@
       function handleFloatingToolbarPointerUp(event) {
         if (event.pointerId !== floatingToolbarPointerId) return;
         event.preventDefault();
+        const isToggleTap = event.type === 'pointerup'
+          && event.currentTarget === fullscreenToolbarToggle
+          && !floatingToolbarMoved;
         try {
           if (fullscreenToolbarToggle && fullscreenToolbarToggle.hasPointerCapture(event.pointerId)) {
             fullscreenToolbarToggle.releasePointerCapture(event.pointerId);
@@ -4861,6 +4864,14 @@
         floatingToolbarPointerId = null;
         applyFloatingToolbarPosition();
         saveFloatingToolbarPosition();
+
+        // Pe tabletă, pointerdown + preventDefault nu garantează un click ulterior.
+        // Deschidem/închidem direct la ridicarea degetului, după ce știm că nu a fost tragere.
+        if (isToggleTap) {
+          ignoreToolbarToggleClick = true;
+          setFloatingToolbarOpen(!floatingToolbarOpen);
+          return;
+        }
         if (floatingToolbarMoved) {
           ignoreToolbarToggleClick = true;
         }
@@ -4879,6 +4890,9 @@
         if (!fullscreenMode) return;
         if (!fullscreenDrawingToolbar || !fullscreenToolbarToggle) return;
         if (fullscreenDrawingToolbar.contains(event.target) || fullscreenToolbarToggle.contains(event.target)) return;
+        if (floatingToolbarOpen) {
+          setFloatingToolbarOpen(false);
+        }
       }
 
       function renderNoteList() {
