@@ -2014,7 +2014,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.4.37';
+      const APP_VERSION = '1.4.38';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -4095,10 +4095,16 @@
         const width = photo.clientWidth;
         const height = photo.clientHeight;
         if (!width || !height) return;
-        canvas.style.left = `${photo.offsetLeft}px`;
-        canvas.style.top = `${photo.offsetTop}px`;
-        canvas.style.width = `${width}px`;
-        canvas.style.height = `${height}px`;
+        // Foaia albă are o margine interioară discretă: schițele nu mai ajung
+        // tăiate pe marginea foii, fără să schimbăm poziția pe fotografiile reale.
+        const isCurrentBlankSheet = isBlankSheet(projectImages[activeImageIndex]);
+        const safeInset = isCurrentBlankSheet ? Math.max(12, Math.round(Math.min(width, height) * 0.035)) : 0;
+        canvas.style.left = `${photo.offsetLeft + safeInset}px`;
+        canvas.style.top = `${photo.offsetTop + safeInset}px`;
+        canvas.style.width = `${Math.max(1, width - (safeInset * 2))}px`;
+        canvas.style.height = `${Math.max(1, height - (safeInset * 2))}px`;
+        canvas.style.right = 'auto';
+        canvas.style.bottom = 'auto';
       }
 
       function getCanvasDrawSize() {
