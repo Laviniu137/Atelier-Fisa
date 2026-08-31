@@ -2039,7 +2039,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.5.9';
+      const APP_VERSION = '1.6.0';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2067,6 +2067,7 @@
       let cloudRealtimeChannel = null;
       let cloudSyncTimer = null;
       let cloudPollingTimer = null;
+      let cloudReconnectTimer = null;
       const pendingCloudRecords = new Map();
       const pendingCloudDeletes = new Set();
 
@@ -2206,8 +2207,32 @@
 
       function stopCloudPolling() {
         window.clearInterval(cloudPollingTimer);
+        window.clearTimeout(cloudReconnectTimer);
         cloudPollingTimer = null;
+        cloudReconnectTimer = null;
       }
+
+      function retryCloudSyncAfterReconnect() {
+        window.clearTimeout(cloudReconnectTimer);
+        if (navigator.onLine === false || !cloudClient) return;
+
+        cloudReconnectTimer = window.setTimeout(async () => {
+          try {
+            if (!cloudUser) {
+              const { data, error } = await cloudClient.auth.getSession();
+              if (error) throw error;
+              if (!data?.session) return;
+              await setCloudSession(data.session);
+              return;
+            }
+            await synchronizeCloudProjects();
+          } catch (error) {
+            console.warn('Sincronizarea automată după revenirea internetului a eșuat. Proiectele rămân salvate local.', error);
+          }
+        }, 650);
+      }
+
+      window.addEventListener('online', retryCloudSyncAfterReconnect);
 
       async function synchronizeCloudProjects() {
         if (!cloudClient || !cloudUser) return;
