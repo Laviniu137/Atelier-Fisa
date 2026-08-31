@@ -2047,7 +2047,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.9.1';
+      const APP_VERSION = '1.9.2';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2078,6 +2078,7 @@
       const googleIdentityScriptUrl = 'https://accounts.google.com/gsi/client';
       const firebaseConfig = { apiKey: 'AIzaSyCMUavm_4Uc66Gv0BFjsm6UsPXIAeu6kYE', authDomain: 'atelier-mobila-cloud.firebaseapp.com', databaseURL: 'https://atelier-mobila-cloud-default-rtdb.europe-west1.firebasedatabase.app', projectId: 'atelier-mobila-cloud', appId: '1:242123502161:web:590fd44106e4cc67533e70' };
       const firebaseSyncCollection = 'atelierFisaSyncV1';
+      const isAppleTouchDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
       const firebaseChunkSize = 480000;
       let firebaseApp = null, firebaseAuth = null, firebaseDb = null, firebaseRealtimeDb = null, firebaseUser = null, firebaseManifestRef = null, firebaseManifest = null, firebaseManifestUnsubscribe = null, firebaseRealtimeSignalRef = null, firebaseRealtimeSignalListener = null, firebaseRealtimeSignalPrimed = false, firebaseSyncTimer = null, firebaseLiveRefreshTimer = null, firebaseRunning = false, firebasePendingRemote = null, firebaseManagerRefreshTimer = null, firebaseManagerLastInteractionAt = Date.now(), firebaseInitialized = false, firebaseLastRemoteUpdatedAt = '', firebaseLastRealtimeSignalAt = '';
 
@@ -2256,6 +2257,12 @@
       }
       async function refreshProjectManagerFromFirebaseFallback() {
         if (!canAutoRefreshProjectManager()) return;
+        // Safari poate suspenda conexiunile live ale aplicațiilor instalate pe iPad.
+        // În lista de proiecte este sigur să reîncărcăm automat: nu există desen sau editare în curs.
+        if (isAppleTouchDevice) {
+          window.location.reload();
+          return;
+        }
         try {
           const token = await firebaseUser.getIdToken();
           const url = 'https://firestore.googleapis.com/v1/projects/' + encodeURIComponent(firebaseConfig.projectId) + '/databases/(default)/documents/' + firebaseSyncCollection + '/' + encodeURIComponent(firebaseUser.uid) + '/state/manifest';
