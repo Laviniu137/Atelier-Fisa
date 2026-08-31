@@ -2042,7 +2042,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.7.4';
+      const APP_VERSION = '1.7.5';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2071,7 +2071,7 @@
       const googleDriveTombstonesKey = 'google-drive-tombstones-v1';
       const googleDriveFileName = 'atelier-fisa-projecte-v1.json';
       const googleIdentityScriptUrl = 'https://accounts.google.com/gsi/client';
-      let googleDriveToken = null, googleDriveTokenExpires = 0, googleDriveFileId = null, googleDriveRemoteModified = '', googleDriveConnected = false, googleDriveTimer = null, googleDrivePoller = null, googleDriveRunning = false;
+      let googleDriveToken = null, googleDriveTokenExpires = 0, googleDriveFileId = null, googleDriveRemoteModified = '', googleDriveConnected = false, googleDriveAuthorizationNeeded = false, googleDriveTimer = null, googleDrivePoller = null, googleDriveRunning = false;
       let cloudClient = null;
       let cloudUser = null;
       let cloudRealtimeChannel = null;
@@ -2082,11 +2082,11 @@
       const pendingCloudDeletes = new Set();
 
       function isCloudReady() { return Boolean(window.supabase && SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY); }
-      function getCloudStatusMessage() { return googleDriveConnected ? 'Google Drive este conectat. Proiectele se salvează local și se actualizează automat între tabletă și PC.' : 'Conectează Google Drive o singură dată pe fiecare dispozitiv pentru sincronizare automată.'; }
+      function getCloudStatusMessage() { if (!googleDriveConnected) return 'Conectează Google Drive o singură dată pe fiecare dispozitiv pentru sincronizare automată.'; return googleDriveAuthorizationNeeded ? 'Google Drive este configurat. Apasă „Sincronizează acum” pentru a reîmprospăta accesul.' : 'Google Drive este conectat. Proiectele se salvează local și se actualizează automat între tabletă și PC.'; }
       function updateCloudAccountUi() {
         if (cloudAccountStatus) cloudAccountStatus.textContent = getCloudStatusMessage();
         if (cloudAccountButton) cloudAccountButton.innerHTML = '<span>' + (googleDriveConnected ? '☁️ Google Drive conectat' : '☁️ Google Drive') + '</span>';
-        if (cloudLoginButton) { cloudLoginButton.hidden = googleDriveConnected; cloudLoginButton.textContent = 'Conectează Google Drive'; }
+        if (cloudLoginButton) { cloudLoginButton.hidden = googleDriveConnected && !googleDriveAuthorizationNeeded; cloudLoginButton.textContent = googleDriveConnected ? 'Reîmprospătează accesul Google Drive' : 'Conectează Google Drive'; }
         if (cloudSyncNowButton) cloudSyncNowButton.hidden = !googleDriveConnected;
         if (cloudUploadDeviceButton) cloudUploadDeviceButton.hidden = !googleDriveConnected;
         if (cloudLogoutButton) { cloudLogoutButton.hidden = !googleDriveConnected; cloudLogoutButton.textContent = 'Deconectează Google Drive'; }
@@ -2164,11 +2164,13 @@
           const client = window.google.accounts.oauth2.initTokenClient({ client_id: GOOGLE_DRIVE_CLIENT_ID, scope: 'https://www.googleapis.com/auth/drive.appdata', callback: (r) => {
             if (!r?.access_token) return reject(new Error(r?.error || 'Autorizare anulată'));
             googleDriveToken = r.access_token; googleDriveTokenExpires = Date.now() + (Number(r.expires_in) || 3500) * 1000; resolve(googleDriveToken);
-          }});
+          }, error_callback: (error) => reject(new Error(error?.message || error?.type || 'Fereastra Google nu a putut fi deschisă')) });
           const timeout = window.setTimeout(() => reject(new Error('Google Drive nu a răspuns la timp.')), 15000);
           const originalCallback = client.callback;
+          const originalErrorCallback = client.error_callback;
           client.callback = (response) => { window.clearTimeout(timeout); originalCallback(response); };
-          client.requestAccessToken({ prompt: interactive ? 'consent' : '' });
+          client.error_callback = (error) => { window.clearTimeout(timeout); originalErrorCallback(error); };
+          client.requestAccessToken({ prompt: interactive ? 'select_account' : '' });
         });
       }
       async function googleDriveFetch(url, options = {}) {
@@ -2243,13 +2245,13 @@
       function scheduleGoogleDriveSync() { if (!googleDriveConnected) return; clearTimeout(googleDriveTimer); googleDriveTimer = setTimeout(() => googleDriveSync().catch((e) => console.warn('Proiectele rămân salvate local.', e)), 1200); }
       function startGoogleDrivePolling() { clearInterval(googleDrivePoller); googleDrivePoller = setInterval(() => googleDriveSync({ poll: true }).catch(() => {}), 15000); }
       async function connectGoogleDrive() {
-        try { await googleDriveTokenFor(true); googleDriveConnected = true; await setMetaValue(googleDriveStateKey, true); await googleDriveSync(); startGoogleDrivePolling(); updateCloudAccountUi(); closeCloudAccountDialog(); showSaveToast('Google Drive este conectat. Proiectele se sincronizează automat.'); }
-        catch (e) { console.warn('Google Drive', e); if (cloudAccountStatus) cloudAccountStatus.textContent = 'Conectarea la Google Drive nu a reușit. Încearcă din nou.'; }
+        try { await googleDriveTokenFor(true); googleDriveConnected = true; googleDriveAuthorizationNeeded = false; await setMetaValue(googleDriveStateKey, true); await googleDriveSync(); startGoogleDrivePolling(); updateCloudAccountUi(); closeCloudAccountDialog(); showSaveToast('Google Drive este conectat. Proiectele se sincronizează automat.'); }
+        catch (e) { googleDriveAuthorizationNeeded = true; updateCloudAccountUi(); console.warn('Google Drive', e); if (cloudAccountStatus) cloudAccountStatus.textContent = 'Google Drive nu a acceptat accesul acum. Proiectele locale sunt în siguranță; încearcă din nou după câteva secunde.'; }
       }
       async function initializeGoogleDrive() {
         googleDriveConnected = Boolean(await getMetaValue(googleDriveStateKey));
         if (!googleDriveConnected) return updateCloudAccountUi();
-        try { await googleDriveTokenFor(); await googleDriveSync(); startGoogleDrivePolling(); } catch (_) { googleDriveConnected = false; }
+        try { await googleDriveTokenFor(); googleDriveAuthorizationNeeded = false; await googleDriveSync(); startGoogleDrivePolling(); } catch (_) { googleDriveAuthorizationNeeded = true; }
         updateCloudAccountUi();
       }
 
@@ -6776,10 +6778,19 @@
       cloudLoginButton.addEventListener('click', signInToCloud);
       cloudSyncNowButton.addEventListener('click', async () => {
         try {
-          await synchronizeCloudProjects();
+          if (googleDriveConnected) {
+            await googleDriveTokenFor(true);
+            googleDriveAuthorizationNeeded = false;
+            await googleDriveSync();
+          } else {
+            await synchronizeCloudProjects();
+          }
+          updateCloudAccountUi();
           showSaveToast('Proiectele sunt sincronizate.');
           closeCloudAccountDialog();
         } catch (error) {
+          googleDriveAuthorizationNeeded = googleDriveConnected;
+          updateCloudAccountUi();
           cloudAccountStatus.textContent = 'Sincronizarea nu a reușit acum. Proiectele locale nu au fost modificate. Verifică din nou conexiunea și încearcă peste câteva secunde.';
           console.warn('Sincronizarea manuală a eșuat.', error);
         }
