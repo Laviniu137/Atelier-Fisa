@@ -1501,6 +1501,7 @@
       <div class="save-dialog-actions cloud-account-actions">
         <button type="button" id="cloudLogin">Intră în cont</button>
         <button type="button" id="cloudSyncNow">Sincronizează acum</button>
+        <button type="button" id="cloudUploadDevice" hidden>Trimite proiectele de pe acest dispozitiv</button>
       </div>
       <div class="save-dialog-actions cloud-account-actions">
         <button type="button" id="cloudLogout">Ieși din cont</button>
@@ -1834,6 +1835,7 @@
       const cloudPasswordInput = document.getElementById('cloudPassword');
       const cloudLoginButton = document.getElementById('cloudLogin');
       const cloudSyncNowButton = document.getElementById('cloudSyncNow');
+      const cloudUploadDeviceButton = document.getElementById('cloudUploadDevice');
       const cloudLogoutButton = document.getElementById('cloudLogout');
       const closeCloudAccountButton = document.getElementById('closeCloudAccount');
       const appMain = document.querySelector('main.app');
@@ -2040,7 +2042,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.7.0';
+      const APP_VERSION = '1.7.1';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2085,6 +2087,7 @@
         if (cloudAccountButton) cloudAccountButton.innerHTML = '<span>' + (googleDriveConnected ? '☁️ Google Drive conectat' : '☁️ Google Drive') + '</span>';
         if (cloudLoginButton) { cloudLoginButton.hidden = googleDriveConnected; cloudLoginButton.textContent = 'Conectează Google Drive'; }
         if (cloudSyncNowButton) cloudSyncNowButton.hidden = !googleDriveConnected;
+        if (cloudUploadDeviceButton) cloudUploadDeviceButton.hidden = !googleDriveConnected;
         if (cloudLogoutButton) { cloudLogoutButton.hidden = !googleDriveConnected; cloudLogoutButton.textContent = 'Deconectează Google Drive'; }
         [cloudEmailInput, cloudPasswordInput, document.querySelector('label[for="cloudEmail"]'), document.querySelector('label[for="cloudPassword"]')].forEach((el) => { if (el) el.hidden = true; });
       }
@@ -2197,6 +2200,20 @@
           await renderProjectCards(); projectManagerNeedsRefresh = false;
         } finally { googleDriveRunning = false; }
       }
+      async function forceUploadGoogleDriveFromThisDevice() {
+        if (!googleDriveConnected) return;
+        // Recuperare sigură: acest dispozitiv este sursa confirmată, iar proiectele lui
+        // sunt scrise integral înainte de orice descărcare pe celălalt dispozitiv.
+        const records = await readAllProjectRecords();
+        if (!records.length) throw new Error('Nu există proiecte locale de trimis.');
+        await googleDriveRead();
+        const tombstones = (await getMetaValue(googleDriveTombstonesKey)) || {};
+        const projects = {};
+        records.forEach((record) => { if (record?.id) projects[record.id] = cloneProjectData(record); });
+        await googleDriveWrite({ version: 1, updatedAt: new Date().toISOString(), projects, tombstones });
+        showSaveToast(records.length + ' proiecte au fost trimise în Google Drive.');
+      }
+
       function scheduleGoogleDriveSync() { if (!googleDriveConnected) return; clearTimeout(googleDriveTimer); googleDriveTimer = setTimeout(() => googleDriveSync().catch((e) => console.warn('Proiectele rămân salvate local.', e)), 1200); }
       function startGoogleDrivePolling() { clearInterval(googleDrivePoller); googleDrivePoller = setInterval(() => googleDriveSync({ poll: true }).catch(() => {}), 15000); }
       async function connectGoogleDrive() {
@@ -6726,6 +6743,18 @@
         } catch (error) {
           cloudAccountStatus.textContent = 'Sincronizarea nu a reușit acum. Proiectele locale nu au fost modificate. Verifică din nou conexiunea și încearcă peste câteva secunde.';
           console.warn('Sincronizarea manuală a eșuat.', error);
+        }
+      });
+      cloudUploadDeviceButton.addEventListener('click', async () => {
+        cloudUploadDeviceButton.disabled = true;
+        try {
+          await forceUploadGoogleDriveFromThisDevice();
+          closeCloudAccountDialog();
+        } catch (error) {
+          console.warn('Încărcarea de recuperare în Google Drive a eșuat.', error);
+          cloudAccountStatus.textContent = 'Nu am putut trimite proiectele acum. Proiectele locale nu au fost modificate.';
+        } finally {
+          cloudUploadDeviceButton.disabled = false;
         }
       });
       cloudLogoutButton.addEventListener('click', async () => {
