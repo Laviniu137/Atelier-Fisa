@@ -2046,7 +2046,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.8.4';
+      const APP_VERSION = '1.8.5';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2237,9 +2237,31 @@
         window.clearInterval(firebaseLiveRefreshTimer);
         firebaseLiveRefreshTimer = window.setInterval(() => {
           if (navigator.onLine) firebaseRefreshFromCloud();
-        }, 30000);
+        }, 10000);
       }
 
+      async function activateFirebaseUser(user) {
+        firebaseUser = user || null;
+        if (firebaseManifestUnsubscribe) { firebaseManifestUnsubscribe(); firebaseManifestUnsubscribe = null; }
+        window.clearInterval(firebaseLiveRefreshTimer);
+        firebaseManifest = null;
+        firebaseLastRemoteUpdatedAt = '';
+        updateCloudAccountUi();
+        if (!firebaseUser || !firebaseDb) return;
+        firebaseManifestRef = firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid).collection('state').doc('manifest');
+        firebaseManifestUnsubscribe = firebaseManifestRef.onSnapshot((snapshot) => {
+          const data = snapshot.data();
+          if (!data) { firebaseReconcile({ version: 1, records: {}, tombstones: {} }).catch(() => {}); return; }
+          if (firebaseRunning) {
+            firebasePendingRemote = data;
+            return;
+          }
+          if (data.updatedAt && data.updatedAt === firebaseLastRemoteUpdatedAt) return;
+          firebaseReconcile(data).catch((error) => console.warn('Actualizarea live Firebase a eșuat.', error));
+        }, (error) => console.warn('Conexiunea live Firebase a eșuat.', error));
+        startFirebaseLiveRefresh();
+        await firebaseRefreshFromCloud();
+      }
       async function initializeFirebaseSync() {
         if (!firebaseAvailable() || firebaseInitialized) return;
         firebaseInitialized = true;
@@ -2252,27 +2274,8 @@
         }
         await firebaseAuth.setPersistence(window.firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
         await firebaseAuth.getRedirectResult().catch((error) => console.warn('Conectarea Firebase nu a fost finalizată.', error));
-        firebaseAuth.onAuthStateChanged(async (user) => {
-          firebaseUser = user || null;
-          if (firebaseManifestUnsubscribe) { firebaseManifestUnsubscribe(); firebaseManifestUnsubscribe = null; }
-          window.clearInterval(firebaseLiveRefreshTimer);
-          firebaseManifest = null;
-          firebaseLastRemoteUpdatedAt = '';
-          updateCloudAccountUi();
-          if (!firebaseUser) return;
-          firebaseManifestRef = firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid).collection('state').doc('manifest');
-          firebaseManifestUnsubscribe = firebaseManifestRef.onSnapshot((snapshot) => {
-            const data = snapshot.data();
-            if (!data) { firebaseReconcile({ version: 1, records: {}, tombstones: {} }).catch(() => {}); return; }
-            if (firebaseRunning) {
-              firebasePendingRemote = data;
-              return;
-            }
-            if (data.updatedAt && data.updatedAt === firebaseLastRemoteUpdatedAt) return;
-            firebaseReconcile(data).catch((error) => console.warn('Actualizarea live Firebase a eșuat.', error));
-          }, (error) => console.warn('Conexiunea live Firebase a eșuat.', error));
-          startFirebaseLiveRefresh();
-          firebaseRefreshFromCloud();
+        firebaseAuth.onAuthStateChanged((user) => {
+          activateFirebaseUser(user).catch((error) => console.warn('Pornirea sincronizării Firebase a eșuat.', error));
         });
       }
       async function connectFirebaseSync() {
@@ -2282,8 +2285,8 @@
         // Pe iPad, redirect-ul Firebase folosește stocare între domenii, pe care Safari o blochează.
         // O fereastră Google deschisă direct de atingerea utilizatorului păstrează sesiunea corect.
         const result = await firebaseAuth.signInWithPopup(provider);
-        firebaseUser = result.user || firebaseAuth.currentUser || null;
-        updateCloudAccountUi();
+        // Pornim abonarea live chiar acum; nu așteptăm un refresh sau callback-ul întârziat al browserului.
+        await activateFirebaseUser(result.user || firebaseAuth.currentUser || null);
         return result;
       }
 
