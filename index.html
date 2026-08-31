@@ -1705,6 +1705,9 @@
                   <button type="button" id="fullscreenLineBtn" class="drawing-tool-button" aria-label="Linie" title="Linie" aria-pressed="false">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5"></path></svg>
                   </button>
+                  <button type="button" id="fullscreenDashedLineBtn" class="drawing-tool-button" aria-label="Linie punctată" title="Linie punctată" aria-pressed="false" hidden>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 7.5 16.5"></path><path d="m9.5 14.5 2.5-2.5"></path><path d="m14 10 2.5-2.5"></path><path d="M18 6 19 5"></path></svg>
+                  </button>
                   <button type="button" id="fullscreenEraserBtn" class="drawing-tool-button" aria-label="Radieră" title="Radieră">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.2 15.4 11 7.2a2.2 2.2 0 0 0-3.1 0L3.8 11.3a2.2 2.2 0 0 0 0 3.1l3.3 3.3a2.2 2.2 0 0 0 1.5.6H17"></path><path d="M13 20h8"></path></svg>
                   </button>
@@ -1719,7 +1722,7 @@
               <div class="drawing-tool-group size-group">
                 <span class="tool-label">Grosime</span>
                 <div class="drawing-tool-group-row">
-                  <input id="fullscreenBrushSize" type="range" min="1" max="20" step="1" value="4">
+                  <input id="fullscreenBrushSize" type="range" min="3" max="20" step="1" value="3">
                   <span id="fullscreenBrushSizeValue">4 px</span>
                 </div>
               </div>
@@ -1902,6 +1905,7 @@
       const fullscreenBrushSizeValue = document.getElementById('fullscreenBrushSizeValue');
       const fullscreenPencilBtn = document.getElementById('fullscreenPencilBtn');
       const fullscreenLineBtn = document.getElementById('fullscreenLineBtn');
+      const fullscreenDashedLineBtn = document.getElementById('fullscreenDashedLineBtn');
       const fullscreenEraserBtn = document.getElementById('fullscreenEraserBtn');
       const fullscreenUndoBtn = document.getElementById('fullscreenUndoBtn');
       const fullscreenRedoBtn = document.getElementById('fullscreenRedoBtn');
@@ -1977,11 +1981,12 @@
       let previousFullscreenTool = 'draw';
       let selectedNoteMode = 'text';
       let activeDrawMode = 'freehand';
+      let lineDashed = false;
       let lineDraftStartPoint = null;
       let lineDraftCurrentPoint = null;
       let brushColor = '#000000';
-      let brushSize = 4;
-      let lastPenSize = 4;
+      let brushSize = 3;
+      let lastPenSize = 3;
       let lastEraserSize = 8;
       let isErasing = false;
       let redoStack = [];
@@ -2047,7 +2052,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.9.2';
+      const APP_VERSION = '1.9.3';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -3274,7 +3279,8 @@
             color: colorValue,
             size: Number.isFinite(sizeValue) ? clamp(sizeValue, 1, 20) : 4,
             eraser: Boolean(drawSettings.eraser),
-            lastPenSize: Number.isFinite(penSizeValue) ? clamp(penSizeValue, 1, 20) : 4,
+            lastPenSize: Number.isFinite(penSizeValue) ? clamp(penSizeValue, 3, 20) : 3,
+            lineDashed: Boolean(drawSettings.lineDashed),
             lastEraserSize: Number.isFinite(eraserSizeValue) ? clamp(eraserSizeValue, 1, 20) : 8
           }
         };
@@ -3566,7 +3572,8 @@
             color: '#000000',
             size: 4,
             eraser: false,
-            lastPenSize: 4,
+            lineDashed: false,
+            lastPenSize: 3,
             lastEraserSize: 8
           }
         })).filter(isValidProjectImageEntry);
@@ -4009,7 +4016,8 @@
                 color: imageRecord.drawSettings && typeof imageRecord.drawSettings.color === 'string' ? imageRecord.drawSettings.color : brushColor,
                 size: Number.isFinite(Number(imageRecord.drawSettings && imageRecord.drawSettings.size)) ? clamp(Number(imageRecord.drawSettings.size), 1, 20) : brushSize,
                 eraser: Boolean(imageRecord.drawSettings && imageRecord.drawSettings.eraser),
-                lastPenSize: Number.isFinite(Number(imageRecord.drawSettings && imageRecord.drawSettings.lastPenSize)) ? clamp(Number(imageRecord.drawSettings.lastPenSize), 1, 20) : lastPenSize,
+                lineDashed: Boolean(imageRecord.drawSettings && imageRecord.drawSettings.lineDashed),
+                lastPenSize: Number.isFinite(Number(imageRecord.drawSettings && imageRecord.drawSettings.lastPenSize)) ? clamp(Number(imageRecord.drawSettings.lastPenSize), 3, 20) : lastPenSize,
                 lastEraserSize: Number.isFinite(Number(imageRecord.drawSettings && imageRecord.drawSettings.lastEraserSize)) ? clamp(Number(imageRecord.drawSettings.lastEraserSize), 1, 20) : lastEraserSize
               }
             };
@@ -4409,6 +4417,7 @@
           color: activeStroke.color,
           size: activeStroke.size,
           eraser: Boolean(activeStroke.eraser),
+          dashed: Boolean(activeStroke.dashed),
           type: 'line'
         });
         redoStack = [];
@@ -4615,6 +4624,7 @@
         ctx.strokeStyle = isErasingStroke ? 'rgba(0,0,0,1)' : strokeColor;
         ctx.fillStyle = isErasingStroke ? 'rgba(0,0,0,1)' : strokeColor;
         ctx.globalCompositeOperation = isErasingStroke ? 'destination-out' : 'source-over';
+        if (stroke.type === 'line' && stroke.dashed && !isErasingStroke) ctx.setLineDash([Math.max(1.5, strokeSize * .6), Math.max(3.5, strokeSize * 2.25)]);
         if (stroke.type === 'line' && stroke.points.length >= 2) {
           const first = stroke.points[0];
           const second = stroke.points[1];
@@ -4646,6 +4656,7 @@
         targetContext.strokeStyle = isErasingStroke ? 'rgba(0,0,0,1)' : strokeColor;
         targetContext.fillStyle = isErasingStroke ? 'rgba(0,0,0,1)' : strokeColor;
         targetContext.globalCompositeOperation = isErasingStroke ? 'destination-out' : 'source-over';
+        if (stroke.type === 'line' && stroke.dashed && !isErasingStroke) targetContext.setLineDash([Math.max(1.5, strokeSize * .6), Math.max(3.5, strokeSize * 2.25)]);
         if (stroke.type === 'line' && stroke.points.length >= 2) {
           const first = stroke.points[0];
           const second = stroke.points[1];
@@ -4887,6 +4898,11 @@
           const lineActive = activeDrawMode === 'line' && !isErasing;
           fullscreenLineBtn.classList.toggle('active', lineActive);
           fullscreenLineBtn.setAttribute('aria-pressed', lineActive ? 'true' : 'false');
+          if (fullscreenDashedLineBtn) {
+            fullscreenDashedLineBtn.hidden = !lineActive;
+            fullscreenDashedLineBtn.classList.toggle('active', lineActive && lineDashed);
+            fullscreenDashedLineBtn.setAttribute('aria-pressed', lineActive && lineDashed ? 'true' : 'false');
+          }
         }
         if (fullscreenEraserBtn) {
           const eraserActive = isErasing;
@@ -5048,6 +5064,7 @@
               color: brushColor,
               size: brushSize,
               eraser: isErasing,
+              dashed: lineDashed,
               type: 'line'
             };
             activeDrawingPointerId = event.pointerId;
@@ -5065,6 +5082,7 @@
               color: brushColor,
               size: brushSize,
               eraser: isErasing,
+              dashed: lineDashed,
               type: 'line'
             };
           }
@@ -5103,6 +5121,7 @@
               color: brushColor,
               size: brushSize,
               eraser: isErasing,
+              dashed: lineDashed,
               type: 'line'
             };
           }
@@ -6304,7 +6323,7 @@
         selectedNoteMode = 'text';
         redoStack = [];
         brushColor = '#000000';
-        lastPenSize = 4;
+        lastPenSize = 3;
         lastEraserSize = 8;
         brushSize = 4;
         isErasing = false;
@@ -6392,6 +6411,7 @@
           size: brushSize,
           eraser: isErasing,
           lastPenSize,
+          lineDashed,
           lastEraserSize
         };
       }
@@ -6470,9 +6490,10 @@
           selectedNoteMode = currentImage.selectedNoteMode === 'pencil' ? 'pencil' : 'text';
           const savedSettings = currentImage.drawSettings && typeof currentImage.drawSettings === 'object' ? currentImage.drawSettings : {};
           brushColor = typeof savedSettings.color === 'string' && savedSettings.color ? savedSettings.color : '#000000';
-          lastPenSize = Number.isFinite(Number(savedSettings.lastPenSize)) ? clamp(Number(savedSettings.lastPenSize), 1, 20) : 4;
+          lastPenSize = Number.isFinite(Number(savedSettings.lastPenSize)) ? clamp(Number(savedSettings.lastPenSize), 3, 20) : 3;
           lastEraserSize = Number.isFinite(Number(savedSettings.lastEraserSize)) ? clamp(Number(savedSettings.lastEraserSize), 1, 20) : 8;
           isErasing = Boolean(savedSettings.eraser);
+          lineDashed = Boolean(savedSettings.lineDashed);
           brushSize = isErasing ? lastEraserSize : lastPenSize;
           redoStack = [];
           zoomLevel = typeof currentImage.zoom === 'number' ? currentImage.zoom : 1;
@@ -6534,9 +6555,10 @@
             selectedNoteMode = currentImage.selectedNoteMode === 'pencil' ? 'pencil' : 'text';
             const savedSettings = currentImage.drawSettings && typeof currentImage.drawSettings === 'object' ? currentImage.drawSettings : {};
             brushColor = typeof savedSettings.color === 'string' && savedSettings.color ? savedSettings.color : '#000000';
-            lastPenSize = Number.isFinite(Number(savedSettings.lastPenSize)) ? clamp(Number(savedSettings.lastPenSize), 1, 20) : 4;
+            lastPenSize = Number.isFinite(Number(savedSettings.lastPenSize)) ? clamp(Number(savedSettings.lastPenSize), 3, 20) : 3;
             lastEraserSize = Number.isFinite(Number(savedSettings.lastEraserSize)) ? clamp(Number(savedSettings.lastEraserSize), 1, 20) : 8;
             isErasing = Boolean(savedSettings.eraser);
+            lineDashed = Boolean(savedSettings.lineDashed);
             brushSize = isErasing ? lastEraserSize : lastPenSize;
             redoStack = [];
             zoomLevel = typeof currentImage.zoom === 'number' ? currentImage.zoom : 1;
@@ -6598,6 +6620,7 @@
               size: brushSize,
               eraser: isErasing,
               lastPenSize,
+              lineDashed,
               lastEraserSize
             }
           };
@@ -6640,7 +6663,8 @@
             color: '#000000',
             size: 4,
             eraser: false,
-            lastPenSize: 4,
+            lineDashed: false,
+            lastPenSize: 3,
             lastEraserSize: 8
           }
         };
@@ -6916,7 +6940,7 @@
         scheduleSave();
       });
       fullscreenBrushSize.addEventListener('input', (event) => {
-        const nextSize = clamp(Number(event.target.value) || 4, 1, 20);
+        const nextSize = clamp(Number(event.target.value) || 3, isErasing ? 1 : 3, 20);
         if (isErasing) {
           lastEraserSize = nextSize;
         } else {
@@ -6939,6 +6963,16 @@
       fullscreenLineBtn.addEventListener('click', () => {
         setActiveDrawMode(activeDrawMode === 'line' ? 'freehand' : 'line', { erasing: false });
       });
+      if (fullscreenDashedLineBtn) {
+        fullscreenDashedLineBtn.addEventListener('click', () => {
+          if (activeDrawMode !== 'line' || isErasing) setActiveDrawMode('line', { erasing: false });
+          lineDashed = !lineDashed;
+          if (activeStroke && activeStroke.type === 'line') activeStroke.dashed = lineDashed;
+          applyCurrentBrushSettings();
+          syncBrushControls();
+          scheduleSave();
+        });
+      }
       fullscreenEraserBtn.addEventListener('click', () => {
         setActiveDrawMode('freehand', { erasing: true });
         brushSize = lastEraserSize;
