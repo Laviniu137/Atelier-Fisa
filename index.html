@@ -2039,7 +2039,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.6.0';
+      const APP_VERSION = '1.6.1';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2198,11 +2198,11 @@
       }
 
       function startCloudPolling() {
+        // Proiectele includ fotografii. Re-descărcarea lor la fiecare 10 secunde
+        // consumă rapid traficul cloud; actualizările live vin prin Realtime,
+        // iar sincronizarea completă se face la conectare, reconectare sau manual.
         window.clearInterval(cloudPollingTimer);
-        if (!cloudClient || !cloudUser) return;
-        cloudPollingTimer = window.setInterval(() => {
-          synchronizeCloudProjects().catch((error) => console.warn('Verificarea automată a sincronizării a eșuat.', error));
-        }, 10000);
+        cloudPollingTimer = null;
       }
 
       function stopCloudPolling() {
