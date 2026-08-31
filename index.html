@@ -1137,20 +1137,21 @@
     }
 
     .fullscreen-drawing-toolbar {
-      --panel-line: rgba(255, 255, 255, .22);
-      --panel-fill: linear-gradient(145deg, rgba(34, 41, 53, .92), rgba(18, 24, 31, .78));
-      --panel-text: rgba(247, 251, 255, .97);
+      --panel-line: rgba(255, 255, 255, .2);
+      --panel-fill: linear-gradient(135deg, rgba(29, 36, 48, .96), rgba(18, 23, 31, .9));
+      --panel-text: #f7fbff;
       position: fixed;
-      inset: auto 0 14px 0;
       z-index: 1600;
       display: none;
       justify-content: center;
       pointer-events: none;
       opacity: 0;
-      transition: opacity .16s ease;
+      transform: translateY(8px) scale(.985);
+      transition: opacity .18s ease, transform .18s ease;
     }
     .fullscreen-drawing-toolbar.is-open {
       opacity: 1;
+      transform: translateY(0) scale(1);
       pointer-events: auto;
       display: flex;
     }
@@ -1158,18 +1159,15 @@
       display: flex;
       align-items: center;
       justify-content: flex-start;
-      gap: 8px;
-      width: auto;
-      min-width: min-content;
-      max-width: min(96vw, 760px);
-      min-height: 84px;
-      padding: 8px 12px;
+      width: min(94vw, 820px);
+      min-height: 76px;
+      padding: 10px;
       border: 1px solid var(--panel-line);
-      border-radius: 18px;
+      border-radius: 22px;
       background: var(--panel-fill);
       color: var(--panel-text);
-      box-shadow: 0 16px 30px rgba(2, 6, 13, .28), inset 0 1px 0 rgba(255, 255, 255, .16);
-      backdrop-filter: blur(24px) saturate(160%);
+      box-shadow: 0 18px 42px rgba(2, 8, 18, .38), inset 0 1px 0 rgba(255, 255, 255, .13);
+      backdrop-filter: blur(24px) saturate(155%);
       overflow-x: auto;
       scrollbar-width: none;
     }
@@ -1180,168 +1178,124 @@
       justify-content: flex-start;
       gap: 8px;
       flex-wrap: nowrap;
-      width: auto;
-      min-width: max-content;
-      max-width: 100%;
+      width: max-content;
+      min-width: 100%;
     }
     .drawing-tool-group {
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 0;
-      background: transparent;
+      gap: 8px;
+      padding: 8px 10px;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,.035));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
       min-width: 0;
       flex: 0 0 auto;
     }
     .drawing-tool-group-row {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 7px;
       flex-wrap: nowrap;
-      width: auto;
-      min-height: 34px;
+      min-height: 38px;
     }
     .tool-label {
       display: block;
-      font-size: .68rem;
-      font-weight: 700;
-      letter-spacing: .08em;
+      color: rgba(228, 237, 248, .72);
+      font-size: .64rem;
+      font-weight: 780;
+      letter-spacing: .075em;
       text-transform: uppercase;
-      line-height: 1;
-      color: rgba(236, 243, 255, .86);
+      line-height: 1.1;
     }
-    .quick-colors { display: flex; align-items: center; gap: 5px; flex-wrap: nowrap; }
+    .quick-colors { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
     .quick-color-button {
-      width: 24px;
-      height: 24px;
-      min-width: 24px;
-      min-height: 24px;
+      width: 27px;
+      height: 27px;
+      min-width: 27px;
+      min-height: 27px;
       padding: 0;
-      border: 1.5px solid rgba(255, 255, 255, .42);
+      border: 1.5px solid rgba(255, 255, 255, .48);
       border-radius: 999px;
       background: var(--swatch);
-      box-shadow: inset 0 0 0 1px rgba(5, 10, 16, .24), 0 3px 8px rgba(0, 0, 0, .18);
+      box-shadow: inset 0 0 0 1px rgba(5, 10, 16, .25), 0 3px 8px rgba(0, 0, 0, .2);
       transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
     }
-    .quick-color-button:hover:not(:disabled) {
-      transform: translateY(-1px) scale(1.03);
-      border-color: rgba(255, 255, 255, .9);
-      box-shadow: inset 0 0 0 1px rgba(5, 10, 16, .24), 0 6px 12px rgba(0, 0, 0, .2);
-    }
+    .quick-color-button:hover:not(:disabled) { transform: translateY(-1px) scale(1.06); border-color: white; }
     .quick-color-button.is-selected {
-      border-color: rgba(255, 255, 255, .98);
-      box-shadow: inset 0 0 0 1px rgba(9, 13, 20, .28), 0 0 0 3px rgba(255, 255, 255, .9), 0 0 12px rgba(126, 217, 255, .3);
-      transform: translateY(-1px) scale(1.05);
+      border-color: #fff;
+      box-shadow: inset 0 0 0 1px rgba(9,13,20,.28), 0 0 0 3px rgba(255,255,255,.86), 0 0 14px rgba(116,211,255,.42);
+      transform: scale(1.06);
     }
     #fullscreenColorPicker {
-      width: 30px;
-      height: 30px;
-      min-width: 30px;
-      min-height: 30px;
-      padding: 0;
-      border: 1px solid rgba(255, 255, 255, .32);
-      border-radius: 10px;
-      background: rgba(255, 255, 255, .08);
-      overflow: hidden;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 4px 10px rgba(0, 0, 0, .16);
-    }
-    #fullscreenColorPicker::-webkit-color-swatch-wrapper { padding: 0; }
-    #fullscreenColorPicker::-webkit-color-swatch { border: 0; border-radius: 8px; }
-    #fullscreenBrushSize {
-      flex: 1 1 88px;
-      min-width: 82px;
-      width: 88px;
-      height: 4px;
-      margin: 0;
-      -webkit-appearance: none;
-      appearance: none;
-      border-radius: 999px;
-      background: linear-gradient(to right, rgba(111, 208, 255, .95), rgba(255, 255, 255, .36));
-      outline: none;
-      transition: all .16s ease;
-      box-shadow: inset 0 1px 2px rgba(0,0,0,.16);
-    }
-    #fullscreenBrushSize::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 16px;
-      height: 16px;
-      border: 2px solid rgba(255, 255, 255, .95);
-      border-radius: 999px;
-      background: #f4fbff;
-      box-shadow: 0 5px 12px rgba(8, 14, 24, .3);
-      cursor: pointer;
-      transition: transform .16s ease;
-    }
-    #fullscreenBrushSize:hover::-webkit-slider-thumb {
-      transform: scale(1.08);
-    }
-    #fullscreenBrushSize::-moz-range-track {
-      height: 4px;
-      border-radius: 999px;
-      background: linear-gradient(to right, rgba(111, 208, 255, .95), rgba(255, 255, 255, .36));
-    }
-    #fullscreenBrushSize::-moz-range-thumb {
-      width: 16px;
-      height: 16px;
-      border: 2px solid rgba(255, 255, 255, .95);
-      border-radius: 999px;
-      background: #f4fbff;
-      box-shadow: 0 5px 12px rgba(8, 14, 24, .3);
-      cursor: pointer;
-      transition: transform .16s ease;
-    }
-    #fullscreenBrushSizeValue {
-      min-width: 40px;
-      flex-shrink: 0;
-      color: rgba(246, 251, 255, .96);
-      font-size: .7rem;
-      font-weight: 700;
-      letter-spacing: .02em;
-      text-align: center;
-      padding: 4px 7px;
-      border: 1px solid rgba(255,255,255,.16);
-      border-radius: 999px;
-      background: rgba(255,255,255,.1);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
-    }
-    .drawing-tool-button {
       width: 34px;
       height: 34px;
       min-width: 34px;
       min-height: 34px;
       padding: 0;
-      border: 1px solid rgba(255, 255, 255, .25);
-      border-radius: 10px;
-      background: linear-gradient(165deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, .05));
-      color: rgba(236, 243, 255, .94);
-      box-shadow: 0 3px 8px rgba(0, 0, 0, .16);
-      transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease, color .16s ease;
+      border: 1px solid rgba(255,255,255,.32);
+      border-radius: 11px;
+      background: rgba(255,255,255,.08);
+      overflow: hidden;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 4px 10px rgba(0,0,0,.18);
     }
-    .drawing-tool-button svg { width: 18px; height: 18px; stroke-width: 2; }
-    .drawing-tool-button:hover:not(:disabled) {
-      transform: translateY(-1px) scale(1.02);
-      border-color: rgba(255, 255, 255, .52);
-      box-shadow: 0 8px 16px rgba(0, 0, 0, .24);
-      background: linear-gradient(165deg, rgba(255, 255, 255, .24), rgba(255, 255, 255, .1));
+    #fullscreenColorPicker::-webkit-color-swatch-wrapper { padding: 0; }
+    #fullscreenColorPicker::-webkit-color-swatch { border: 0; border-radius: 9px; }
+    #fullscreenBrushSize {
+      width: 96px;
+      min-width: 96px;
+      height: 5px;
+      margin: 0;
+      -webkit-appearance: none;
+      appearance: none;
+      border-radius: 999px;
+      background: linear-gradient(to right, #79d8ff, rgba(255,255,255,.32));
+      box-shadow: inset 0 1px 2px rgba(0,0,0,.25);
+      outline: none;
     }
+    #fullscreenBrushSize::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid #fff;
+      border-radius: 999px;
+      background: #f4fbff;
+      box-shadow: 0 5px 12px rgba(8,14,24,.35);
+      cursor: pointer;
+    }
+    #fullscreenBrushSize::-moz-range-track { height: 5px; border-radius: 999px; background: linear-gradient(to right, #79d8ff, rgba(255,255,255,.32)); }
+    #fullscreenBrushSize::-moz-range-thumb { width: 18px; height: 18px; border: 2px solid #fff; border-radius: 999px; background: #f4fbff; box-shadow: 0 5px 12px rgba(8,14,24,.35); cursor: pointer; }
+    #fullscreenBrushSizeValue {
+      min-width: 44px;
+      color: #f6fbff;
+      font-size: .72rem;
+      font-weight: 750;
+      text-align: center;
+      padding: 6px 8px;
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 9px;
+      background: rgba(0,0,0,.16);
+    }
+    .drawing-tool-button {
+      width: 38px;
+      height: 38px;
+      min-width: 38px;
+      min-height: 38px;
+      padding: 0;
+      border: 1px solid rgba(255,255,255,.24);
+      border-radius: 11px;
+      background: linear-gradient(165deg, rgba(255,255,255,.18), rgba(255,255,255,.06));
+      color: rgba(242,247,255,.96);
+      box-shadow: 0 4px 10px rgba(0,0,0,.18);
+      transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease;
+    }
+    .drawing-tool-button svg { width: 19px; height: 19px; stroke-width: 2.1; }
+    .drawing-tool-button:hover:not(:disabled) { transform: translateY(-1px) scale(1.03); border-color: rgba(255,255,255,.58); box-shadow: 0 9px 17px rgba(0,0,0,.28); }
     .drawing-tool-button:active:not(:disabled) { transform: translateY(1px) scale(.97); }
-    .drawing-tool-button.active {
-      border-color: rgba(173, 227, 255, .8);
-      background: linear-gradient(165deg, rgba(127, 220, 255, .28), rgba(86, 177, 237, .24));
-      box-shadow: inset 0 0 0 1px rgba(228, 246, 255, .34), 0 0 0 1px rgba(255,255,255,.14), 0 10px 18px rgba(54, 120, 152, .25);
-      outline: 1px solid rgba(120, 195, 255, .62);
-      outline-offset: 1px;
-    }
-    .drawing-tool-button.active svg { color: #f7fdff; }
-    .drawing-tool-button.danger {
-      border-color: rgba(255, 126, 126, .44);
-      background: linear-gradient(165deg, rgba(255, 138, 138, .24), rgba(255, 120, 120, .14));
-    }
-    .drawing-tool-button.danger:hover:not(:disabled) {
-      border-color: rgba(255, 126, 126, .56);
-      box-shadow: 0 8px 16px rgba(0, 0, 0, .24);
-    }
+    .drawing-tool-button.active { border-color: #a9e6ff; background: linear-gradient(165deg, rgba(102,205,249,.45), rgba(50,139,205,.3)); box-shadow: inset 0 0 0 1px rgba(239,250,255,.44), 0 0 0 2px rgba(116,211,255,.24), 0 9px 18px rgba(40,125,170,.28); }
+    .drawing-tool-button.danger { border-color: rgba(255,141,150,.5); background: linear-gradient(165deg, rgba(255,132,142,.3), rgba(255,102,113,.14)); }
     .drawing-tool-button:disabled { opacity: .44; box-shadow: none; }
     .fullscreen-toolbar-close-fallback { display: none; }
 
@@ -2058,7 +2012,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.4.33';
+      const APP_VERSION = '1.4.34';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -6917,10 +6871,13 @@
               if (!worker || worker.state !== 'installed' || !navigator.serviceWorker.controller) return;
               const shouldReload = window.confirm('Este disponibilă o versiune nouă. Reîncarcă aplicația?');
               if (!shouldReload) return;
-              try {
-                await saveLastWork();
-              } catch (error) {
-                console.warn('Starea curentă nu a putut fi salvată înainte de actualizare.', error);
+              // Nu crea un proiect gol când aplicația se actualizează din ecranul „Proiectele mele”.
+              if (projectDirty && activeProjectId) {
+                try {
+                  await flushAutosave({ force: true });
+                } catch (error) {
+                  console.warn('Starea curentă nu a putut fi salvată înainte de actualizare.', error);
+                }
               }
               worker.postMessage({ type: 'SKIP_WAITING' });
             };
