@@ -2183,7 +2183,7 @@
           firebaseManifest = { ...current, version: 1, updatedAt: new Date().toISOString(), records, tombstones };
           transaction.set(manifestRef, firebaseManifest);
         });
-        await firebaseBroadcastRealtimeSignal();
+        await firebaseBroadcastRealtimeSignal().catch((error) => console.warn('Semnalul live va fi reîncercat la următoarea modificare.', error));
       }
       async function firebaseRecordDeletion(projectId) {
         if (!firebaseUser || !firebaseDb || !projectId) return;
@@ -2198,7 +2198,7 @@
           firebaseManifest = { ...current, version: 1, updatedAt: new Date().toISOString(), records, tombstones };
           transaction.set(manifestRef, firebaseManifest);
         });
-        await firebaseBroadcastRealtimeSignal();
+        await firebaseBroadcastRealtimeSignal().catch((error) => console.warn('Semnalul live va fi reîncercat la următoarea modificare.', error));
       }
       async function firebaseReconcile(remote) {
         if (!firebaseUser || !remote) return;
