@@ -2047,7 +2047,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.9.0';
+      const APP_VERSION = '1.9.1';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2079,7 +2079,7 @@
       const firebaseConfig = { apiKey: 'AIzaSyCMUavm_4Uc66Gv0BFjsm6UsPXIAeu6kYE', authDomain: 'atelier-mobila-cloud.firebaseapp.com', databaseURL: 'https://atelier-mobila-cloud-default-rtdb.europe-west1.firebasedatabase.app', projectId: 'atelier-mobila-cloud', appId: '1:242123502161:web:590fd44106e4cc67533e70' };
       const firebaseSyncCollection = 'atelierFisaSyncV1';
       const firebaseChunkSize = 480000;
-      let firebaseApp = null, firebaseAuth = null, firebaseDb = null, firebaseRealtimeDb = null, firebaseUser = null, firebaseManifestRef = null, firebaseManifest = null, firebaseManifestUnsubscribe = null, firebaseRealtimeSignalRef = null, firebaseRealtimeSignalListener = null, firebaseSyncTimer = null, firebaseLiveRefreshTimer = null, firebaseRunning = false, firebasePendingRemote = null, firebaseManagerRefreshTimer = null, firebaseManagerLastInteractionAt = Date.now(), firebaseInitialized = false, firebaseLastRemoteUpdatedAt = '', firebaseLastRealtimeSignalAt = '';
+      let firebaseApp = null, firebaseAuth = null, firebaseDb = null, firebaseRealtimeDb = null, firebaseUser = null, firebaseManifestRef = null, firebaseManifest = null, firebaseManifestUnsubscribe = null, firebaseRealtimeSignalRef = null, firebaseRealtimeSignalListener = null, firebaseRealtimeSignalPrimed = false, firebaseSyncTimer = null, firebaseLiveRefreshTimer = null, firebaseRunning = false, firebasePendingRemote = null, firebaseManagerRefreshTimer = null, firebaseManagerLastInteractionAt = Date.now(), firebaseInitialized = false, firebaseLastRemoteUpdatedAt = '', firebaseLastRealtimeSignalAt = '';
 
       let googleDriveToken = null, googleDriveTokenExpires = 0, googleDriveFileId = null, googleDriveRemoteModified = '', googleDriveConnected = false, googleDriveAuthorizationNeeded = false, googleDriveTimer = null, googleDrivePoller = null, googleDriveRunning = false;
       let cloudClient = null;
@@ -2286,6 +2286,7 @@
         if (firebaseRealtimeSignalRef && firebaseRealtimeSignalListener) firebaseRealtimeSignalRef.off('value', firebaseRealtimeSignalListener);
         firebaseRealtimeSignalRef = null;
         firebaseRealtimeSignalListener = null;
+        firebaseRealtimeSignalPrimed = false;
         firebaseLastRealtimeSignalAt = '';
       }
       function startFirebaseRealtimeSignal() {
@@ -2294,8 +2295,20 @@
         firebaseRealtimeSignalRef = firebaseRealtimeDb.ref(firebaseSyncCollection + '/' + firebaseUser.uid + '/signal');
         firebaseRealtimeSignalListener = (snapshot) => {
           const updatedAt = String(snapshot.val()?.updatedAt || '');
+          // Primul eveniment este doar starea curentă; nu reîncărcăm imediat după pornire.
+          if (!firebaseRealtimeSignalPrimed) {
+            firebaseRealtimeSignalPrimed = true;
+            firebaseLastRealtimeSignalAt = updatedAt;
+            return;
+          }
           if (!updatedAt || updatedAt === firebaseLastRealtimeSignalAt) return;
           firebaseLastRealtimeSignalAt = updatedAt;
+          // RTDB a primit o modificare de pe celălalt dispozitiv. În lista de proiecte,
+          // reîncărcarea este sigură și garantează afișarea imediată a noii stări.
+          if (canAutoRefreshProjectManager()) {
+            window.location.reload();
+            return;
+          }
           firebaseRefreshFromCloud();
         };
         firebaseRealtimeSignalRef.on('value', firebaseRealtimeSignalListener, (error) => console.warn('Conexiunea live Realtime Database a eșuat.', error));
