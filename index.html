@@ -2241,7 +2241,7 @@
         firebaseSyncTimer = window.setTimeout(() => firebaseUploadRecord(record).catch((error) => console.warn('Proiectul rămâne salvat local până revine sincronizarea Firebase.', error)), 750);
       }
       function canAutoRefreshProjectManager() {
-        const blockingDialogs = [cloudAccountDialog, deleteProjectDialog, projectSaveDialog, autosaveRecoveryDialog, clearAllDialog, removeImageDialog, exportImageDialog, exportProjectDialog, deleteNoteDialog, pencilEditorOverlay, pencilUnsavedDialog];
+        const blockingDialogs = [cloudAccountDialog, deleteProjectDialog, saveProjectDialog, autosaveRecoveryDialog, clearAllDialog, removeImageDialog, exportImageDialog, exportProjectDialog, deleteNoteDialog, pencilEditorOverlay, pencilUnsavedDialog];
         return Boolean(
           firebaseUser
           && !projectManagerView.hidden
