@@ -2042,7 +2042,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.7.1';
+      const APP_VERSION = '1.7.2';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2145,6 +2145,9 @@
             if (!r?.access_token) return reject(new Error(r?.error || 'Autorizare anulată'));
             googleDriveToken = r.access_token; googleDriveTokenExpires = Date.now() + (Number(r.expires_in) || 3500) * 1000; resolve(googleDriveToken);
           }});
+          const timeout = window.setTimeout(() => reject(new Error('Google Drive nu a răspuns la timp.')), 15000);
+          const originalCallback = client.callback;
+          client.callback = (response) => { window.clearTimeout(timeout); originalCallback(response); };
           client.requestAccessToken({ prompt: interactive ? 'consent' : '' });
         });
       }
@@ -2206,6 +2209,9 @@
         // sunt scrise integral înainte de orice descărcare pe celălalt dispozitiv.
         const records = await readAllProjectRecords();
         if (!records.length) throw new Error('Nu există proiecte locale de trimis.');
+        // Pe iPad tokenul Google poate expira între două sincronizări; cere acordul din nou,
+        // doar dacă este necesar, înainte să începem încărcarea de recuperare.
+        await googleDriveTokenFor(true);
         await googleDriveRead();
         const tombstones = (await getMetaValue(googleDriveTombstonesKey)) || {};
         const projects = {};
@@ -6752,7 +6758,7 @@
           closeCloudAccountDialog();
         } catch (error) {
           console.warn('Încărcarea de recuperare în Google Drive a eșuat.', error);
-          cloudAccountStatus.textContent = 'Nu am putut trimite proiectele acum. Proiectele locale nu au fost modificate.';
+          cloudAccountStatus.textContent = 'Nu am putut trimite proiectele. Alege din nou contul Google când apare fereastra și încearcă iar. Proiectele locale nu au fost modificate.';
         } finally {
           cloudUploadDeviceButton.disabled = false;
         }
