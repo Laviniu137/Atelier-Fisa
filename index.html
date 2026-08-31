@@ -2046,7 +2046,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.8.2';
+      const APP_VERSION = '1.8.3';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2078,7 +2078,7 @@
       const firebaseConfig = { apiKey: 'AIzaSyCMUavm_4Uc66Gv0BFjsm6UsPXIAeu6kYE', authDomain: 'atelier-mobila-cloud.firebaseapp.com', projectId: 'atelier-mobila-cloud', appId: '1:242123502161:web:590fd44106e4cc67533e70' };
       const firebaseSyncCollection = 'atelierFisaSyncV1';
       const firebaseChunkSize = 480000;
-      let firebaseApp = null, firebaseAuth = null, firebaseDb = null, firebaseUser = null, firebaseManifestRef = null, firebaseManifest = null, firebaseManifestUnsubscribe = null, firebaseSyncTimer = null, firebaseRunning = false, firebaseInitialized = false, firebaseLastRemoteUpdatedAt = '';
+      let firebaseApp = null, firebaseAuth = null, firebaseDb = null, firebaseUser = null, firebaseManifestRef = null, firebaseManifest = null, firebaseManifestUnsubscribe = null, firebaseSyncTimer = null, firebaseLiveRefreshTimer = null, firebaseRunning = false, firebaseInitialized = false, firebaseLastRemoteUpdatedAt = '';
 
       let googleDriveToken = null, googleDriveTokenExpires = 0, googleDriveFileId = null, googleDriveRemoteModified = '', googleDriveConnected = false, googleDriveAuthorizationNeeded = false, googleDriveTimer = null, googleDrivePoller = null, googleDriveRunning = false;
       let cloudClient = null;
@@ -2137,10 +2137,8 @@
         }
         await persistProjectRecord(nextRecord);
 
-        // Cât timp proiectul este deschis, nu reîncărcăm automat editorul din cloud.
-        // Astfel apăsarea pe Note sau pe o notă nu poate muta utilizatorul pe altă pagină.
-        const isEditingThisProject = nextRecord.id === activeProjectId && editorView && !editorView.hidden;
-        if (nextRecord.id === activeProjectId && !projectDirty && !isEditingThisProject) {
+        // Un proiect deschis se actualizează doar când utilizatorul nu îl modifică activ.
+        if (nextRecord.id === activeProjectId && !projectDirty && !isContinuousInteractionActive()) {
           await applyProjectState(nextRecord.payload);
         }
         return nextRecord;
@@ -2214,6 +2212,24 @@
         window.clearTimeout(firebaseSyncTimer);
         firebaseSyncTimer = window.setTimeout(() => firebaseUploadRecord(record).catch((error) => console.warn('Proiectul rămâne salvat local până revine sincronizarea Firebase.', error)), 750);
       }
+      async function firebaseRefreshFromCloud() {
+        if (!firebaseUser || !firebaseDb || firebaseRunning) return;
+        try {
+          const remoteRef = firebaseManifestRef || firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid).collection('state').doc('manifest');
+          firebaseManifestRef = remoteRef;
+          const snapshot = await remoteRef.get();
+          await firebaseReconcile(snapshot.data() || { version: 1, records: {}, tombstones: {} });
+        } catch (error) {
+          console.warn('Reîmprospătarea live Firebase va fi reluată automat.', error);
+        }
+      }
+      function startFirebaseLiveRefresh() {
+        window.clearInterval(firebaseLiveRefreshTimer);
+        firebaseLiveRefreshTimer = window.setInterval(() => {
+          if (navigator.onLine) firebaseRefreshFromCloud();
+        }, 30000);
+      }
+
       async function initializeFirebaseSync() {
         if (!firebaseAvailable() || firebaseInitialized) return;
         firebaseInitialized = true;
@@ -2225,7 +2241,9 @@
         firebaseAuth.onAuthStateChanged(async (user) => {
           firebaseUser = user || null;
           if (firebaseManifestUnsubscribe) { firebaseManifestUnsubscribe(); firebaseManifestUnsubscribe = null; }
+          window.clearInterval(firebaseLiveRefreshTimer);
           firebaseManifest = null;
+          firebaseLastRemoteUpdatedAt = '';
           updateCloudAccountUi();
           if (!firebaseUser) return;
           firebaseManifestRef = firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid).collection('state').doc('manifest');
@@ -2236,6 +2254,8 @@
             firebaseLastRemoteUpdatedAt = data.updatedAt || '';
             firebaseReconcile(data).catch((error) => console.warn('Actualizarea live Firebase a eșuat.', error));
           }, (error) => console.warn('Conexiunea live Firebase a eșuat.', error));
+          startFirebaseLiveRefresh();
+          firebaseRefreshFromCloud();
         });
       }
       async function connectFirebaseSync() {
@@ -6887,7 +6907,10 @@
         }
       });
       document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState !== 'hidden') return;
+        if (document.visibilityState === 'visible') {
+          firebaseRefreshFromCloud();
+          return;
+        }
         if (!projectDirty) return;
         flushAutosave({ force: true });
       });
@@ -7302,6 +7325,7 @@
 
             window.addEventListener('online', () => {
               registration.update().catch(() => {});
+              firebaseRefreshFromCloud();
             });
           }).catch(() => {});
         });
