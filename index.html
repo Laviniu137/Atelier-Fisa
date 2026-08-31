@@ -2046,7 +2046,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.8.3';
+      const APP_VERSION = '1.8.4';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2078,7 +2078,7 @@
       const firebaseConfig = { apiKey: 'AIzaSyCMUavm_4Uc66Gv0BFjsm6UsPXIAeu6kYE', authDomain: 'atelier-mobila-cloud.firebaseapp.com', projectId: 'atelier-mobila-cloud', appId: '1:242123502161:web:590fd44106e4cc67533e70' };
       const firebaseSyncCollection = 'atelierFisaSyncV1';
       const firebaseChunkSize = 480000;
-      let firebaseApp = null, firebaseAuth = null, firebaseDb = null, firebaseUser = null, firebaseManifestRef = null, firebaseManifest = null, firebaseManifestUnsubscribe = null, firebaseSyncTimer = null, firebaseLiveRefreshTimer = null, firebaseRunning = false, firebaseInitialized = false, firebaseLastRemoteUpdatedAt = '';
+      let firebaseApp = null, firebaseAuth = null, firebaseDb = null, firebaseUser = null, firebaseManifestRef = null, firebaseManifest = null, firebaseManifestUnsubscribe = null, firebaseSyncTimer = null, firebaseLiveRefreshTimer = null, firebaseRunning = false, firebasePendingRemote = null, firebaseInitialized = false, firebaseLastRemoteUpdatedAt = '';
 
       let googleDriveToken = null, googleDriveTokenExpires = 0, googleDriveFileId = null, googleDriveRemoteModified = '', googleDriveConnected = false, googleDriveAuthorizationNeeded = false, googleDriveTimer = null, googleDrivePoller = null, googleDriveRunning = false;
       let cloudClient = null;
@@ -2180,8 +2180,13 @@
         await firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid).collection('state').doc('manifest').set(firebaseManifest);
       }
       async function firebaseReconcile(remote) {
-        if (!firebaseUser || !remote || firebaseRunning) return;
+        if (!firebaseUser || !remote) return;
+        if (firebaseRunning) {
+          firebasePendingRemote = remote;
+          return;
+        }
         firebaseRunning = true;
+        firebaseLastRemoteUpdatedAt = remote.updatedAt || firebaseLastRemoteUpdatedAt;
         try {
           firebaseManifest = remote;
           const local = await readAllProjectRecords();
@@ -2205,7 +2210,12 @@
             if (!remoteMeta || getRecordUpdatedAt(localRecord) > Date.parse(remoteMeta.updatedAt || '')) await firebaseUploadRecord(localRecord);
           }
           await renderProjectCards();
-        } finally { firebaseRunning = false; }
+        } finally {
+          firebaseRunning = false;
+          const pendingRemote = firebasePendingRemote;
+          firebasePendingRemote = null;
+          if (pendingRemote) Promise.resolve().then(() => firebaseReconcile(pendingRemote));
+        }
       }
       function scheduleFirebaseSync(record) {
         if (!firebaseUser || !record?.id) return;
@@ -2236,6 +2246,10 @@
         firebaseApp = window.firebase.apps?.length ? window.firebase.app() : window.firebase.initializeApp(firebaseConfig);
         firebaseAuth = window.firebase.auth();
         firebaseDb = window.firebase.firestore();
+        // Conexiune Firestore compatibilă cu Safari/iPad, inclusiv în rețele restrictive.
+        try { firebaseDb.settings({ experimentalAutoDetectLongPolling: true, useFetchStreams: false }); } catch (error) {
+          console.warn('Setările speciale Firestore nu au fost aplicate; folosesc conexiunea standard.', error);
+        }
         await firebaseAuth.setPersistence(window.firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
         await firebaseAuth.getRedirectResult().catch((error) => console.warn('Conectarea Firebase nu a fost finalizată.', error));
         firebaseAuth.onAuthStateChanged(async (user) => {
@@ -2250,8 +2264,11 @@
           firebaseManifestUnsubscribe = firebaseManifestRef.onSnapshot((snapshot) => {
             const data = snapshot.data();
             if (!data) { firebaseReconcile({ version: 1, records: {}, tombstones: {} }).catch(() => {}); return; }
+            if (firebaseRunning) {
+              firebasePendingRemote = data;
+              return;
+            }
             if (data.updatedAt && data.updatedAt === firebaseLastRemoteUpdatedAt) return;
-            firebaseLastRemoteUpdatedAt = data.updatedAt || '';
             firebaseReconcile(data).catch((error) => console.warn('Actualizarea live Firebase a eșuat.', error));
           }, (error) => console.warn('Conexiunea live Firebase a eșuat.', error));
           startFirebaseLiveRefresh();
