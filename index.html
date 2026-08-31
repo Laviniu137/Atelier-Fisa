@@ -2046,7 +2046,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.8.5';
+      const APP_VERSION = '1.8.6';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2158,26 +2158,44 @@
         if (!firebaseUser || !firebaseDb || !record?.id) return;
         const text = JSON.stringify(cloneProjectData(record));
         const chunks = Math.max(1, Math.ceil(text.length / firebaseChunkSize));
-        const batch = firebaseDb.batch();
         const parent = firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid);
-        for (let index = 0; index < chunks; index += 1) batch.set(parent.collection('chunks').doc(firebaseChunkId(record.id, index)), { data: text.slice(index * firebaseChunkSize, (index + 1) * firebaseChunkSize), updatedAt: record.updatedAt || new Date().toISOString() });
+        const batch = firebaseDb.batch();
+        for (let index = 0; index < chunks; index += 1) {
+          batch.set(parent.collection('chunks').doc(firebaseChunkId(record.id, index)), { data: text.slice(index * firebaseChunkSize, (index + 1) * firebaseChunkSize), updatedAt: record.updatedAt || new Date().toISOString() });
+        }
         await batch.commit();
-        const nextManifest = firebaseManifest || { version: 1, records: {}, tombstones: {} };
-        const tombstones = { ...(nextManifest.tombstones || {}) };
-        const deletedAt = Date.parse(tombstones[record.id] || '') || 0;
-        if (deletedAt > getRecordUpdatedAt(record)) return;
-        delete tombstones[record.id];
-        const records = { ...(nextManifest.records || {}), [record.id]: { id: record.id, updatedAt: record.updatedAt || new Date().toISOString(), chunks } };
-        firebaseManifest = { ...nextManifest, version: 1, updatedAt: new Date().toISOString(), records, tombstones };
-        await parent.collection('state').doc('manifest').set(firebaseManifest);
+        const manifestRef = parent.collection('state').doc('manifest');
+        await firebaseDb.runTransaction(async (transaction) => {
+          const snapshot = await transaction.get(manifestRef);
+          const current = snapshot.exists ? snapshot.data() : { version: 1, records: {}, tombstones: {} };
+          const records = { ...(current.records || {}) };
+          const tombstones = { ...(current.tombstones || {}) };
+          const deletedAt = Date.parse(tombstones[record.id] || '') || 0;
+          const savedAt = getRecordUpdatedAt(record);
+          const cloudAt = Date.parse(records[record.id]?.updatedAt || '') || 0;
+          if (deletedAt > savedAt || cloudAt > savedAt) {
+            firebaseManifest = current;
+            return;
+          }
+          delete tombstones[record.id];
+          records[record.id] = { id: record.id, updatedAt: record.updatedAt || new Date().toISOString(), chunks };
+          firebaseManifest = { ...current, version: 1, updatedAt: new Date().toISOString(), records, tombstones };
+          transaction.set(manifestRef, firebaseManifest);
+        });
       }
       async function firebaseRecordDeletion(projectId) {
         if (!firebaseUser || !firebaseDb || !projectId) return;
-        const nextManifest = firebaseManifest || { version: 1, records: {}, tombstones: {} };
-        const records = { ...(nextManifest.records || {}) }; delete records[projectId];
-        const tombstones = { ...(nextManifest.tombstones || {}), [projectId]: new Date().toISOString() };
-        firebaseManifest = { ...nextManifest, version: 1, updatedAt: new Date().toISOString(), records, tombstones };
-        await firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid).collection('state').doc('manifest').set(firebaseManifest);
+        const manifestRef = firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid).collection('state').doc('manifest');
+        await firebaseDb.runTransaction(async (transaction) => {
+          const snapshot = await transaction.get(manifestRef);
+          const current = snapshot.exists ? snapshot.data() : { version: 1, records: {}, tombstones: {} };
+          const records = { ...(current.records || {}) };
+          const tombstones = { ...(current.tombstones || {}) };
+          delete records[projectId];
+          tombstones[projectId] = new Date().toISOString();
+          firebaseManifest = { ...current, version: 1, updatedAt: new Date().toISOString(), records, tombstones };
+          transaction.set(manifestRef, firebaseManifest);
+        });
       }
       async function firebaseReconcile(remote) {
         if (!firebaseUser || !remote) return;
