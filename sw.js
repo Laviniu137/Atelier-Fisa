@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fisa-atelier-v74';
+const CACHE_NAME = 'fisa-atelier-v75';
 const APP_FILES = [
   './',
   './index.html',
