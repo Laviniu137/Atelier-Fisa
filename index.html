@@ -2173,8 +2173,9 @@
       const projectStore = 'projects';
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
+      const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.10.4';
+      const APP_VERSION = '1.10.5';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2207,7 +2208,8 @@
       const firebaseSyncCollection = 'atelierFisaSyncV1';
       const isAppleTouchDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
       const firebaseChunkSize = 480000;
-      let firebaseApp = null, firebaseAuth = null, firebaseDb = null, firebaseRealtimeDb = null, firebaseUser = null, firebaseManifestRef = null, firebaseManifest = null, firebaseManifestUnsubscribe = null, firebaseRealtimeSignalRef = null, firebaseRealtimeSignalListener = null, firebaseRealtimeSignalPrimed = false, firebaseSyncTimer = null, firebaseLiveRefreshTimer = null, firebaseRunning = false, firebasePendingRemote = null, firebaseManagerRefreshTimer = null, firebaseManagerLastInteractionAt = Date.now(), firebaseInitialized = false, firebaseLastRemoteUpdatedAt = '', firebaseLastRealtimeSignalAt = '';
+      let firebaseApp = null, firebaseAuth = null, firebaseDb = null, firebaseRealtimeDb = null, firebaseUser = null, firebaseManifestRef = null, firebaseManifest = null, firebaseManifestUnsubscribe = null, firebaseRealtimeSignalRef = null, firebaseRealtimeSignalListener = null, firebaseRealtimeSignalPrimed = false, firebaseSyncTimer = null, firebaseLiveRefreshTimer = null, firebaseRunning = false, firebasePendingRemote = null, firebaseManagerRefreshTimer = null, firebaseManagerLastInteractionAt = Date.now(), firebaseInitialized = false, firebaseLastRemoteUpdatedAt = '', firebaseLastRealtimeSignalAt = '', firebaseSyncInProgress = false;
+      const pendingFirebaseRecords = new Map();
 
       let googleDriveToken = null, googleDriveTokenExpires = 0, googleDriveFileId = null, googleDriveRemoteModified = '', googleDriveConnected = false, googleDriveAuthorizationNeeded = false, googleDriveTimer = null, googleDrivePoller = null, googleDriveRunning = false;
       let cloudClient = null;
@@ -2313,20 +2315,45 @@
         });
         await firebaseBroadcastRealtimeSignal().catch((error) => console.warn('Semnalul live va fi reîncercat la următoarea modificare.', error));
       }
-      async function firebaseRecordDeletion(projectId) {
-        if (!firebaseUser || !firebaseDb || !projectId) return;
+      async function firebaseRecordDeletion(projectId, deletedAt = new Date().toISOString()) {
+        if (!firebaseUser || !firebaseDb || !projectId) throw new Error('SYNC_UNAVAILABLE');
         const manifestRef = firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid).collection('state').doc('manifest');
         await firebaseDb.runTransaction(async (transaction) => {
           const snapshot = await transaction.get(manifestRef);
           const current = snapshot.exists ? snapshot.data() : { version: 1, records: {}, tombstones: {} };
           const records = { ...(current.records || {}) };
           const tombstones = { ...(current.tombstones || {}) };
+          const existingDelete = tombstones[projectId] || '';
+          const finalDeletedAt = Date.parse(existingDelete) > Date.parse(deletedAt) ? existingDelete : deletedAt;
           delete records[projectId];
-          tombstones[projectId] = new Date().toISOString();
+          tombstones[projectId] = finalDeletedAt;
           firebaseManifest = { ...current, version: 1, updatedAt: new Date().toISOString(), records, tombstones };
           transaction.set(manifestRef, firebaseManifest);
         });
         await firebaseBroadcastRealtimeSignal().catch((error) => console.warn('Semnalul live va fi reîncercat la următoarea modificare.', error));
+      }
+
+      async function queueFirebaseDeletion(projectId, deletedAt = new Date().toISOString()) {
+        const pending = (await getMetaValue(firebasePendingDeletesMetaKey)) || {};
+        pending[projectId] = deletedAt;
+        await setMetaValue(firebasePendingDeletesMetaKey, pending);
+      }
+
+      async function flushPendingFirebaseDeletions() {
+        if (!firebaseUser || !firebaseDb || navigator.onLine === false) return;
+        const pending = (await getMetaValue(firebasePendingDeletesMetaKey)) || {};
+        let changed = false;
+        for (const [projectId, deletedAt] of Object.entries(pending)) {
+          try {
+            await firebaseRecordDeletion(projectId, deletedAt);
+            delete pending[projectId];
+            changed = true;
+          } catch (error) {
+            console.warn('Ștergerea va fi retrimisă când conexiunea este disponibilă.', error);
+            break;
+          }
+        }
+        if (changed) await setMetaValue(firebasePendingDeletesMetaKey, pending);
       }
       async function forceUploadFirebaseFromThisDevice() {
         if (!firebaseUser || !firebaseDb) throw new Error('AUTH_REQUIRED');
@@ -2385,10 +2412,34 @@
           if (pendingRemote) Promise.resolve().then(() => firebaseReconcile(pendingRemote));
         }
       }
+      async function flushPendingFirebaseRecords() {
+        if (!firebaseUser || !firebaseDb || navigator.onLine === false || firebaseSyncInProgress) return;
+        firebaseSyncInProgress = true;
+        try {
+          await flushPendingFirebaseDeletions();
+          for (const [projectId, record] of Array.from(pendingFirebaseRecords.entries())) {
+            try {
+              await firebaseUploadRecord(record);
+              pendingFirebaseRecords.delete(projectId);
+            } catch (error) {
+              console.warn('Proiectul rămâne în coada de sincronizare până revine conexiunea.', error);
+              break;
+            }
+          }
+        } finally {
+          firebaseSyncInProgress = false;
+          if (pendingFirebaseRecords.size && navigator.onLine !== false) {
+            window.clearTimeout(firebaseSyncTimer);
+            firebaseSyncTimer = window.setTimeout(() => flushPendingFirebaseRecords(), 5000);
+          }
+        }
+      }
+
       function scheduleFirebaseSync(record) {
-        if (!firebaseUser || !record?.id) return;
+        if (!record?.id) return;
+        pendingFirebaseRecords.set(record.id, cloneProjectData(record));
         window.clearTimeout(firebaseSyncTimer);
-        firebaseSyncTimer = window.setTimeout(() => firebaseUploadRecord(record).catch((error) => console.warn('Proiectul rămâne salvat local până revine sincronizarea Firebase.', error)), 750);
+        firebaseSyncTimer = window.setTimeout(() => flushPendingFirebaseRecords(), 750);
       }
       function canAutoRefreshProjectManager() {
         const blockingDialogs = [cloudAccountDialog, deleteProjectDialog, saveProjectDialog, autosaveRecoveryDialog, clearAllDialog, removeImageDialog, exportImageDialog, exportProjectDialog, deleteNoteDialog, pencilEditorOverlay, pencilUnsavedDialog];
@@ -2508,6 +2559,8 @@
         startFirebaseLiveRefresh();
         startFirebaseManagerRefreshFallback();
         startFirebaseRealtimeSignal();
+        await flushPendingFirebaseDeletions();
+        await flushPendingFirebaseRecords();
         await firebaseRefreshFromCloud();
       }
       async function initializeFirebaseSync() {
@@ -3088,7 +3141,13 @@
         // Marcăm imediat ștergerea, inclusiv dacă Drive este temporar deconectat.
         // Astfel o copie veche din celălalt dispozitiv nu poate readuce proiectul.
         if (syncCloud && firebaseUser) {
-          await firebaseRecordDeletion(projectId);
+          const deletedAt = new Date().toISOString();
+          try {
+            await firebaseRecordDeletion(projectId, deletedAt);
+          } catch (error) {
+            await queueFirebaseDeletion(projectId, deletedAt);
+            console.warn('Proiectul a fost șters local; ștergerea va fi trimisă automat când revine internetul.', error);
+          }
           return;
         }
         if (syncCloud) {
@@ -7407,6 +7466,8 @@
           if (firebaseInitialized && !firebaseUser) {
             throw new Error('AUTH_REQUIRED');
           } else if (firebaseUser) {
+            await flushPendingFirebaseDeletions();
+            await flushPendingFirebaseRecords();
             const remoteRef = firebaseManifestRef || firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid).collection('state').doc('manifest');
             firebaseManifestRef = remoteRef;
             const remote = await remoteRef.get();
@@ -7813,7 +7874,7 @@
 
             window.addEventListener('online', () => {
               registration.update().catch(() => {});
-              firebaseRefreshFromCloud();
+              flushPendingFirebaseDeletions().then(() => flushPendingFirebaseRecords()).finally(() => firebaseRefreshFromCloud());
             });
           }).catch(() => {});
         });
