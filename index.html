@@ -2174,7 +2174,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.10.2';
+      const APP_VERSION = '1.10.3';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -4621,8 +4621,9 @@
         }
         if (fullscreenLineBtn) {
           const lineActive = nextTool === 'draw' && normalizedDrawMode === 'line' && !nextErasing;
-          fullscreenLineBtn.classList.toggle('active', lineActive);
-          fullscreenLineBtn.setAttribute('aria-pressed', lineActive ? 'true' : 'false');
+          const solidLineActive = lineActive && !lineDashed;
+          fullscreenLineBtn.classList.toggle('active', solidLineActive);
+          fullscreenLineBtn.setAttribute('aria-pressed', solidLineActive ? 'true' : 'false');
         }
         if (fullscreenEraserBtn) {
           fullscreenEraserBtn.classList.toggle('active', nextErasing);
@@ -5045,8 +5046,9 @@
         }
         if (fullscreenLineBtn) {
           const lineActive = activeDrawMode === 'line' && !isErasing;
-          fullscreenLineBtn.classList.toggle('active', lineActive);
-          fullscreenLineBtn.setAttribute('aria-pressed', lineActive ? 'true' : 'false');
+          const solidLineActive = lineActive && !lineDashed;
+          fullscreenLineBtn.classList.toggle('active', solidLineActive);
+          fullscreenLineBtn.setAttribute('aria-pressed', solidLineActive ? 'true' : 'false');
           if (fullscreenDashedLineBtn) {
             fullscreenDashedLineBtn.hidden = false;
             fullscreenDashedLineBtn.classList.toggle('active', lineActive && lineDashed);
