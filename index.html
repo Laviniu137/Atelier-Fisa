@@ -2032,6 +2032,7 @@
       let fullscreenAbortController = null;
       let activeDrawingPointerId = null;
       let activeWritingPointerId = null;
+      let lastPenDrawingActivityAt = 0;
       let isDrawing = false;
       let isDraggingNote = false;
       let isPanning = false;
@@ -2080,6 +2081,8 @@
       const AUTOSAVE_DEBOUNCE_MS = 2000;
       const STROKE_SAMPLE_MIN_DISTANCE_PX = 0.35;
       const FULLSCREEN_SWIPE_MIN_DISTANCE_PX = 72;
+      const FULLSCREEN_SWIPE_EDGE_PX = 56;
+      const FULLSCREEN_SWIPE_PEN_GUARD_MS = 800;
       const databaseName = 'fisa-atelier-offline';
       const databaseVersion = 3;
       const legacyAutosaveStore = 'lucrari';
@@ -2087,7 +2090,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.9.7';
+      const APP_VERSION = '1.9.8';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -5099,8 +5102,26 @@
         }
       }
 
+      function isFullscreenSwipeSafeToStart(clientX) {
+        const startedAtEdge = clientX <= FULLSCREEN_SWIPE_EDGE_PX || clientX >= window.innerWidth - FULLSCREEN_SWIPE_EDGE_PX;
+        return Boolean(
+          fullscreenMode
+          && sourceImage
+          && startedAtEdge
+          && !isDrawing
+          && activeDrawingPointerId === null
+          && !activeStroke
+          && Date.now() - lastPenDrawingActivityAt > FULLSCREEN_SWIPE_PEN_GUARD_MS
+        );
+      }
+
+      function markPenDrawingActivity() {
+        lastPenDrawingActivityAt = Date.now();
+        fullscreenSwipe = null;
+      }
+
       function beginFullscreenSwipe(event) {
-        if (!fullscreenMode || !sourceImage || event.pointerType !== 'touch' || activeTouches.size > 0 || fullscreenSwipe?.source === 'touch') return;
+        if (event.pointerType !== 'touch' || activeTouches.size > 0 || fullscreenSwipe?.source === 'touch' || !isFullscreenSwipeSafeToStart(event.clientX)) return;
         fullscreenSwipe = { source: 'pointer', pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, currentX: event.clientX, currentY: event.clientY };
       }
 
@@ -5112,7 +5133,7 @@
       }
 
       function beginFullscreenTouchSwipe(event) {
-        if (!fullscreenMode || !sourceImage || event.touches.length !== 1 || activeTouches.size > 0) return;
+        if (event.touches.length !== 1 || activeTouches.size > 0 || !isFullscreenSwipeSafeToStart(event.touches[0].clientX)) return;
         const touch = event.touches[0];
         fullscreenSwipe = { source: 'touch', identifier: touch.identifier, startX: touch.clientX, startY: touch.clientY, currentX: touch.clientX, currentY: touch.clientY };
       }
@@ -5130,7 +5151,7 @@
         const deltaX = endX - swipe.startX;
         const deltaY = endY - swipe.startY;
         const isHorizontalSwipe = Math.abs(deltaX) >= 42 && Math.abs(deltaX) > Math.abs(deltaY) * 1.1;
-        if (!fullscreenMode || !isHorizontalSwipe || fullscreenImageSwitchInProgress || projectImages.length < 2) return;
+        if (!isFullscreenSwipeSafeToStart(swipe.startX) || !isHorizontalSwipe || fullscreenImageSwitchInProgress || projectImages.length < 2) return;
         const nextIndex = (activeImageIndex + (deltaX < 0 ? 1 : -1) + projectImages.length) % projectImages.length;
         fullscreenImageSwitchInProgress = true;
         Promise.resolve().then(async () => {
@@ -5162,6 +5183,7 @@
       function beginDrawing(event) {
         if (placePendingNoteAtEvent(event)) return;
         if (!sourceImage || activeTool !== 'draw' || event.altKey) return;
+        if (event.pointerType === 'pen') markPenDrawingActivity();
         // În ecran complet, degetul sau palma nu pot începe o linie ori muta desenul.
         // Apple Pencil folosește în continuare evenimentele precise, inclusiv punctele coalescate.
         if (event.pointerType === 'touch') {
@@ -5225,6 +5247,7 @@
       }
 
       function continueDrawing(event) {
+        if (event.pointerType === 'pen') lastPenDrawingActivityAt = Date.now();
         // Respinge palma/degetul și dacă un Apple Pencil este deja în contact cu ecranul.
         if (event.pointerType === 'touch') {
           updateFullscreenSwipe(event);
@@ -5261,6 +5284,7 @@
       }
 
       function finishDrawing(event) {
+        if (event.pointerType === 'pen') lastPenDrawingActivityAt = Date.now();
         if (event.pointerType === 'touch') {
           finishFullscreenSwipe(event);
           return;
