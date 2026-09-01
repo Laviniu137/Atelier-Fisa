@@ -189,6 +189,25 @@
       font-size: .82rem;
       line-height: 1.35;
     }
+    .project-status {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      margin-top: 7px;
+      padding: 4px 8px;
+      border: 1px solid #dfd4c5;
+      border-radius: 999px;
+      background: #fbf7f0;
+      color: #6c5d4b;
+      font-size: .72rem;
+      font-weight: 720;
+      line-height: 1;
+    }
+    .project-status.is-finalized {
+      border-color: #b9d5c3;
+      background: #eef8f0;
+      color: #2f6f51;
+    }
     .project-card-stats {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2079,6 +2098,7 @@
       let activeImageIndex = 0;
       let imageTitleCounter = 0;
       let currentProjectName = 'Proiect nou';
+      let currentProjectStatus = 'in-progress';
       let currentProjectUpdatedAt = null;
       let activeProjectId = null;
       let pendingProjectNameAction = null;
@@ -2176,7 +2196,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.11.8';
+      const APP_VERSION = '1.12.0';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -3173,6 +3193,7 @@
       function buildProjectRecordFromPayload(payload, options = {}) {
         const nowIso = new Date().toISOString();
         const projectName = normalizeProjectName(options.name || payload?.projectName);
+        const projectStatus = normalizeProjectStatus(options.status ?? payload?.projectStatus);
         const images = Array.isArray(payload?.images) ? payload.images : [];
         const stats = {
           images: images.length,
@@ -3181,6 +3202,7 @@
         return {
           id: options.id || createProjectId(),
           name: projectName,
+          status: projectStatus,
           createdAt: options.createdAt || nowIso,
           updatedAt: nowIso,
           thumbnail: getProjectThumbnail(images),
@@ -3188,6 +3210,7 @@
           payload: {
             ...(payload || {}),
             projectName,
+            projectStatus,
             updatedAt: nowIso
           }
         };
@@ -3874,6 +3897,10 @@
         return text || 'Proiect nou';
       }
 
+      function normalizeProjectStatus(value) {
+        return value === 'finalized' ? 'finalized' : 'in-progress';
+      }
+
       function isLikelyAtelierProjectFile(project) {
         if (!project || typeof project !== 'object') return false;
         if (project.format === 'atelier-fisa-project') return true;
@@ -3947,6 +3974,7 @@
             version: projectVersion,
             updatedAt: new Date().toISOString(),
             projectName: 'Proiect nou',
+            projectStatus: 'in-progress',
             activeImageIndex: 0,
             images: [],
             imageTitleCounter: 0
@@ -4000,6 +4028,7 @@
           version: projectVersion,
           updatedAt: typeof project.updatedAt === 'string' ? project.updatedAt : new Date().toISOString(),
           projectName: normalizeProjectName(project.projectName || project.name || 'Proiect nou'),
+          projectStatus: normalizeProjectStatus(project.projectStatus),
           activeImageIndex: clamp(nextActiveImageIndex, 0, Math.max(images.length - 1, 0)),
           images,
           imageTitleCounter: computeImageTitleCounter(images, project.imageTitleCounter)
@@ -4132,6 +4161,12 @@
           updated.textContent = `Ultima modificare: ${formatProjectDate(record.updatedAt)}`;
           titleColumn.appendChild(updated);
 
+          const status = normalizeProjectStatus(record.status || record.payload?.projectStatus);
+          const statusBadge = document.createElement('span');
+          statusBadge.className = 'project-status' + (status === 'finalized' ? ' is-finalized' : '');
+          statusBadge.textContent = status === 'finalized' ? '✓ Finalizat' : '● În lucru';
+          titleColumn.appendChild(statusBadge);
+
           const menu = document.createElement('details');
           menu.className = 'project-card-menu';
           const summary = document.createElement('summary');
@@ -4145,6 +4180,9 @@
             { action: 'open', label: 'Deschide', icon: '📂' },
             { action: 'rename', label: 'Redenumește', icon: '✏️' },
             { action: 'duplicate', label: 'Duplică', icon: '📄' },
+            status === 'finalized'
+              ? { action: 'set-in-progress', label: 'Marchează ca în lucru', icon: '●' }
+              : { action: 'set-finalized', label: 'Marchează ca finalizat', icon: '✓' },
             { action: 'export-project-atf', label: 'Exportă proiect (.atf)', icon: '📦' },
             { action: 'export-project-json', label: 'Exportă proiect (.json)', icon: '📄' },
             { action: 'restore-backup', label: 'Recuperează ultimul backup într-un proiect nou', icon: '↩️' },
@@ -4220,7 +4258,7 @@
         currentProjectUpdatedAt = record.updatedAt || record?.payload?.updatedAt || null;
         setProjectName(record.name || record.payload.projectName || 'Proiect nou');
         showEditor();
-        await applyProjectState(record.payload);
+        await applyProjectState({ ...record.payload, projectStatus: record.status || record.payload?.projectStatus });
       }
 
       async function createProjectAndOpen(name) {
@@ -4328,6 +4366,24 @@
           return;
         }
 
+        if (action === 'set-in-progress' || action === 'set-finalized') {
+          const nextStatus = action === 'set-finalized' ? 'finalized' : 'in-progress';
+          const nextPayload = normalizeIncomingProject(record.payload || {});
+          nextPayload.projectStatus = nextStatus;
+          nextPayload.updatedAt = new Date().toISOString();
+          const updatedRecord = {
+            ...record,
+            status: nextStatus,
+            updatedAt: nextPayload.updatedAt,
+            payload: nextPayload
+          };
+          await saveProjectRecord(updatedRecord);
+          if (record.id === activeProjectId) currentProjectStatus = nextStatus;
+          await renderProjectCards();
+          showSaveToast(nextStatus === 'finalized' ? 'Proiect marcat ca finalizat.' : 'Proiect marcat ca în lucru.');
+          return;
+        }
+
         if (action === 'export-project-atf') {
           await exportProjectPayload(record.payload, record.name || 'Proiect', { extension: 'atf' });
           return;
@@ -4418,6 +4474,7 @@
           version: projectVersion,
           updatedAt: new Date().toISOString(),
           projectName: currentProjectName,
+          projectStatus: currentProjectStatus,
           activeImageIndex: clamp(activeImageIndex, 0, Math.max(projectImages.length - 1, 0)),
           imageTitleCounter,
           images: await Promise.all(projectImages.map(async (image, index) => {
@@ -4477,7 +4534,8 @@
           const record = buildProjectRecordFromPayload(payload, {
             id: nextActiveProjectId,
             name: currentName,
-            createdAt: existingRecord?.createdAt
+            createdAt: existingRecord?.createdAt,
+            status: currentProjectStatus || existingRecord?.status
           });
 
           await saveProjectRecord(record);
@@ -4625,6 +4683,7 @@
         try {
           const normalizedProject = normalizeIncomingProject(project);
           currentProjectUpdatedAt = normalizedProject.updatedAt || project?.updatedAt || null;
+          currentProjectStatus = normalizeProjectStatus(normalizedProject.projectStatus);
           setProjectName(normalizedProject.projectName || project?.projectName || project?.name || 'Proiect nou');
 
           projectImages = normalizedProject.images.map((image) => cloneProjectImageState(image));
@@ -6880,6 +6939,7 @@
           photo.removeAttribute('src');
         }
         currentProjectUpdatedAt = null;
+        currentProjectStatus = 'in-progress';
         setProjectName('Proiect nou');
         sourceImage = null;
         imageBlob = null;
