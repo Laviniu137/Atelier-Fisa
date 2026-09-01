@@ -2176,7 +2176,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.11.3';
+      const APP_VERSION = '1.11.4';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -3601,6 +3601,7 @@
           title: typeof source.title === 'string' ? source.title : '',
           dataUrl: resolvedDataUrl,
           type: source.type || 'image/png',
+          sheetType: source.sheetType === 'plain' ? 'plain' : (source.sheetType === 'grid' ? 'grid' : undefined),
           strokes: cloneProjectData(Array.isArray(source.strokes) ? source.strokes : []),
           notes: normalizeNotesCollection(cloneProjectData(Array.isArray(source.notes) ? source.notes : [])),
           zoom: typeof source.zoom === 'number' ? source.zoom : 1,
@@ -4352,6 +4353,7 @@
               name: imageRecord.name || getProjectImageName(index),
               title: imageRecord.title && imageRecord.title.trim() ? imageRecord.title.trim() : getProjectImageName(index),
               type: imageRecord.type || 'image/png',
+              sheetType: isBlankSheet(imageRecord) ? getSheetType(imageRecord) : undefined,
               dataUrl,
               strokes: cloneProjectData(imageRecord.strokes),
               notes: cloneProjectData(imageRecord.notes),
@@ -7139,7 +7141,10 @@
       }
 
       function getSheetType(image) {
-        return image?.sheetType === 'plain' ? 'plain' : 'grid';
+        if (image?.sheetType === 'plain' || image?.sheetType === 'grid') return image.sheetType;
+        // Repară foile simple create înainte ca tipul foii să fie salvat explicit.
+        const data = String(image?.dataUrl || '');
+        return data.includes('pattern%20id%3D%22grid%22') || data.includes('pattern id="grid"') ? 'grid' : 'plain';
       }
 
       function createBlankSheetDataUrl(sheetType = 'grid') {
