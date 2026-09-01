@@ -1491,6 +1491,32 @@
     body.fullscreen-mode #fullscreenBrushSizeValue { min-width: 38px; padding: 4px 5px; font-size: .65rem; }
     body.fullscreen-mode .drawing-tool-button { width: 30px; height: 30px; min-width: 30px; min-height: 30px; }
     body.fullscreen-mode .drawing-tool-button svg { width: 16px; height: 16px; }
+
+    /* Navigare directă între imagini în ecran complet. */
+    .fullscreen-image-nav { display: none; }
+    body.fullscreen-mode .fullscreen-image-nav:not([hidden]) {
+      position: fixed;
+      top: 50%;
+      z-index: 1650;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 54px;
+      min-width: 42px;
+      min-height: 54px;
+      padding: 0;
+      transform: translateY(-50%);
+      border: 1px solid rgba(255,255,255,.28);
+      border-radius: 14px;
+      background: linear-gradient(165deg, rgba(43,53,66,.78), rgba(19,26,36,.64));
+      color: #f4f9ff;
+      box-shadow: 0 10px 22px rgba(2,6,14,.3);
+      backdrop-filter: blur(14px) saturate(145%);
+    }
+    body.fullscreen-mode .fullscreen-image-nav-prev { left: calc(env(safe-area-inset-left, 0px) + 10px); }
+    body.fullscreen-mode .fullscreen-image-nav-next { right: calc(env(safe-area-inset-right, 0px) + 10px); }
+    body.fullscreen-mode .fullscreen-image-nav svg { width: 22px; height: 22px; stroke-width: 2.5; }
   </style>
 </head>
 <body>
@@ -1682,6 +1708,12 @@
           <span class="section-label" id="imageLabel">Imagine</span>
           <button type="button" id="removeActiveImage" class="image-header-delete" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg><span>Șterge</span></button>
         </div>
+        <button type="button" id="fullscreenPrevImageBtn" class="fullscreen-image-nav fullscreen-image-nav-prev" aria-label="Imaginea anterioară" title="Imaginea anterioară" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5-7 7 7 7"></path></svg>
+        </button>
+        <button type="button" id="fullscreenNextImageBtn" class="fullscreen-image-nav fullscreen-image-nav-next" aria-label="Imaginea următoare" title="Imaginea următoare" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 5 7 7-7 7"></path></svg>
+        </button>
         <div class="fullscreen-image-title" id="fullscreenImageTitle" aria-hidden="true"></div>
         <div class="canvas-shell" id="canvasShell">
           <div class="empty" id="emptyState">Adaugă o fotografie pentru a putea desena pe ea.</div>
@@ -1949,6 +1981,8 @@
       const imageTitleLabel = document.getElementById('imageLabel');
       const removeActiveImageButton = document.getElementById('removeActiveImage');
       const fullscreenImageTitle = document.getElementById('fullscreenImageTitle');
+      const fullscreenPrevImageBtn = document.getElementById('fullscreenPrevImageBtn');
+      const fullscreenNextImageBtn = document.getElementById('fullscreenNextImageBtn');
       const addNoteButton = document.getElementById('addNote');
       const deleteSelectedNoteButton = document.getElementById('deleteSelectedNote');
       const noteList = document.getElementById('noteList');
@@ -2090,7 +2124,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.9.8';
+      const APP_VERSION = '1.9.9';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -4410,6 +4444,9 @@
             ? imageTitle + ' • ' + (activeImageIndex + 1) + '/' + projectImages.length
             : imageTitle;
         }
+        const showFullscreenNavigation = fullscreenMode && projectImages.length > 1;
+        if (fullscreenPrevImageBtn) fullscreenPrevImageBtn.hidden = !showFullscreenNavigation;
+        if (fullscreenNextImageBtn) fullscreenNextImageBtn.hidden = !showFullscreenNavigation;
       }
 
       function renderImageThumbnails() {
@@ -5147,12 +5184,9 @@
         event.preventDefault();
       }
 
-      function completeFullscreenSwipe(swipe, endX, endY) {
-        const deltaX = endX - swipe.startX;
-        const deltaY = endY - swipe.startY;
-        const isHorizontalSwipe = Math.abs(deltaX) >= 42 && Math.abs(deltaX) > Math.abs(deltaY) * 1.1;
-        if (!isFullscreenSwipeSafeToStart(swipe.startX) || !isHorizontalSwipe || fullscreenImageSwitchInProgress || projectImages.length < 2) return;
-        const nextIndex = (activeImageIndex + (deltaX < 0 ? 1 : -1) + projectImages.length) % projectImages.length;
+      function switchFullscreenImage(direction) {
+        if (!fullscreenMode || !sourceImage || fullscreenImageSwitchInProgress || projectImages.length < 2) return;
+        const nextIndex = (activeImageIndex + direction + projectImages.length) % projectImages.length;
         fullscreenImageSwitchInProgress = true;
         Promise.resolve().then(async () => {
           try {
@@ -5162,6 +5196,14 @@
             fullscreenImageSwitchInProgress = false;
           }
         });
+      }
+
+      function completeFullscreenSwipe(swipe, endX, endY) {
+        const deltaX = endX - swipe.startX;
+        const deltaY = endY - swipe.startY;
+        const isHorizontalSwipe = Math.abs(deltaX) >= 42 && Math.abs(deltaX) > Math.abs(deltaY) * 1.1;
+        if (!isFullscreenSwipeSafeToStart(swipe.startX) || !isHorizontalSwipe || fullscreenImageSwitchInProgress || projectImages.length < 2) return;
+        switchFullscreenImage(deltaX < 0 ? 1 : -1);
       }
 
       function finishFullscreenSwipe(event) {
@@ -6331,6 +6373,7 @@
           renderNotes();
           updateImageTransform();
         });
+        syncActiveImageTitleDisplay();
         setControls();
       }
 
@@ -7070,6 +7113,8 @@
       });
       fullscreenButton.addEventListener('click', () => setFullscreenMode(true));
       fullscreenCloseButton.addEventListener('click', () => setFullscreenMode(false));
+      fullscreenPrevImageBtn?.addEventListener('click', () => switchFullscreenImage(-1));
+      fullscreenNextImageBtn?.addEventListener('click', () => switchFullscreenImage(1));
       fullscreenCloseToolbarBtn.addEventListener('click', () => setFullscreenMode(false));
       fullscreenToolbarToggle.addEventListener('pointerdown', handleFloatingToolbarPointerDown, { passive: false });
       fullscreenToolbarToggle.addEventListener('pointermove', handleFloatingToolbarPointerMove, { passive: false });
