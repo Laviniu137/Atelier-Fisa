@@ -1031,7 +1031,7 @@
     body.fullscreen-mode .notes { display: none; }
     body.fullscreen-mode .image-panel.fullscreen-panel { position: relative; width: 100%; height: 100%; z-index: 1; border: 0; border-radius: 0; padding: 0; background: #000; box-shadow: none; }
     body.fullscreen-mode .image-panel.fullscreen-panel .section-label, body.fullscreen-mode .image-panel.fullscreen-panel .help { display: none; }
-    body.fullscreen-mode .image-panel.fullscreen-panel .canvas-shell { min-height: 100vh; height: 100vh; width: 100vw; border: 0; border-radius: 0; background: #000; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 0; }
+    body.fullscreen-mode .image-panel.fullscreen-panel .canvas-shell { min-height: 100vh; min-height: 100dvh; height: 100vh; height: 100dvh; width: 100vw; border: 0; border-radius: 0; background: #000; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 0; }
     body.fullscreen-mode .image-panel.fullscreen-panel .image-stage {
       position: absolute;
       inset: 0;
@@ -1066,6 +1066,18 @@
       user-select: none;
       -webkit-touch-callout: none;
       -webkit-user-drag: none;
+    }
+    /* iPad 10.9\": păstrează imaginea și creionul în interiorul zonei sigure. */
+    @media (min-width: 768px) and (pointer: coarse) {
+      body.fullscreen-mode .image-panel.fullscreen-panel .image-stage {
+        inset:
+          max(env(safe-area-inset-top, 0px), 10px)
+          max(env(safe-area-inset-right, 0px), 12px)
+          max(env(safe-area-inset-bottom, 0px), 10px)
+          max(env(safe-area-inset-left, 0px), 12px);
+        width: auto;
+        height: auto;
+      }
     }
     body.fullscreen-mode .mode-switcher { display: none; }
     body.fullscreen-mode .toolbar { display: none; }
@@ -2113,7 +2125,8 @@
       const MAX_ZOOM_LEVEL = 12;
       const DOUBLE_TAP_ZOOM_LEVEL = 4;
       const AUTOSAVE_DEBOUNCE_MS = 2000;
-      const STROKE_SAMPLE_MIN_DISTANCE_PX = 0.35;
+      const STROKE_SAMPLE_MIN_DISTANCE_PX = 0.8;
+      const MAX_PENDING_STROKE_POINTS = 32;
       const FULLSCREEN_SWIPE_MIN_DISTANCE_PX = 72;
       const FULLSCREEN_SWIPE_EDGE_PX = 56;
       const FULLSCREEN_SWIPE_PEN_GUARD_MS = 800;
@@ -2124,7 +2137,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.9.9';
+      const APP_VERSION = '1.10.0';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -4245,8 +4258,9 @@
 
       function updateFullscreenFrame() {
         if (!fullscreenMode) return;
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
+        const visualViewport = window.visualViewport;
+        const viewportWidth = Math.round(visualViewport?.width || window.innerWidth);
+        const viewportHeight = Math.round(visualViewport?.height || window.innerHeight);
         fullscreenFrame = { width: viewportWidth, height: viewportHeight };
         const shell = document.getElementById('canvasShell');
         if (shell) {
@@ -4254,8 +4268,9 @@
           shell.style.height = `${viewportHeight}px`;
         }
         if (stage) {
-          stage.style.width = `${viewportWidth}px`;
-          stage.style.height = `${viewportHeight}px`;
+          // Dimensiunile sunt lăsate CSS-ului: pe iPad acesta aplică automat zona sigură.
+          stage.style.width = '';
+          stage.style.height = '';
         }
       }
 
@@ -5064,6 +5079,32 @@
         return true;
       }
 
+      function drawPendingStrokeBatch(stroke, fromIndex) {
+        if (!stroke || !Array.isArray(stroke.points) || stroke.points.length < 2) return;
+        const size = getCanvasDrawSize();
+        if (!size.width || !size.height) return;
+
+        const points = stroke.points;
+        const startIndex = Math.max(1, fromIndex);
+        if (startIndex >= points.length) return;
+
+        ctx.save();
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = getRenderStrokeSize(typeof stroke.size === 'number' ? stroke.size : brushSize);
+        ctx.strokeStyle = stroke.eraser ? 'rgba(0,0,0,1)' : (typeof stroke.color === 'string' ? stroke.color : brushColor);
+        ctx.globalCompositeOperation = stroke.eraser ? 'destination-out' : 'source-over';
+        ctx.beginPath();
+        const start = points[startIndex - 1];
+        ctx.moveTo(start.x * size.width, start.y * size.height);
+        for (let index = startIndex; index < points.length; index += 1) {
+          const point = points[index];
+          ctx.lineTo(point.x * size.width, point.y * size.height);
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+
       function flushPendingStrokePoints({ cancelAnimation = false } = {}) {
         if (cancelAnimation && drawingFrameRequest !== null) {
           window.cancelAnimationFrame(drawingFrameRequest);
@@ -5071,12 +5112,16 @@
         }
         if (!activeStroke || !pendingStrokePoints.length) return;
 
+        let firstAppendedIndex = -1;
         for (const point of pendingStrokePoints) {
-          if (appendPointToActiveStroke(point)) {
-            drawStrokeSegment(activeStroke, activeStroke.points.length - 2);
+          if (appendPointToActiveStroke(point) && firstAppendedIndex < 0) {
+            firstAppendedIndex = activeStroke.points.length - 1;
           }
         }
-
+        if (firstAppendedIndex >= 0) {
+          // Un singur traseu pe cadru: Apple Pencil rămâne fluid chiar la 120 Hz.
+          drawPendingStrokeBatch(activeStroke, firstAppendedIndex);
+        }
         pendingStrokePoints = [];
       }
 
@@ -5225,6 +5270,12 @@
       function beginDrawing(event) {
         if (placePendingNoteAtEvent(event)) return;
         if (!sourceImage || activeTool !== 'draw' || event.altKey) return;
+        // Un singur contact activ. Palma, a doua atingere sau un eveniment duplicat
+        // nu mai pot porni o a doua linie peste cea desenată cu Apple Pencil.
+        if (event.isPrimary === false || activeDrawingPointerId !== null || isDrawing) {
+          event.preventDefault();
+          return;
+        }
         if (event.pointerType === 'pen') markPenDrawingActivity();
         // În ecran complet, degetul sau palma nu pot începe o linie ori muta desenul.
         // Apple Pencil folosește în continuare evenimentele precise, inclusiv punctele coalescate.
@@ -5320,7 +5371,12 @@
         coalesced.forEach((pointerEvent) => {
           const nextPoint = pointFromEvent(pointerEvent);
           if (!nextPoint) return;
-          pendingStrokePoints.push(nextPoint);
+          if (pendingStrokePoints.length < MAX_PENDING_STROKE_POINTS) {
+            pendingStrokePoints.push(nextPoint);
+          } else {
+            // Păstrează poziția cea mai nouă dacă browserul livrează o rafală de puncte.
+            pendingStrokePoints[pendingStrokePoints.length - 1] = nextPoint;
+          }
         });
         schedulePendingStrokeFlush();
       }
@@ -6284,18 +6340,19 @@
         window.addEventListener('touchend', finishFullscreenTouchSwipe, { passive: false, signal });
         window.addEventListener('touchcancel', finishFullscreenTouchSwipe, { passive: false, signal });
         window.addEventListener('blur', () => resetInteractionState(), { signal });
-        window.addEventListener('resize', () => {
-          if (fullscreenMode) {
-            updateFullscreenFrame();
-            applyFloatingToolbarPosition();
-            if (floatingToolbarOpen) {
-              positionFloatingToolbar();
-            }
+        const refreshFullscreenViewport = () => {
+          if (!fullscreenMode) return;
+          updateFullscreenFrame();
+          applyFloatingToolbarPosition();
+          if (floatingToolbarOpen) {
+            positionFloatingToolbar();
           }
           configureCanvas();
           configureNoteCanvas();
           renderNotes();
-        }, { signal });
+        };
+        window.addEventListener('resize', refreshFullscreenViewport, { signal });
+        window.visualViewport?.addEventListener('resize', refreshFullscreenViewport, { signal });
       }
 
       function detachFullscreenInputHandlers() {
