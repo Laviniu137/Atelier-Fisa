@@ -2175,7 +2175,7 @@
       const projectBackupStore = 'projectBackups';
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.10.6';
+      const APP_VERSION = '1.11.0';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2276,48 +2276,115 @@
       }
 
       function firebaseAvailable() { return Boolean(window.firebase?.initializeApp && window.firebase?.auth && window.firebase?.firestore); }
-      function firebaseChunkId(projectId, index) { return encodeURIComponent(projectId).replace(/%/g, '_') + '-' + index; }
+      function firebaseChunkId(projectId, index, version = '') {
+        const base = encodeURIComponent(projectId).replace(/%/g, '_');
+        const revision = version ? '-' + encodeURIComponent(version).replace(/%/g, '_') : '';
+        return base + revision + '-' + index;
+      }
       function firebaseRecordUpdatedAt(record) { return new Date(getRecordUpdatedAt(record) || 0).toISOString(); }
-      async function firebaseLoadRecord(meta) {
+      function firebaseBackupDocumentId(projectId) { return encodeURIComponent(projectId).replace(/%/g, '_'); }
+
+      async function firebaseLoadRecord(meta, source = 'chunks') {
         const reads = [];
-        for (let index = 0; index < Number(meta?.chunks || 0); index += 1) reads.push(firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid).collection('chunks').doc(firebaseChunkId(meta.id, index)).get());
+        const chunkVersion = meta?.chunkVersion || '';
+        const parent = firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid);
+        for (let index = 0; index < Number(meta?.chunks || 0); index += 1) {
+          const ref = source === 'backup'
+            ? parent.collection('backups').doc(firebaseBackupDocumentId(meta.id)).collection('chunks').doc(String(index))
+            : parent.collection('chunks').doc(firebaseChunkId(meta.id, index, chunkVersion));
+          reads.push(ref.get());
+        }
         const chunks = await Promise.all(reads);
         const text = chunks.map((item) => item.exists ? String(item.data()?.data || '') : '').join('');
         return text ? JSON.parse(text) : null;
       }
+
+      async function firebaseArchiveRemoteRecord(meta) {
+        if (!firebaseUser || !firebaseDb || !meta?.id || !meta?.chunks) return null;
+        const remoteRecord = await firebaseLoadRecord(meta);
+        if (!remoteRecord) return null;
+        const text = JSON.stringify(cloneProjectData(remoteRecord));
+        const chunks = Math.max(1, Math.ceil(text.length / firebaseChunkSize));
+        const parent = firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid);
+        const backupRef = parent.collection('backups').doc(firebaseBackupDocumentId(meta.id));
+        const previousBackup = await backupRef.get();
+        const batch = firebaseDb.batch();
+        for (let index = 0; index < chunks; index += 1) {
+          batch.set(backupRef.collection('chunks').doc(String(index)), { data: text.slice(index * firebaseChunkSize, (index + 1) * firebaseChunkSize) });
+        }
+        for (let index = chunks; index < Number(previousBackup.data()?.chunks || 0); index += 1) {
+          batch.delete(backupRef.collection('chunks').doc(String(index)));
+        }
+        batch.set(backupRef, {
+          id: meta.id,
+          updatedAt: meta.updatedAt || firebaseRecordUpdatedAt(remoteRecord),
+          chunks,
+          archivedAt: new Date().toISOString()
+        });
+        await batch.commit();
+        return remoteRecord;
+      }
+
+      async function firebaseRestoreCloudBackup(projectId) {
+        if (!firebaseUser || !firebaseDb || !projectId) return null;
+        const parent = firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid);
+        const snapshot = await parent.collection('backups').doc(firebaseBackupDocumentId(projectId)).get();
+        if (!snapshot.exists) return null;
+        const meta = snapshot.data() || {};
+        const backupRecord = await firebaseLoadRecord({ ...meta, id: projectId }, 'backup');
+        if (!backupRecord?.payload) return null;
+        const name = normalizeProjectName((backupRecord.name || backupRecord.payload.projectName || 'Proiect') + ' – recuperat din cloud');
+        const restoredRecord = buildProjectRecordFromPayload(cloneProjectData(backupRecord.payload), { name });
+        await saveProjectRecord(restoredRecord);
+        return restoredRecord;
+      }
+
       async function firebaseUploadRecord(record) {
         if (!firebaseUser || !firebaseDb || !record?.id) return;
         const text = JSON.stringify(cloneProjectData(record));
         const chunks = Math.max(1, Math.ceil(text.length / firebaseChunkSize));
         const parent = firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid);
-        const batch = firebaseDb.batch();
-        for (let index = 0; index < chunks; index += 1) {
-          batch.set(parent.collection('chunks').doc(firebaseChunkId(record.id, index)), { data: text.slice(index * firebaseChunkSize, (index + 1) * firebaseChunkSize), updatedAt: record.updatedAt || new Date().toISOString() });
-        }
-        await batch.commit();
         const manifestRef = parent.collection('state').doc('manifest');
-        await firebaseDb.runTransaction(async (transaction) => {
+        const savedAt = getRecordUpdatedAt(record);
+        const initial = await manifestRef.get();
+        const initialCurrent = initial.exists ? initial.data() : { version: 1, records: {}, tombstones: {} };
+        const initialMeta = initialCurrent.records?.[record.id];
+        if ((Date.parse(initialCurrent.tombstones?.[record.id] || '') || 0) > savedAt || (Date.parse(initialMeta?.updatedAt || '') || 0) > savedAt) return;
+        if (initialMeta?.chunks) await firebaseArchiveRemoteRecord(initialMeta);
+
+        const chunkVersion = String(record.updatedAt || new Date().toISOString());
+        const published = await firebaseDb.runTransaction(async (transaction) => {
           const snapshot = await transaction.get(manifestRef);
           const current = snapshot.exists ? snapshot.data() : { version: 1, records: {}, tombstones: {} };
           const records = { ...(current.records || {}) };
           const tombstones = { ...(current.tombstones || {}) };
           const deletedAt = Date.parse(tombstones[record.id] || '') || 0;
-          const savedAt = getRecordUpdatedAt(record);
           const cloudAt = Date.parse(records[record.id]?.updatedAt || '') || 0;
           if (deletedAt > savedAt || cloudAt > savedAt) {
             firebaseManifest = current;
-            return;
+            return false;
+          }
+          for (let index = 0; index < chunks; index += 1) {
+            transaction.set(parent.collection('chunks').doc(firebaseChunkId(record.id, index, chunkVersion)), {
+              data: text.slice(index * firebaseChunkSize, (index + 1) * firebaseChunkSize),
+              updatedAt: record.updatedAt || new Date().toISOString()
+            });
           }
           delete tombstones[record.id];
-          records[record.id] = { id: record.id, updatedAt: record.updatedAt || new Date().toISOString(), chunks };
+          records[record.id] = { id: record.id, updatedAt: record.updatedAt || new Date().toISOString(), chunks, chunkVersion };
           firebaseManifest = { ...current, version: 1, updatedAt: new Date().toISOString(), records, tombstones };
           transaction.set(manifestRef, firebaseManifest);
+          return true;
         });
-        await firebaseBroadcastRealtimeSignal().catch((error) => console.warn('Semnalul live va fi reîncercat la următoarea modificare.', error));
+        if (published) await firebaseBroadcastRealtimeSignal().catch((error) => console.warn('Semnalul live va fi reîncercat la următoarea modificare.', error));
       }
       async function firebaseRecordDeletion(projectId, deletedAt = new Date().toISOString()) {
         if (!firebaseUser || !firebaseDb || !projectId) throw new Error('SYNC_UNAVAILABLE');
-        const manifestRef = firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid).collection('state').doc('manifest');
+        const parent = firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid);
+        const manifestRef = parent.collection('state').doc('manifest');
+        const beforeDelete = await manifestRef.get();
+        const currentMeta = beforeDelete.data()?.records?.[projectId];
+        if (currentMeta?.chunks) await firebaseArchiveRemoteRecord(currentMeta);
         await firebaseDb.runTransaction(async (transaction) => {
           const snapshot = await transaction.get(manifestRef);
           const current = snapshot.exists ? snapshot.data() : { version: 1, records: {}, tombstones: {} };
@@ -3141,6 +3208,8 @@
 
       async function deleteProjectRecord(projectId, { syncCloud = true } = {}) {
         if (!projectId) return;
+        const recordBeforeDelete = await readProjectRecord(projectId);
+        if (recordBeforeDelete) await createProjectBackup(recordBeforeDelete, 'delete-recovery');
         const database = await openDatabase();
         try {
           const transaction = database.transaction(projectStore, 'readwrite');
@@ -3948,6 +4017,7 @@
             { action: 'export-project-atf', label: 'Exportă proiect (.atf)', icon: '📦' },
             { action: 'export-project-json', label: 'Exportă proiect (.json)', icon: '📄' },
             { action: 'restore-backup', label: 'Recuperează ultimul backup într-un proiect nou', icon: '↩️' },
+            { action: 'restore-cloud-backup', label: 'Recuperează copia de siguranță din cloud', icon: '☁️' },
             { action: 'separator' },
             { action: 'delete', label: 'Șterge proiect', icon: '🗑️', danger: true }
           ];
@@ -4146,6 +4216,18 @@
           await renderProjectCards();
           await openProjectById(restoredRecord.id);
           showSaveToast('Backup recuperat într-un proiect nou. Originalul a rămas neschimbat.');
+          return;
+        }
+
+        if (action === 'restore-cloud-backup') {
+          const restoredRecord = await firebaseRestoreCloudBackup(record.id);
+          if (!restoredRecord) {
+            window.alert('Nu există încă o copie de siguranță în cloud pentru acest proiect.');
+            return;
+          }
+          await renderProjectCards();
+          await openProjectById(restoredRecord.id);
+          showSaveToast('Copia de siguranță din cloud a fost recuperată într-un proiect nou.');
           return;
         }
 
