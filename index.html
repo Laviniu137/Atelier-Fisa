@@ -2174,8 +2174,9 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
+      const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.11.2';
+      const APP_VERSION = '1.11.3';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2453,7 +2454,9 @@
           firebaseManifest = remote;
           const local = await readAllProjectRecords();
           const localMap = new Map(local.map((item) => [item.id, item]));
+          const protectedOfflineIds = await getPendingFirebaseRecordIds();
           for (const [id, deletedAt] of Object.entries(remote.tombstones || {})) {
+            if (protectedOfflineIds.has(id)) continue;
             const localRecord = localMap.get(id);
             if (localRecord && (Date.parse(deletedAt) || 0) >= getRecordUpdatedAt(localRecord)) {
               await createProjectBackup(localRecord, 'firebase-delete-recovery');
@@ -2461,6 +2464,7 @@
             }
           }
           for (const meta of Object.values(remote.records || {})) {
+            if (protectedOfflineIds.has(meta.id)) continue;
             const localRecord = localMap.get(meta.id);
             if (!localRecord || Date.parse(meta.updatedAt || '') > getRecordUpdatedAt(localRecord)) {
               // Never replace an open project while the user is still writing.
@@ -2480,6 +2484,7 @@
           }
           const refreshed = await readAllProjectRecords();
           for (const localRecord of refreshed) {
+            if (protectedOfflineIds.has(localRecord.id)) continue;
             const remoteMeta = remote.records?.[localRecord.id];
             const tombstoneAt = Date.parse(remote.tombstones?.[localRecord.id] || '') || 0;
             if (tombstoneAt > getRecordUpdatedAt(localRecord)) continue;
@@ -2493,15 +2498,39 @@
           if (pendingRemote) Promise.resolve().then(() => firebaseReconcile(pendingRemote));
         }
       }
+      async function getPendingFirebaseRecordIds() {
+        const pending = (await getMetaValue(firebasePendingRecordsMetaKey)) || {};
+        return new Set(Object.keys(pending));
+      }
+
+      async function loadPersistentFirebaseQueue() {
+        const pending = (await getMetaValue(firebasePendingRecordsMetaKey)) || {};
+        for (const projectId of Object.keys(pending)) {
+          const record = await readProjectRecord(projectId);
+          if (record) pendingFirebaseRecords.set(projectId, cloneProjectData(record));
+        }
+      }
+
+      async function removePersistentFirebaseQueueItem(projectId) {
+        const pending = (await getMetaValue(firebasePendingRecordsMetaKey)) || {};
+        if (!(projectId in pending)) return;
+        delete pending[projectId];
+        await setMetaValue(firebasePendingRecordsMetaKey, pending);
+      }
+
       async function flushPendingFirebaseRecords() {
         if (!firebaseUser || !firebaseDb || navigator.onLine === false || firebaseSyncInProgress) return;
         firebaseSyncInProgress = true;
         try {
+          await loadPersistentFirebaseQueue();
           await flushPendingFirebaseDeletions();
           for (const [projectId, record] of Array.from(pendingFirebaseRecords.entries())) {
             try {
-              await firebaseUploadRecord(record);
+              const uploaded = await firebaseUploadRecord(record);
+              // O versiune locală nu este abandonată dacă serverul refuză încă trimiterea.
+              if (uploaded === false) break;
               pendingFirebaseRecords.delete(projectId);
+              await removePersistentFirebaseQueueItem(projectId);
             } catch (error) {
               console.warn('Proiectul rămâne în coada de sincronizare până revine conexiunea.', error);
               break;
@@ -2627,6 +2656,10 @@
         updateCloudAccountUi();
         if (!firebaseUser || !firebaseDb) return;
         firebaseManifestRef = firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid).collection('state').doc('manifest');
+        // Trimitem mai întâi munca păstrată offline. Abia apoi ascultăm actualizările
+        // venite din cloud, astfel încât ele nu pot înlocui nota de pe tabletă la reconectare.
+        await flushPendingFirebaseDeletions();
+        await flushPendingFirebaseRecords();
         firebaseManifestUnsubscribe = firebaseManifestRef.onSnapshot((snapshot) => {
           const data = snapshot.data();
           if (!data) { firebaseReconcile({ version: 1, records: {}, tombstones: {} }).catch(() => {}); return; }
@@ -2640,8 +2673,6 @@
         startFirebaseLiveRefresh();
         startFirebaseManagerRefreshFallback();
         startFirebaseRealtimeSignal();
-        await flushPendingFirebaseDeletions();
-        await flushPendingFirebaseRecords();
         await firebaseRefreshFromCloud();
       }
       async function initializeFirebaseSync() {
@@ -3188,6 +3219,26 @@
         }
       }
 
+      async function persistProjectRecordWithOfflineQueue(record) {
+        if (!record || !record.id) return;
+        const database = await openDatabase();
+        try {
+          // Proiectul și marcajul de trimitere sunt salvate în aceeași operație.
+          // Astfel, închiderea aplicației sau modul avion nu poate lăsa munca fără coadă.
+          const transaction = database.transaction([projectStore, metaStore], 'readwrite');
+          const projects = transaction.objectStore(projectStore);
+          const meta = transaction.objectStore(metaStore);
+          const pendingRow = await requestAsPromise(meta.get(firebasePendingRecordsMetaKey));
+          const pending = { ...(pendingRow?.value || {}) };
+          pending[record.id] = record.updatedAt || record.payload?.updatedAt || new Date().toISOString();
+          await requestAsPromise(projects.put(record));
+          await requestAsPromise(meta.put({ key: firebasePendingRecordsMetaKey, value: pending }));
+          await transactionAsPromise(transaction);
+        } finally {
+          database.close();
+        }
+      }
+
       async function saveProjectRecord(record) {
         if (!record || !record.id) return;
         const existingRecord = await readProjectRecord(record.id);
@@ -3195,7 +3246,7 @@
           await createProjectBackup(existingRecord, 'save');
         }
         try {
-          await persistProjectRecord(record);
+          await persistProjectRecordWithOfflineQueue(record);
           scheduleCloudProjectSync(record);
         } catch (error) {
           console.warn('Salvarea proiectului a eșuat; se restaurează backup-ul.', error);
