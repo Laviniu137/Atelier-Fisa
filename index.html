@@ -2175,7 +2175,7 @@
       const projectBackupStore = 'projectBackups';
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.11.0';
+      const APP_VERSION = '1.11.1';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -7536,12 +7536,31 @@
           setFullscreenMode(false);
         }
       });
-      window.addEventListener('resize', () => {
-        renderHandwritingPreview();
-        if (pencilEditorOpen) {
-          configurePencilEditorCanvas();
-        }
-      });
+      let editorViewportRefreshTimer = null;
+      function refreshEditorViewportAfterRotation() {
+        window.clearTimeout(editorViewportRefreshTimer);
+        editorViewportRefreshTimer = window.setTimeout(() => {
+          renderHandwritingPreview();
+          if (pencilEditorOpen) {
+            configurePencilEditorCanvas();
+          }
+          // Safari pe iPad raportează dimensiunile vechi pentru canvas chiar după rotire.
+          // Recalculăm după stabilizarea viewport-ului ca foaia și scrisul să rămână aliniate.
+          if (sourceImage) {
+            if (fullscreenMode) {
+              updateFullscreenFrame();
+              configureCanvas();
+              configureNoteCanvas();
+              renderNotes();
+            } else {
+              restoreActiveImagePresentation();
+            }
+          }
+        }, 180);
+      }
+      window.addEventListener('resize', refreshEditorViewportAfterRotation);
+      window.addEventListener('orientationchange', refreshEditorViewportAfterRotation);
+      window.visualViewport?.addEventListener('resize', refreshEditorViewportAfterRotation);
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
           firebaseRefreshFromCloud();
