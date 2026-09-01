@@ -997,15 +997,18 @@
       margin-top: 16px;
     }
     .danger-dialog-actions button { min-width: 120px; }
-    .sheet-type-dialog { width: min(610px, 100%); }
-    .sheet-type-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
-    .sheet-type-choice { display: grid; gap: 8px; min-height: 142px; padding: 15px; text-align: left; border: 1px solid #d9cdbd; border-radius: 15px; background: #fffdfa; color: #342b21; }
-    .sheet-type-choice:hover { border-color: #a98758; background: #fff9ef; transform: translateY(-1px); }
-    .sheet-type-choice strong { font-size: 1rem; }
+    .sheet-type-dialog { width: min(640px, 100%); padding: 24px; }
+    .sheet-type-dialog > p { max-width: 510px; }
+    .sheet-type-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 18px; }
+    .sheet-type-choice { display: grid; grid-template-rows: 64px auto 1fr; align-items: start; gap: 9px; min-height: 166px; padding: 16px; text-align: left; border: 1px solid #ded3c4; border-radius: 17px; background: linear-gradient(145deg, #fffefa, #fbf7f0); color: #342b21; box-shadow: 0 3px 9px rgba(69, 52, 30, .04); }
+    .sheet-type-choice:hover { border-color: #a98758; background: #fffaf0; box-shadow: 0 10px 22px rgba(93, 66, 31, .12); transform: translateY(-2px); }
+    .sheet-type-choice:focus-visible { outline: 3px solid rgba(97, 145, 190, .45); outline-offset: 3px; }
+    .sheet-type-choice strong { align-self: end; font-size: 1rem; letter-spacing: -.01em; }
     .sheet-type-choice span { color: #746657; font-size: .86rem; line-height: 1.35; }
-    .sheet-type-swatch { height: 52px; border: 1px solid #ded4c7; border-radius: 8px; background: #fff; }
+    .sheet-type-swatch { height: 62px; border: 1px solid #ded4c7; border-radius: 10px; background: #fff; box-shadow: inset 0 1px 0 rgba(255,255,255,.8); }
     .sheet-type-swatch.grid { background-color: #fff; background-image: linear-gradient(#c9d7ed 1px, transparent 1px), linear-gradient(90deg, #c9d7ed 1px, transparent 1px); background-size: 12px 12px; }
-    @media (max-width: 520px) { .sheet-type-choices { grid-template-columns: 1fr; } }
+    .sheet-type-dialog .danger-dialog-actions { margin-top: 18px; }
+    @media (max-width: 520px) { .sheet-type-dialog { padding: 20px; } .sheet-type-choices { grid-template-columns: 1fr; } .sheet-type-choice { min-height: 132px; grid-template-rows: 52px auto 1fr; } .sheet-type-swatch { height: 50px; } }
     .danger-confirm-btn {
       border-color: #a22a2a;
       background: #b03434;
@@ -1661,8 +1664,8 @@
   </div>
   <div id="sheetTypeDialog" class="danger-dialog-backdrop" hidden>
     <div class="danger-dialog sheet-type-dialog" role="dialog" aria-modal="true" aria-labelledby="sheetTypeDialogTitle">
-      <h2 id="sheetTypeDialogTitle">Alege tipul foii</h2>
-      <p>Poți adăuga o foaie simplă sau una cu pătrățele, ca la caietul de matematică.</p>
+      <h2 id="sheetTypeDialogTitle">Adaugă o foaie nouă</h2>
+      <p>Alege formatul potrivit pentru schița ta.</p>
       <div class="sheet-type-choices">
         <button type="button" id="createGridSheet" class="sheet-type-choice">
           <span class="sheet-type-swatch grid" aria-hidden="true"></span>
@@ -1771,7 +1774,7 @@
         <div class="image-gallery" aria-label="Miniaturi imagini">
           <div class="thumbnail-strip" id="thumbnailStrip"></div>
           <div class="gallery-add-actions">
-            <button type="button" id="thumbnailAddBlankSheet" class="thumbnail-add-btn thumbnail-add-note-btn">+ Foaie albă</button>
+            <button type="button" id="thumbnailAddBlankSheet" class="thumbnail-add-btn thumbnail-add-note-btn">+ Adaugă foaie</button>
             <button type="button" id="thumbnailAddImage" class="thumbnail-add-btn">+ Adaugă imagine</button>
           </div>
         </div>
@@ -2171,7 +2174,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.10.1';
+      const APP_VERSION = '1.10.2';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
