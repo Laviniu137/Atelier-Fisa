@@ -2176,7 +2176,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.11.4';
+      const APP_VERSION = '1.11.5';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2408,6 +2408,13 @@
         await setMetaValue(firebasePendingDeletesMetaKey, pending);
       }
 
+      async function removePersistentFirebaseDeletionQueueItem(projectId) {
+        const pending = (await getMetaValue(firebasePendingDeletesMetaKey)) || {};
+        if (!(projectId in pending)) return;
+        delete pending[projectId];
+        await setMetaValue(firebasePendingDeletesMetaKey, pending);
+      }
+
       async function flushPendingFirebaseDeletions() {
         if (!firebaseUser || !firebaseDb || navigator.onLine === false) return;
         const pending = (await getMetaValue(firebasePendingDeletesMetaKey)) || {};
@@ -2456,6 +2463,7 @@
           const local = await readAllProjectRecords();
           const localMap = new Map(local.map((item) => [item.id, item]));
           const protectedOfflineIds = await getPendingFirebaseRecordIds();
+          const protectedDeletionIds = await getPendingFirebaseDeletionIds();
           for (const [id, deletedAt] of Object.entries(remote.tombstones || {})) {
             if (protectedOfflineIds.has(id)) continue;
             const localRecord = localMap.get(id);
@@ -2465,7 +2473,7 @@
             }
           }
           for (const meta of Object.values(remote.records || {})) {
-            if (protectedOfflineIds.has(meta.id)) continue;
+            if (protectedOfflineIds.has(meta.id) || protectedDeletionIds.has(meta.id)) continue;
             const localRecord = localMap.get(meta.id);
             if (!localRecord || Date.parse(meta.updatedAt || '') > getRecordUpdatedAt(localRecord)) {
               // Never replace an open project while the user is still writing.
@@ -2485,7 +2493,7 @@
           }
           const refreshed = await readAllProjectRecords();
           for (const localRecord of refreshed) {
-            if (protectedOfflineIds.has(localRecord.id)) continue;
+            if (protectedOfflineIds.has(localRecord.id) || protectedDeletionIds.has(localRecord.id)) continue;
             const remoteMeta = remote.records?.[localRecord.id];
             const tombstoneAt = Date.parse(remote.tombstones?.[localRecord.id] || '') || 0;
             if (tombstoneAt > getRecordUpdatedAt(localRecord)) continue;
@@ -2501,6 +2509,11 @@
       }
       async function getPendingFirebaseRecordIds() {
         const pending = (await getMetaValue(firebasePendingRecordsMetaKey)) || {};
+        return new Set(Object.keys(pending));
+      }
+
+      async function getPendingFirebaseDeletionIds() {
+        const pending = (await getMetaValue(firebasePendingDeletesMetaKey)) || {};
         return new Set(Object.keys(pending));
       }
 
@@ -2684,7 +2697,7 @@
         firebaseDb = window.firebase.firestore();
         firebaseRealtimeDb = window.firebase.database();
         // Conexiune Firestore compatibilă cu Safari/iPad, inclusiv în rețele restrictive.
-        try { firebaseDb.settings({ experimentalAutoDetectLongPolling: true, useFetchStreams: false }); } catch (error) {
+        try { firebaseDb.settings({ experimentalAutoDetectLongPolling: true, useFetchStreams: false, merge: true }); } catch (error) {
           console.warn('Setările speciale Firestore nu au fost aplicate; folosesc conexiunea standard.', error);
         }
         await firebaseAuth.setPersistence(window.firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
@@ -3240,6 +3253,30 @@
         }
       }
 
+      async function deleteProjectRecordWithOfflineQueue(projectId, deletedAt) {
+        if (!projectId) return;
+        const database = await openDatabase();
+        try {
+          // Ștergerea și marcajul ei pleacă împreună în aceeași operație.
+          // O copie veche din cloud nu poate reapărea între ele.
+          const transaction = database.transaction([projectStore, metaStore], 'readwrite');
+          const projects = transaction.objectStore(projectStore);
+          const meta = transaction.objectStore(metaStore);
+          const pendingRecordsRow = await requestAsPromise(meta.get(firebasePendingRecordsMetaKey));
+          const pendingDeletesRow = await requestAsPromise(meta.get(firebasePendingDeletesMetaKey));
+          const pendingRecords = { ...(pendingRecordsRow?.value || {}) };
+          const pendingDeletes = { ...(pendingDeletesRow?.value || {}) };
+          delete pendingRecords[projectId];
+          pendingDeletes[projectId] = deletedAt;
+          await requestAsPromise(projects.delete(projectId));
+          await requestAsPromise(meta.put({ key: firebasePendingRecordsMetaKey, value: pendingRecords }));
+          await requestAsPromise(meta.put({ key: firebasePendingDeletesMetaKey, value: pendingDeletes }));
+          await transactionAsPromise(transaction);
+        } finally {
+          database.close();
+        }
+      }
+
       async function saveProjectRecord(record) {
         if (!record || !record.id) return;
         const existingRecord = await readProjectRecord(record.id);
@@ -3262,25 +3299,31 @@
         if (!projectId) return;
         const recordBeforeDelete = await readProjectRecord(projectId);
         if (recordBeforeDelete) await createProjectBackup(recordBeforeDelete, 'delete-recovery');
-        const database = await openDatabase();
-        try {
-          const transaction = database.transaction(projectStore, 'readwrite');
-          const store = transaction.objectStore(projectStore);
-          await requestAsPromise(store.delete(projectId));
-          await transactionAsPromise(transaction);
-        } finally {
-          database.close();
+        const deletedAt = new Date().toISOString();
+        const deletingThroughFirebase = Boolean(syncCloud && firebaseUser);
+        if (deletingThroughFirebase) {
+          await deleteProjectRecordWithOfflineQueue(projectId, deletedAt);
+        } else {
+          const database = await openDatabase();
+          try {
+            const transaction = database.transaction(projectStore, 'readwrite');
+            const store = transaction.objectStore(projectStore);
+            await requestAsPromise(store.delete(projectId));
+            await transactionAsPromise(transaction);
+          } finally {
+            database.close();
+          }
         }
 
         pendingCloudRecords.delete(projectId);
+        pendingFirebaseRecords.delete(projectId);
         // Marcăm imediat ștergerea, inclusiv dacă Drive este temporar deconectat.
         // Astfel o copie veche din celălalt dispozitiv nu poate readuce proiectul.
-        if (syncCloud && firebaseUser) {
-          const deletedAt = new Date().toISOString();
+        if (deletingThroughFirebase) {
           try {
             await firebaseRecordDeletion(projectId, deletedAt);
+            await removePersistentFirebaseDeletionQueueItem(projectId);
           } catch (error) {
-            await queueFirebaseDeletion(projectId, deletedAt);
             console.warn('Proiectul a fost șters local; ștergerea va fi trimisă automat când revine internetul.', error);
           }
           return;
