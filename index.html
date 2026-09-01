@@ -1459,6 +1459,23 @@
     #cloudLogout { color: #8f1d2d; border-color: #f0c5cb; background: #fff7f7; }
     #pmCloudAccount { border-color: #9fb8ad; background: linear-gradient(180deg, #f6fbf8, #e9f3ee); color: #2f624c; }
     #pmCloudAccount:hover:not(:disabled) { border-color: #6f9b86; background: linear-gradient(180deg, #f7fcf9, #def0e6); }
+
+    /* Ecran complet compact pe tabletă, cu toate comenzile încă ușor de atins. */
+    body.fullscreen-mode .image-panel.fullscreen-panel .fullscreen-image-title { top: calc(env(safe-area-inset-top, 0px) + 8px); max-width: 62vw; padding: 2px 9px; font-size: .68rem; }
+    body.fullscreen-mode .fullscreen-close-btn { top: calc(env(safe-area-inset-top, 0px) + 10px); right: calc(env(safe-area-inset-right, 0px) + 10px); width: 42px; height: 42px; border-radius: 13px; }
+    body.fullscreen-mode .fullscreen-close-btn svg { width: 19px; height: 19px; }
+    body.fullscreen-mode .fullscreen-toolbar-toggle { left: 14px; top: 76px; width: 44px; height: 44px; min-width: 44px; min-height: 44px; border-radius: 14px; }
+    body.fullscreen-mode .fullscreen-toolbar-toggle svg { width: 18px; height: 18px; }
+    body.fullscreen-mode .fullscreen-drawing-toolbar-shell { width: min(94vw, 980px); min-height: 62px; padding: 6px; border-radius: 18px; }
+    body.fullscreen-mode .drawing-toolbar-row { gap: 5px; }
+    body.fullscreen-mode .drawing-tool-group { gap: 5px; padding: 5px 7px; border-radius: 11px; }
+    body.fullscreen-mode .drawing-tool-group-row { gap: 5px; min-height: 32px; }
+    body.fullscreen-mode .tool-label { font-size: .56rem; }
+    body.fullscreen-mode .quick-color-button { width: 23px; height: 23px; min-width: 23px; min-height: 23px; }
+    body.fullscreen-mode #fullscreenColorPicker { width: 30px; height: 30px; min-width: 30px; min-height: 30px; }
+    body.fullscreen-mode #fullscreenBrushSize { width: 78px; min-width: 78px; }
+    body.fullscreen-mode .drawing-tool-button { width: 32px; height: 32px; min-width: 32px; min-height: 32px; border-radius: 9px; }
+    body.fullscreen-mode .drawing-tool-button svg { width: 17px; height: 17px; }
   </style>
 </head>
 <body>
@@ -2055,7 +2072,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.9.5';
+      const APP_VERSION = '1.9.6';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -5068,41 +5085,63 @@
       }
 
       function beginFullscreenSwipe(event) {
-        if (!fullscreenMode || !sourceImage || event.pointerType !== 'touch' || activeTouches.size > 0) return;
-        fullscreenSwipe = {
-          pointerId: event.pointerId,
-          startX: event.clientX,
-          startY: event.clientY,
-          currentX: event.clientX,
-          currentY: event.clientY
-        };
+        if (!fullscreenMode || !sourceImage || event.pointerType !== 'touch' || activeTouches.size > 0 || fullscreenSwipe?.source === 'touch') return;
+        fullscreenSwipe = { source: 'pointer', pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, currentX: event.clientX, currentY: event.clientY };
       }
 
       function updateFullscreenSwipe(event) {
-        if (!fullscreenSwipe || event.pointerId !== fullscreenSwipe.pointerId) return;
+        if (!fullscreenSwipe || fullscreenSwipe.source !== 'pointer' || event.pointerId !== fullscreenSwipe.pointerId) return;
         fullscreenSwipe.currentX = event.clientX;
         fullscreenSwipe.currentY = event.clientY;
         event.preventDefault();
       }
 
-      async function finishFullscreenSwipe(event) {
-        if (!fullscreenSwipe || event.pointerId !== fullscreenSwipe.pointerId) return;
+      function beginFullscreenTouchSwipe(event) {
+        if (!fullscreenMode || !sourceImage || event.touches.length !== 1 || activeTouches.size > 0) return;
+        const touch = event.touches[0];
+        fullscreenSwipe = { source: 'touch', identifier: touch.identifier, startX: touch.clientX, startY: touch.clientY, currentX: touch.clientX, currentY: touch.clientY };
+      }
+
+      function updateFullscreenTouchSwipe(event) {
+        if (!fullscreenSwipe || fullscreenSwipe.source !== 'touch') return;
+        const touch = Array.from(event.touches).find((item) => item.identifier === fullscreenSwipe.identifier);
+        if (!touch) return;
+        fullscreenSwipe.currentX = touch.clientX;
+        fullscreenSwipe.currentY = touch.clientY;
+        event.preventDefault();
+      }
+
+      function completeFullscreenSwipe(swipe, endX, endY) {
+        const deltaX = endX - swipe.startX;
+        const deltaY = endY - swipe.startY;
+        const isHorizontalSwipe = Math.abs(deltaX) >= 42 && Math.abs(deltaX) > Math.abs(deltaY) * 1.1;
+        if (!fullscreenMode || !isHorizontalSwipe || fullscreenImageSwitchInProgress || projectImages.length < 2) return;
+        const nextIndex = (activeImageIndex + (deltaX < 0 ? 1 : -1) + projectImages.length) % projectImages.length;
+        fullscreenImageSwitchInProgress = true;
+        Promise.resolve().then(async () => {
+          try {
+            clearLineToolPreview();
+            await activateImageAt(nextIndex, { persist: true });
+          } finally {
+            fullscreenImageSwitchInProgress = false;
+          }
+        });
+      }
+
+      function finishFullscreenSwipe(event) {
+        if (!fullscreenSwipe || fullscreenSwipe.source !== 'pointer' || event.pointerId !== fullscreenSwipe.pointerId) return;
         const swipe = fullscreenSwipe;
         fullscreenSwipe = null;
-        const deltaX = event.clientX - swipe.startX;
-        const deltaY = event.clientY - swipe.startY;
-        const isHorizontalSwipe = Math.abs(deltaX) >= FULLSCREEN_SWIPE_MIN_DISTANCE_PX
-          && Math.abs(deltaX) > Math.abs(deltaY) * 1.35;
-        if (!fullscreenMode || !isHorizontalSwipe || fullscreenImageSwitchInProgress || projectImages.length < 2) return;
-        const nextIndex = clamp(activeImageIndex + (deltaX < 0 ? 1 : -1), 0, projectImages.length - 1);
-        if (nextIndex === activeImageIndex) return;
-        fullscreenImageSwitchInProgress = true;
-        try {
-          clearLineToolPreview();
-          await activateImageAt(nextIndex, { persist: true });
-        } finally {
-          fullscreenImageSwitchInProgress = false;
-        }
+        completeFullscreenSwipe(swipe, event.clientX, event.clientY);
+      }
+
+      function finishFullscreenTouchSwipe(event) {
+        if (!fullscreenSwipe || fullscreenSwipe.source !== 'touch') return;
+        const touch = Array.from(event.changedTouches).find((item) => item.identifier === fullscreenSwipe.identifier);
+        if (!touch) return;
+        const swipe = fullscreenSwipe;
+        fullscreenSwipe = null;
+        completeFullscreenSwipe(swipe, touch.clientX, touch.clientY);
       }
 
       function beginDrawing(event) {
@@ -6155,10 +6194,14 @@
         fullscreenAbortController = new AbortController();
         const { signal } = fullscreenAbortController;
         stage.addEventListener('pointerdown', handleStagePointerDown, { passive: false, signal });
+        stage.addEventListener('touchstart', beginFullscreenTouchSwipe, { passive: false, signal });
+        stage.addEventListener('touchmove', updateFullscreenTouchSwipe, { passive: false, signal });
         stage.addEventListener('wheel', handleImageWheel, { passive: false, signal });
         window.addEventListener('pointermove', handleStagePointerMove, { signal });
         window.addEventListener('pointerup', handleStagePointerUp, { signal });
         window.addEventListener('pointercancel', handleStagePointerUp, { signal });
+        window.addEventListener('touchend', finishFullscreenTouchSwipe, { passive: false, signal });
+        window.addEventListener('touchcancel', finishFullscreenTouchSwipe, { passive: false, signal });
         window.addEventListener('blur', () => resetInteractionState(), { signal });
         window.addEventListener('resize', () => {
           if (fullscreenMode) {
