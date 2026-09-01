@@ -997,6 +997,15 @@
       margin-top: 16px;
     }
     .danger-dialog-actions button { min-width: 120px; }
+    .sheet-type-dialog { width: min(610px, 100%); }
+    .sheet-type-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+    .sheet-type-choice { display: grid; gap: 8px; min-height: 142px; padding: 15px; text-align: left; border: 1px solid #d9cdbd; border-radius: 15px; background: #fffdfa; color: #342b21; }
+    .sheet-type-choice:hover { border-color: #a98758; background: #fff9ef; transform: translateY(-1px); }
+    .sheet-type-choice strong { font-size: 1rem; }
+    .sheet-type-choice span { color: #746657; font-size: .86rem; line-height: 1.35; }
+    .sheet-type-swatch { height: 52px; border: 1px solid #ded4c7; border-radius: 8px; background: #fff; }
+    .sheet-type-swatch.grid { background-color: #fff; background-image: linear-gradient(#c9d7ed 1px, transparent 1px), linear-gradient(90deg, #c9d7ed 1px, transparent 1px); background-size: 12px 12px; }
+    @media (max-width: 520px) { .sheet-type-choices { grid-template-columns: 1fr; } }
     .danger-confirm-btn {
       border-color: #a22a2a;
       background: #b03434;
@@ -1650,6 +1659,27 @@
       </div>
     </div>
   </div>
+  <div id="sheetTypeDialog" class="danger-dialog-backdrop" hidden>
+    <div class="danger-dialog sheet-type-dialog" role="dialog" aria-modal="true" aria-labelledby="sheetTypeDialogTitle">
+      <h2 id="sheetTypeDialogTitle">Alege tipul foii</h2>
+      <p>Poți adăuga o foaie simplă sau una cu pătrățele, ca la caietul de matematică.</p>
+      <div class="sheet-type-choices">
+        <button type="button" id="createGridSheet" class="sheet-type-choice">
+          <span class="sheet-type-swatch grid" aria-hidden="true"></span>
+          <strong>Foaie cu pătrățele</strong>
+          <span>Recomandată pentru schițe și cote.</span>
+        </button>
+        <button type="button" id="createPlainSheet" class="sheet-type-choice">
+          <span class="sheet-type-swatch" aria-hidden="true"></span>
+          <strong>Foaie simplă</strong>
+          <span>Albă, fără ghidaje.</span>
+        </button>
+      </div>
+      <div class="danger-dialog-actions">
+        <button type="button" id="cancelSheetType">Anulează</button>
+      </div>
+    </div>
+  </div>
   <div id="clearAllDialog" class="danger-dialog-backdrop" hidden>
     <div class="danger-dialog" role="dialog" aria-modal="true" aria-labelledby="clearAllDialogTitle" aria-describedby="clearAllDialogDescription">
       <h2 id="clearAllDialogTitle">Ștergere proiect</h2>
@@ -1781,7 +1811,7 @@
                   <button type="button" id="fullscreenLineBtn" class="drawing-tool-button" aria-label="Linie" title="Linie" aria-pressed="false">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5"></path></svg>
                   </button>
-                  <button type="button" id="fullscreenDashedLineBtn" class="drawing-tool-button" aria-label="Linie punctată" title="Linie punctată" aria-pressed="false" hidden>
+                  <button type="button" id="fullscreenDashedLineBtn" class="drawing-tool-button" aria-label="Linie punctată" title="Linie punctată" aria-pressed="false">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 7.5 16.5"></path><path d="m9.5 14.5 2.5-2.5"></path><path d="m14 10 2.5-2.5"></path><path d="M18 6 19 5"></path></svg>
                   </button>
                   <button type="button" id="fullscreenEraserBtn" class="drawing-tool-button" aria-label="Radieră" title="Radieră">
@@ -1945,6 +1975,10 @@
       const confirmExportImageButton = document.getElementById('confirmExportImage');
       const cancelExportProjectButton = document.getElementById('cancelExportProject');
       const confirmExportProjectButton = document.getElementById('confirmExportProject');
+      const sheetTypeDialog = document.getElementById('sheetTypeDialog');
+      const createGridSheetButton = document.getElementById('createGridSheet');
+      const createPlainSheetButton = document.getElementById('createPlainSheet');
+      const cancelSheetTypeButton = document.getElementById('cancelSheetType');
       const clearAllDialog = document.getElementById('clearAllDialog');
       const cancelClearAllButton = document.getElementById('cancelClearAll');
       const confirmClearAllButton = document.getElementById('confirmClearAll');
@@ -2137,7 +2171,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.10.0';
+      const APP_VERSION = '1.10.1';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -3440,7 +3474,7 @@
         projectImages = projectImages
           .filter((image) => isValidProjectImageEntry(image))
           .map((image) => isBlankSheet(image)
-            ? { ...image, dataUrl: createBlankSheetDataUrl(), type: 'image/svg+xml' }
+            ? { ...image, sheetType: getSheetType(image), dataUrl: createBlankSheetDataUrl(getSheetType(image)), type: 'image/svg+xml' }
             : image);
         if (!projectImages.length) {
           activeImageIndex = 0;
@@ -5011,7 +5045,7 @@
           fullscreenLineBtn.classList.toggle('active', lineActive);
           fullscreenLineBtn.setAttribute('aria-pressed', lineActive ? 'true' : 'false');
           if (fullscreenDashedLineBtn) {
-            fullscreenDashedLineBtn.hidden = !lineActive;
+            fullscreenDashedLineBtn.hidden = false;
             fullscreenDashedLineBtn.classList.toggle('active', lineActive && lineDashed);
             fullscreenDashedLineBtn.setAttribute('aria-pressed', lineActive && lineDashed ? 'true' : 'false');
           }
@@ -6884,24 +6918,33 @@
 
       function isBlankSheet(image) {
         const title = String(image?.title || image?.name || '').trim();
-        return image?.type === 'image/svg+xml' && /^Foaie albă(?:\s+\d+)?$/i.test(title);
+        return image?.type === 'image/svg+xml' && /^Foaie (?:albă|cu pătrățele)(?:\s+\d+)?$/i.test(title);
       }
 
-      function createBlankSheetDataUrl() {
+      function getSheetType(image) {
+        return image?.sheetType === 'plain' ? 'plain' : 'grid';
+      }
+
+      function createBlankSheetDataUrl(sheetType = 'grid') {
         // 4:3 folosește mai bine spațiul editorului, pe PC și tabletă.
-        const blankSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900"><rect width="1200" height="900" fill="white"/></svg>';
+        const isGrid = sheetType !== 'plain';
+        const grid = isGrid ? '<defs><pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M 24 0 L 0 0 0 24" fill="none" stroke="#c7d8ee" stroke-width="1"/></pattern></defs><rect width="1200" height="900" fill="url(#grid)"/>' : '';
+        const blankSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900"><rect width="1200" height="900" fill="white"/>' + grid + '</svg>';
         return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(blankSvg);
       }
 
-      async function createBlankSheet() {
-        const blankSheetNumber = projectImages.filter((image) => String(image?.title || '').startsWith('Foaie albă')).length + 1;
-        const title = blankSheetNumber === 1 ? 'Foaie albă' : `Foaie albă ${blankSheetNumber}`;
+      async function createBlankSheet(sheetType = 'grid') {
+        const normalizedSheetType = sheetType === 'plain' ? 'plain' : 'grid';
+        const baseTitle = normalizedSheetType === 'grid' ? 'Foaie cu pătrățele' : 'Foaie albă';
+        const sheetNumber = projectImages.filter((image) => String(image?.title || '').startsWith(baseTitle)).length + 1;
+        const title = sheetNumber === 1 ? baseTitle : `${baseTitle} ${sheetNumber}`;
         const imageEntry = {
           id: createNoteId(),
           name: title,
           title,
-          dataUrl: createBlankSheetDataUrl(),
+          dataUrl: createBlankSheetDataUrl(normalizedSheetType),
           type: 'image/svg+xml',
+          sheetType: normalizedSheetType,
           strokes: [],
           notes: [],
           zoom: 1,
@@ -7158,12 +7201,30 @@
         event.preventDefault();
         imageInput.click();
       });
+      function openSheetTypeDialog() {
+        sheetTypeDialog.hidden = false;
+        requestAnimationFrame(() => createGridSheetButton?.focus());
+      }
+
+      function closeSheetTypeDialog() {
+        sheetTypeDialog.hidden = true;
+      }
+
       if (thumbnailAddBlankSheetButton) {
-        thumbnailAddBlankSheetButton.addEventListener('click', async (event) => {
+        thumbnailAddBlankSheetButton.addEventListener('click', (event) => {
           event.preventDefault();
-          await createBlankSheet();
+          openSheetTypeDialog();
         });
       }
+      createGridSheetButton?.addEventListener('click', async () => {
+        closeSheetTypeDialog();
+        await createBlankSheet('grid');
+      });
+      createPlainSheetButton?.addEventListener('click', async () => {
+        closeSheetTypeDialog();
+        await createBlankSheet('plain');
+      });
+      cancelSheetTypeButton?.addEventListener('click', closeSheetTypeDialog);
       thumbnailAddImageButton.addEventListener('click', (event) => {
         event.preventDefault();
         imageInput.click();
@@ -7213,13 +7274,19 @@
         });
       }
       fullscreenLineBtn.addEventListener('click', () => {
-        setActiveDrawMode(activeDrawMode === 'line' ? 'freehand' : 'line', { erasing: false });
+        // Linie continuă și linie punctată sunt alegeri independente.
+        setActiveDrawMode('line', { erasing: false });
+        lineDashed = false;
+        if (activeStroke && activeStroke.type === 'line') activeStroke.dashed = false;
+        applyCurrentBrushSettings();
+        syncBrushControls();
+        scheduleSave();
       });
       if (fullscreenDashedLineBtn) {
         fullscreenDashedLineBtn.addEventListener('click', () => {
-          if (activeDrawMode !== 'line' || isErasing) setActiveDrawMode('line', { erasing: false });
-          lineDashed = !lineDashed;
-          if (activeStroke && activeStroke.type === 'line') activeStroke.dashed = lineDashed;
+          setActiveDrawMode('line', { erasing: false });
+          lineDashed = true;
+          if (activeStroke && activeStroke.type === 'line') activeStroke.dashed = true;
           applyCurrentBrushSettings();
           syncBrushControls();
           scheduleSave();
