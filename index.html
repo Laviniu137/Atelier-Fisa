@@ -2174,7 +2174,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.10.3';
+      const APP_VERSION = '1.10.4';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -7770,23 +7770,22 @@
           navigator.serviceWorker.register('./sw.js').then((registration) => {
             let refreshingAfterUpdate = false;
 
-            const askAndActivateUpdate = async (worker) => {
+            const activateUpdateSafely = async (worker) => {
               if (!worker || worker.state !== 'installed' || !navigator.serviceWorker.controller) return;
-              const shouldReload = window.confirm('Este disponibilă o versiune nouă. Reîncarcă aplicația?');
-              if (!shouldReload) return;
-              // Nu crea un proiect gol când aplicația se actualizează din ecranul „Proiectele mele”.
+              // Actualizarea este automată, însă întâi salvăm proiectul în lucru.
               if (projectDirty && activeProjectId) {
                 try {
                   await flushAutosave({ force: true });
                 } catch (error) {
-                  console.warn('Starea curentă nu a putut fi salvată înainte de actualizare.', error);
+                  console.warn('Actualizarea a fost amânată: proiectul curent nu a putut fi salvat.', error);
+                  return;
                 }
               }
               worker.postMessage({ type: 'SKIP_WAITING' });
             };
 
             if (registration.waiting) {
-              askAndActivateUpdate(registration.waiting);
+              activateUpdateSafely(registration.waiting);
             }
 
             registration.addEventListener('updatefound', () => {
@@ -7794,7 +7793,7 @@
               if (!installingWorker) return;
               installingWorker.addEventListener('statechange', () => {
                 if (installingWorker.state === 'installed') {
-                  askAndActivateUpdate(installingWorker);
+                  activateUpdateSafely(installingWorker);
                 }
               });
             });
