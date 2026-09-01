@@ -2175,7 +2175,7 @@
       const projectBackupStore = 'projectBackups';
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.10.5';
+      const APP_VERSION = '1.10.6';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2388,13 +2388,27 @@
           const localMap = new Map(local.map((item) => [item.id, item]));
           for (const [id, deletedAt] of Object.entries(remote.tombstones || {})) {
             const localRecord = localMap.get(id);
-            if (localRecord && (Date.parse(deletedAt) || 0) >= getRecordUpdatedAt(localRecord)) await deleteProjectRecord(id, { syncCloud: false });
+            if (localRecord && (Date.parse(deletedAt) || 0) >= getRecordUpdatedAt(localRecord)) {
+              await createProjectBackup(localRecord, 'firebase-delete-recovery');
+              await deleteProjectRecord(id, { syncCloud: false });
+            }
           }
           for (const meta of Object.values(remote.records || {})) {
             const localRecord = localMap.get(meta.id);
             if (!localRecord || Date.parse(meta.updatedAt || '') > getRecordUpdatedAt(localRecord)) {
+              // Never replace an open project while the user is still writing.
+              // The next autosave uploads that local work as the newer version.
+              if (localRecord?.id === activeProjectId && (projectDirty || isContinuousInteractionActive())) {
+                projectManagerNeedsRefresh = true;
+                continue;
+              }
               const remoteRecord = await firebaseLoadRecord(meta);
-              if (remoteRecord) await persistProjectRecord(remoteRecord);
+              if (remoteRecord) {
+                if (localRecord && JSON.stringify(localRecord) !== JSON.stringify(remoteRecord)) {
+                  await createProjectBackup(localRecord, 'firebase-merge-recovery');
+                }
+                await persistProjectRecord(remoteRecord);
+              }
             }
           }
           const refreshed = await readAllProjectRecords();
