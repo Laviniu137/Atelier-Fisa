@@ -2055,7 +2055,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.9.4';
+      const APP_VERSION = '1.9.5';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2209,6 +2209,25 @@
         });
         await firebaseBroadcastRealtimeSignal().catch((error) => console.warn('Semnalul live va fi reîncercat la următoarea modificare.', error));
       }
+      async function forceUploadFirebaseFromThisDevice() {
+        if (!firebaseUser || !firebaseDb) throw new Error('AUTH_REQUIRED');
+        // Aducem mai întâi proiectele cloud, astfel lista locală devine completă înainte de trimitere.
+        const manifestRef = firebaseManifestRef || firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid).collection('state').doc('manifest');
+        firebaseManifestRef = manifestRef;
+        const snapshot = await manifestRef.get();
+        await firebaseReconcile(snapshot.data() || { version: 1, records: {}, tombstones: {} });
+
+        // Publicăm fiecare proiect local. Firebase păstrează proiectele sau ștergerile mai noi.
+        const records = await readAllProjectRecords();
+        if (!records.length) throw new Error('Nu există proiecte locale de trimis.');
+        for (const record of records) {
+          await firebaseUploadRecord(record);
+        }
+        await firebaseRefreshFromCloud();
+        await renderProjectCards();
+        showSaveToast(records.length + ' proiecte au fost trimise în sincronizare.');
+      }
+
       async function firebaseReconcile(remote) {
         if (!firebaseUser || !remote) return;
         if (firebaseRunning) {
@@ -7158,11 +7177,17 @@
       cloudUploadDeviceButton.addEventListener('click', async () => {
         cloudUploadDeviceButton.disabled = true;
         try {
-          await forceUploadGoogleDriveFromThisDevice();
+          if (firebaseUser) {
+            await forceUploadFirebaseFromThisDevice();
+          } else {
+            await forceUploadGoogleDriveFromThisDevice();
+          }
           closeCloudAccountDialog();
         } catch (error) {
-          console.warn('Încărcarea de recuperare în Google Drive a eșuat.', error);
-          cloudAccountStatus.textContent = 'Nu am putut trimite proiectele. Alege din nou contul Google când apare fereastra și încearcă iar. Proiectele locale nu au fost modificate.';
+          console.warn('Încărcarea de recuperare a eșuat.', error);
+          cloudAccountStatus.textContent = error?.message === 'AUTH_REQUIRED'
+            ? 'Conectează același cont Google pentru sincronizare și încearcă din nou.'
+            : 'Nu am putut trimite proiectele. Proiectele locale nu au fost modificate; verifică internetul și încearcă din nou.';
         } finally {
           cloudUploadDeviceButton.disabled = false;
         }
