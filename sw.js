@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fisa-atelier-v91';
+const CACHE_NAME = 'fisa-atelier-v92';
 const APP_FILES = [
   './',
   './index.html',
@@ -46,22 +46,17 @@ self.addEventListener('fetch', (event) => {
   if (event.request.mode === 'navigate') {
     event.respondWith((async () => {
       const cache = await caches.open(CACHE_NAME);
-      const cachedShell = await cache.match('./index.html');
-      const networkPromise = fetch(event.request).then((response) => {
+      // Online, pagina principală vine întotdeauna din rețea: astfel actualizările
+      // nu mai rămân blocate într-o versiune veche din cache.
+      try {
+        const response = await fetch(event.request);
         if (response.ok) {
           cache.put('./index.html', response.clone());
         }
         return response;
-      });
-
-      if (cachedShell) {
-        event.waitUntil(networkPromise.catch(() => {}));
-        return cachedShell;
-      }
-
-      try {
-        return await networkPromise;
       } catch {
+        const cachedShell = await cache.match('./index.html');
+        if (cachedShell) return cachedShell;
         return new Response('<h1>Offline</h1>', {
           headers: { 'Content-Type': 'text/html; charset=utf-8' },
           status: 503
