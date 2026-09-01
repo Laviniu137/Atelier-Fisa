@@ -208,6 +208,11 @@
       background: #eef8f0;
       color: #2f6f51;
     }
+    .project-status.is-to-measure {
+      border-color: #e5cf93;
+      background: #fff8e7;
+      color: #8a6517;
+    }
     .project-card-stats {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2196,7 +2201,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.12.1';
+      const APP_VERSION = '1.12.2';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -3898,7 +3903,7 @@
       }
 
       function normalizeProjectStatus(value) {
-        return value === 'finalized' ? 'finalized' : 'in-progress';
+        return value === 'finalized' || value === 'to-measure' ? value : 'in-progress';
       }
 
       function isLikelyAtelierProjectFile(project) {
@@ -4163,8 +4168,8 @@
 
           const status = normalizeProjectStatus(record.status || record.payload?.projectStatus);
           const statusBadge = document.createElement('span');
-          statusBadge.className = 'project-status' + (status === 'finalized' ? ' is-finalized' : '');
-          statusBadge.textContent = status === 'finalized' ? '✓ Finalizat' : '● În lucru';
+          statusBadge.className = 'project-status' + (status === 'finalized' ? ' is-finalized' : (status === 'to-measure' ? ' is-to-measure' : ''));
+          statusBadge.textContent = status === 'finalized' ? '✓ Finalizat' : (status === 'to-measure' ? '📏 De măsurat' : '● În lucru');
           titleColumn.appendChild(statusBadge);
 
           const menu = document.createElement('details');
@@ -4176,11 +4181,14 @@
 
           const menuItems = document.createElement('div');
           menuItems.className = 'project-card-menu-items';
+          const statusActions = [
+            { status: 'to-measure', action: 'set-to-measure', label: 'Marchează ca de măsurat', icon: '📏' },
+            { status: 'in-progress', action: 'set-in-progress', label: 'Marchează ca în lucru', icon: '●' },
+            { status: 'finalized', action: 'set-finalized', label: 'Marchează ca finalizat', icon: '✓' }
+          ].filter((item) => item.status !== status);
           const menuActions = [
             { action: 'rename', label: 'Redenumește', icon: '✏️' },
-            status === 'finalized'
-              ? { action: 'set-in-progress', label: 'Marchează ca în lucru', icon: '●' }
-              : { action: 'set-finalized', label: 'Marchează ca finalizat', icon: '✓' },
+            ...statusActions,
             { action: 'export-project', label: 'Exportă proiect', icon: '📦' },
             { action: 'toggle-more', label: 'Mai multe opțiuni', icon: '⋯' },
             { action: 'duplicate', label: 'Duplică', icon: '📄', secondary: true },
@@ -4383,8 +4391,8 @@
           return;
         }
 
-        if (action === 'set-in-progress' || action === 'set-finalized') {
-          const nextStatus = action === 'set-finalized' ? 'finalized' : 'in-progress';
+        if (action === 'set-to-measure' || action === 'set-in-progress' || action === 'set-finalized') {
+          const nextStatus = action === 'set-finalized' ? 'finalized' : (action === 'set-to-measure' ? 'to-measure' : 'in-progress');
           const nextPayload = normalizeIncomingProject(record.payload || {});
           nextPayload.projectStatus = nextStatus;
           nextPayload.updatedAt = new Date().toISOString();
@@ -4397,7 +4405,7 @@
           await saveProjectRecord(updatedRecord);
           if (record.id === activeProjectId) currentProjectStatus = nextStatus;
           await renderProjectCards();
-          showSaveToast(nextStatus === 'finalized' ? 'Proiect marcat ca finalizat.' : 'Proiect marcat ca în lucru.');
+          showSaveToast(nextStatus === 'finalized' ? 'Proiect marcat ca finalizat.' : (nextStatus === 'to-measure' ? 'Proiect marcat ca de măsurat.' : 'Proiect marcat ca în lucru.'));
           return;
         }
 
