@@ -2176,7 +2176,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.11.6';
+      const APP_VERSION = '1.11.7';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2211,7 +2211,7 @@
       let firebaseApp = null, firebaseAuth = null, firebaseDb = null, firebaseRealtimeDb = null, firebaseUser = null, firebaseManifestRef = null, firebaseManifest = null, firebaseManifestUnsubscribe = null, firebaseRealtimeSignalRef = null, firebaseRealtimeSignalListener = null, firebaseRealtimeSignalPrimed = false, firebaseSyncTimer = null, firebaseLiveRefreshTimer = null, firebaseRunning = false, firebasePendingRemote = null, firebaseManagerRefreshTimer = null, firebaseManagerLastInteractionAt = Date.now(), firebaseInitialized = false, firebaseLastRemoteUpdatedAt = '', firebaseLastRealtimeSignalAt = '', firebaseSyncInProgress = false;
       const pendingFirebaseRecords = new Map();
 
-      let googleDriveToken = null, googleDriveTokenExpires = 0, googleDriveFileId = null, googleDriveRemoteModified = '', googleDriveConnected = false, googleDriveAuthorizationNeeded = false, googleDriveTimer = null, googleDrivePoller = null, googleDriveRunning = false;
+      let googleDriveToken = null, googleDriveTokenExpires = 0, googleDriveFileId = null, googleDriveRemoteModified = '', googleDriveConnected = false, googleDriveAuthorizationNeeded = false, googleDriveTimer = null, googleDrivePoller = null, googleDriveRunning = false, googleDriveSyncScheduled = false;
       let cloudClient = null;
       let cloudUser = null;
       let cloudRealtimeChannel = null;
@@ -2223,9 +2223,18 @@
 
       function isCloudReady() { return Boolean(window.supabase && SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY); }
       function getCloudStatusMessage() { if (firebaseUser) return 'Sincronizare live activă prin Firebase între tabletă și PC.'; if (firebaseInitialized) return 'Conectează contul Google pentru sincronizare live între tabletă și PC.'; if (!googleDriveConnected) return 'Conectează Google Drive o singură dată pe fiecare dispozitiv pentru sincronizare automată.'; return googleDriveAuthorizationNeeded ? 'Google Drive este configurat. Apasă „Sincronizează acum” pentru a reîmprospăta accesul.' : 'Google Drive este conectat. Proiectele se salvează local și se actualizează automat între tabletă și PC.'; }
+      function getSyncIndicatorLabel() {
+        if (firebaseUser) {
+          return firebaseSyncInProgress || pendingFirebaseRecords.size ? '↻ Se sincronizează' : '☁️ Sincronizat';
+        }
+        if (googleDriveConnected && !googleDriveAuthorizationNeeded) {
+          return googleDriveRunning || googleDriveSyncScheduled ? '↻ Se sincronizează' : '☁️ Sincronizat';
+        }
+        return '💾 Salvat local';
+      }
       function updateCloudAccountUi() {
         if (cloudAccountStatus) cloudAccountStatus.textContent = getCloudStatusMessage();
-        if (cloudAccountButton) cloudAccountButton.innerHTML = '<span>' + (firebaseUser ? '☁️ Sincronizare activă' : firebaseInitialized ? '☁️ Conectează Google' : (googleDriveConnected ? '☁️ Google Drive conectat' : '☁️ Google Drive')) + '</span>';
+        if (cloudAccountButton) cloudAccountButton.innerHTML = '<span>' + getSyncIndicatorLabel() + '</span>';
         if (cloudLoginButton) { cloudLoginButton.hidden = Boolean(firebaseUser) || (googleDriveConnected && !googleDriveAuthorizationNeeded); cloudLoginButton.textContent = firebaseInitialized ? 'Conectează Google pentru sincronizare live' : (googleDriveConnected ? 'Reîmprospătează accesul Google Drive' : 'Conectează Google Drive'); }
         if (cloudSyncNowButton) cloudSyncNowButton.hidden = firebaseInitialized ? !firebaseUser : !googleDriveConnected;
         if (cloudUploadDeviceButton) cloudUploadDeviceButton.hidden = firebaseInitialized ? !firebaseUser : !googleDriveConnected;
@@ -2534,6 +2543,7 @@
       async function flushPendingFirebaseRecords() {
         if (!firebaseUser || !firebaseDb || navigator.onLine === false || firebaseSyncInProgress) return;
         firebaseSyncInProgress = true;
+        updateCloudAccountUi();
         try {
           await loadPersistentFirebaseQueue();
           await flushPendingFirebaseDeletions();
@@ -2551,6 +2561,7 @@
           }
         } finally {
           firebaseSyncInProgress = false;
+          updateCloudAccountUi();
           if (pendingFirebaseRecords.size && navigator.onLine !== false) {
             window.clearTimeout(firebaseSyncTimer);
             firebaseSyncTimer = window.setTimeout(() => flushPendingFirebaseRecords(), 5000);
@@ -2561,6 +2572,7 @@
       function scheduleFirebaseSync(record) {
         if (!record?.id) return;
         pendingFirebaseRecords.set(record.id, cloneProjectData(record));
+        updateCloudAccountUi();
         window.clearTimeout(firebaseSyncTimer);
         firebaseSyncTimer = window.setTimeout(() => flushPendingFirebaseRecords(), 750);
       }
@@ -2779,6 +2791,7 @@
         if (poll && googleDriveFileId) { const check = await googleDriveFetch('https://www.googleapis.com/drive/v3/files/' + encodeURIComponent(googleDriveFileId) + '?fields=modifiedTime'); if (check.ok) { const meta = await check.json(); if (meta.modifiedTime && meta.modifiedTime === googleDriveRemoteModified) return; } }
         if (!googleDriveConnected || googleDriveRunning || navigator.onLine === false) return;
         googleDriveRunning = true;
+        updateCloudAccountUi();
         try {
           const local = await readAllProjectRecords(), localMap = new Map(local.map((x) => [x.id, x]));
           const localDeletes = (await getMetaValue(googleDriveTombstonesKey)) || {};
@@ -2799,7 +2812,7 @@
           await setMetaValue(googleDriveTombstonesKey, tombstones);
           if (upload) await googleDriveWrite({ version: 1, updatedAt: new Date().toISOString(), projects, tombstones });
           await renderProjectCards(); projectManagerNeedsRefresh = false;
-        } finally { googleDriveRunning = false; }
+        } finally { googleDriveRunning = false; updateCloudAccountUi(); }
       }
       async function forceUploadGoogleDriveFromThisDevice() {
         if (!googleDriveConnected) return;
@@ -2818,7 +2831,17 @@
         showSaveToast(records.length + ' proiecte au fost trimise în Google Drive.');
       }
 
-      function scheduleGoogleDriveSync() { if (!googleDriveConnected) return; clearTimeout(googleDriveTimer); googleDriveTimer = setTimeout(() => googleDriveSync().catch((e) => console.warn('Proiectele rămân salvate local.', e)), 1200); }
+      function scheduleGoogleDriveSync() {
+        if (!googleDriveConnected) return;
+        googleDriveSyncScheduled = true;
+        updateCloudAccountUi();
+        clearTimeout(googleDriveTimer);
+        googleDriveTimer = setTimeout(() => {
+          googleDriveSyncScheduled = false;
+          updateCloudAccountUi();
+          googleDriveSync().catch((e) => console.warn('Proiectele rămân salvate local.', e));
+        }, 1200);
+      }
       function startGoogleDrivePolling() { clearInterval(googleDrivePoller); googleDrivePoller = setInterval(() => googleDriveSync({ poll: true }).catch(() => {}), 15000); }
       async function connectGoogleDrive() {
         try { await googleDriveTokenFor(true); googleDriveConnected = true; googleDriveAuthorizationNeeded = false; await setMetaValue(googleDriveStateKey, true); await googleDriveSync(); startGoogleDrivePolling(); updateCloudAccountUi(); closeCloudAccountDialog(); showSaveToast('Google Drive este conectat. Proiectele se sincronizează automat.'); }
