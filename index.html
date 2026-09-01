@@ -1476,6 +1476,21 @@
     body.fullscreen-mode #fullscreenBrushSize { width: 78px; min-width: 78px; }
     body.fullscreen-mode .drawing-tool-button { width: 32px; height: 32px; min-width: 32px; min-height: 32px; border-radius: 9px; }
     body.fullscreen-mode .drawing-tool-button svg { width: 17px; height: 17px; }
+
+    /* Bară flotantă mai compactă: nu mai ocupă lățimea ecranului. */
+    body.fullscreen-mode .fullscreen-drawing-toolbar { max-width: calc(100vw - 28px); }
+    body.fullscreen-mode .fullscreen-drawing-toolbar-shell { width: fit-content; max-width: min(calc(100vw - 28px), 760px); min-height: 54px; padding: 5px; border-radius: 16px; }
+    body.fullscreen-mode .drawing-toolbar-row { width: max-content; flex-wrap: nowrap; gap: 4px; }
+    body.fullscreen-mode .drawing-tool-group { gap: 4px; padding: 4px 6px; border-radius: 10px; }
+    body.fullscreen-mode .drawing-tool-group-row { gap: 4px; min-height: 30px; }
+    body.fullscreen-mode .tool-label { font-size: .52rem; letter-spacing: .055em; }
+    body.fullscreen-mode .quick-colors { gap: 4px; }
+    body.fullscreen-mode .quick-color-button { width: 22px; height: 22px; min-width: 22px; min-height: 22px; }
+    body.fullscreen-mode #fullscreenColorPicker { width: 28px; height: 28px; min-width: 28px; min-height: 28px; }
+    body.fullscreen-mode #fullscreenBrushSize { width: 64px; min-width: 64px; }
+    body.fullscreen-mode #fullscreenBrushSizeValue { min-width: 38px; padding: 4px 5px; font-size: .65rem; }
+    body.fullscreen-mode .drawing-tool-button { width: 30px; height: 30px; min-width: 30px; min-height: 30px; }
+    body.fullscreen-mode .drawing-tool-button svg { width: 16px; height: 16px; }
   </style>
 </head>
 <body>
@@ -2072,7 +2087,7 @@
       const metaStore = 'meta';
       const projectBackupStore = 'projectBackups';
       const projectVersion = 2;
-      const APP_VERSION = '1.9.6';
+      const APP_VERSION = '1.9.7';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
