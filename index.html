@@ -2196,7 +2196,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.12.0';
+      const APP_VERSION = '1.12.1';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -4177,16 +4177,15 @@
           const menuItems = document.createElement('div');
           menuItems.className = 'project-card-menu-items';
           const menuActions = [
-            { action: 'open', label: 'Deschide', icon: '📂' },
             { action: 'rename', label: 'Redenumește', icon: '✏️' },
-            { action: 'duplicate', label: 'Duplică', icon: '📄' },
             status === 'finalized'
               ? { action: 'set-in-progress', label: 'Marchează ca în lucru', icon: '●' }
               : { action: 'set-finalized', label: 'Marchează ca finalizat', icon: '✓' },
-            { action: 'export-project-atf', label: 'Exportă proiect (.atf)', icon: '📦' },
-            { action: 'export-project-json', label: 'Exportă proiect (.json)', icon: '📄' },
-            { action: 'restore-backup', label: 'Recuperează ultimul backup într-un proiect nou', icon: '↩️' },
-            { action: 'restore-cloud-backup', label: 'Recuperează copia de siguranță din cloud', icon: '☁️' },
+            { action: 'export-project', label: 'Exportă proiect', icon: '📦' },
+            { action: 'toggle-more', label: 'Mai multe opțiuni', icon: '⋯' },
+            { action: 'duplicate', label: 'Duplică', icon: '📄', secondary: true },
+            { action: 'restore-backup', label: 'Recuperează ultimul backup într-un proiect nou', icon: '↩️', secondary: true },
+            { action: 'restore-cloud-backup', label: 'Recuperează copia de siguranță din cloud', icon: '☁️', secondary: true },
             { action: 'separator' },
             { action: 'delete', label: 'Șterge proiect', icon: '🗑️', danger: true }
           ];
@@ -4201,6 +4200,10 @@
             const itemButton = document.createElement('button');
             itemButton.type = 'button';
             itemButton.disabled = Boolean(item.disabled);
+            if (item.secondary) {
+              itemButton.hidden = true;
+              itemButton.dataset.secondaryAction = 'true';
+            }
             if (item.danger) {
               itemButton.classList.add('is-danger');
             }
@@ -4214,6 +4217,15 @@
             itemButton.appendChild(label);
             itemButton.addEventListener('click', async (event) => {
               event.preventDefault();
+              if (item.action === 'toggle-more') {
+                const expanded = itemButton.getAttribute('aria-expanded') === 'true';
+                menuItems.querySelectorAll('[data-secondary-action]').forEach((button) => {
+                  button.hidden = expanded;
+                });
+                itemButton.setAttribute('aria-expanded', String(!expanded));
+                label.textContent = expanded ? 'Mai multe opțiuni' : 'Mai puține opțiuni';
+                return;
+              }
               menu.open = false;
               await handleProjectCardAction(record, item.action);
             });
@@ -4363,6 +4375,11 @@
           });
           await saveProjectRecord(duplicateRecord);
           await renderProjectCards();
+          return;
+        }
+
+        if (action === 'export-project') {
+          openExportProjectDialog({ type: 'record', record });
           return;
         }
 
