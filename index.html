@@ -2176,7 +2176,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.11.7';
+      const APP_VERSION = '1.11.8';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2208,7 +2208,7 @@
       const firebaseConfig = { apiKey: 'AIzaSyCMUavm_4Uc66Gv0BFjsm6UsPXIAeu6kYE', authDomain: 'atelier-mobila-cloud.firebaseapp.com', databaseURL: 'https://atelier-mobila-cloud-default-rtdb.europe-west1.firebasedatabase.app', projectId: 'atelier-mobila-cloud', appId: '1:242123502161:web:590fd44106e4cc67533e70' };
       const firebaseSyncCollection = 'atelierFisaSyncV1';
       const firebaseChunkSize = 480000;
-      let firebaseApp = null, firebaseAuth = null, firebaseDb = null, firebaseRealtimeDb = null, firebaseUser = null, firebaseManifestRef = null, firebaseManifest = null, firebaseManifestUnsubscribe = null, firebaseRealtimeSignalRef = null, firebaseRealtimeSignalListener = null, firebaseRealtimeSignalPrimed = false, firebaseSyncTimer = null, firebaseLiveRefreshTimer = null, firebaseRunning = false, firebasePendingRemote = null, firebaseManagerRefreshTimer = null, firebaseManagerLastInteractionAt = Date.now(), firebaseInitialized = false, firebaseLastRemoteUpdatedAt = '', firebaseLastRealtimeSignalAt = '', firebaseSyncInProgress = false;
+      let firebaseApp = null, firebaseAuth = null, firebaseDb = null, firebaseRealtimeDb = null, firebaseUser = null, firebaseManifestRef = null, firebaseManifest = null, firebaseManifestUnsubscribe = null, firebaseRealtimeSignalRef = null, firebaseRealtimeSignalListener = null, firebaseRealtimeSignalPrimed = false, firebaseSyncTimer = null, firebaseLiveRefreshTimer = null, firebaseRunning = false, firebasePendingRemote = null, firebaseManagerRefreshTimer = null, firebaseManagerLastInteractionAt = Date.now(), firebaseInitialized = false, firebaseLastRemoteUpdatedAt = '', firebaseLastRealtimeSignalAt = '', firebaseSyncInProgress = false, firebasePendingDeletionCount = 0;
       const pendingFirebaseRecords = new Map();
 
       let googleDriveToken = null, googleDriveTokenExpires = 0, googleDriveFileId = null, googleDriveRemoteModified = '', googleDriveConnected = false, googleDriveAuthorizationNeeded = false, googleDriveTimer = null, googleDrivePoller = null, googleDriveRunning = false, googleDriveSyncScheduled = false;
@@ -2225,9 +2225,11 @@
       function getCloudStatusMessage() { if (firebaseUser) return 'Sincronizare live activă prin Firebase între tabletă și PC.'; if (firebaseInitialized) return 'Conectează contul Google pentru sincronizare live între tabletă și PC.'; if (!googleDriveConnected) return 'Conectează Google Drive o singură dată pe fiecare dispozitiv pentru sincronizare automată.'; return googleDriveAuthorizationNeeded ? 'Google Drive este configurat. Apasă „Sincronizează acum” pentru a reîmprospăta accesul.' : 'Google Drive este conectat. Proiectele se salvează local și se actualizează automat între tabletă și PC.'; }
       function getSyncIndicatorLabel() {
         if (firebaseUser) {
-          return firebaseSyncInProgress || pendingFirebaseRecords.size ? '↻ Se sincronizează' : '☁️ Sincronizat';
+          if (navigator.onLine === false) return '💾 Salvat local';
+          return firebaseSyncInProgress || pendingFirebaseRecords.size || firebasePendingDeletionCount ? '↻ Se sincronizează' : '☁️ Sincronizat';
         }
         if (googleDriveConnected && !googleDriveAuthorizationNeeded) {
+          if (navigator.onLine === false) return '💾 Salvat local';
           return googleDriveRunning || googleDriveSyncScheduled ? '↻ Se sincronizează' : '☁️ Sincronizat';
         }
         return '💾 Salvat local';
@@ -2414,6 +2416,8 @@
         const pending = (await getMetaValue(firebasePendingDeletesMetaKey)) || {};
         pending[projectId] = deletedAt;
         await setMetaValue(firebasePendingDeletesMetaKey, pending);
+        firebasePendingDeletionCount = Object.keys(pending).length;
+        updateCloudAccountUi();
       }
 
       async function removePersistentFirebaseDeletionQueueItem(projectId) {
@@ -2421,6 +2425,8 @@
         if (!(projectId in pending)) return;
         delete pending[projectId];
         await setMetaValue(firebasePendingDeletesMetaKey, pending);
+        firebasePendingDeletionCount = Object.keys(pending).length;
+        updateCloudAccountUi();
       }
 
       async function flushPendingFirebaseDeletions() {
@@ -2438,6 +2444,8 @@
           }
         }
         if (changed) await setMetaValue(firebasePendingDeletesMetaKey, pending);
+        firebasePendingDeletionCount = Object.keys(pending).length;
+        updateCloudAccountUi();
       }
       async function forceUploadFirebaseFromThisDevice() {
         if (!firebaseUser || !firebaseDb) throw new Error('AUTH_REQUIRED');
@@ -2531,6 +2539,9 @@
           const record = await readProjectRecord(projectId);
           if (record) pendingFirebaseRecords.set(projectId, cloneProjectData(record));
         }
+        const pendingDeletes = (await getMetaValue(firebasePendingDeletesMetaKey)) || {};
+        firebasePendingDeletionCount = Object.keys(pendingDeletes).length;
+        updateCloudAccountUi();
       }
 
       async function removePersistentFirebaseQueueItem(projectId) {
@@ -2679,6 +2690,8 @@
         firebaseManifestRef = firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid).collection('state').doc('manifest');
         // Trimitem mai întâi munca păstrată offline. Abia apoi ascultăm actualizările
         // venite din cloud, astfel încât ele nu pot înlocui nota de pe tabletă la reconectare.
+        // Încărcăm coada și fără internet, ca indicatorul să nu afirme greșit că totul este sincronizat.
+        await loadPersistentFirebaseQueue();
         await flushPendingFirebaseDeletions();
         await flushPendingFirebaseRecords();
         firebaseManifestUnsubscribe = firebaseManifestRef.onSnapshot((snapshot) => {
@@ -3274,6 +3287,7 @@
       async function deleteProjectRecordWithOfflineQueue(projectId, deletedAt) {
         if (!projectId) return;
         const database = await openDatabase();
+        let queuedDeletionCount = 0;
         try {
           // Ștergerea și marcajul ei pleacă împreună în aceeași operație.
           // O copie veche din cloud nu poate reapărea între ele.
@@ -3286,6 +3300,7 @@
           const pendingDeletes = { ...(pendingDeletesRow?.value || {}) };
           delete pendingRecords[projectId];
           pendingDeletes[projectId] = deletedAt;
+          queuedDeletionCount = Object.keys(pendingDeletes).length;
           await requestAsPromise(projects.delete(projectId));
           await requestAsPromise(meta.put({ key: firebasePendingRecordsMetaKey, value: pendingRecords }));
           await requestAsPromise(meta.put({ key: firebasePendingDeletesMetaKey, value: pendingDeletes }));
@@ -3293,6 +3308,8 @@
         } finally {
           database.close();
         }
+        firebasePendingDeletionCount = queuedDeletionCount;
+        updateCloudAccountUi();
       }
 
       async function saveProjectRecord(record) {
