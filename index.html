@@ -2175,7 +2175,7 @@
       const projectBackupStore = 'projectBackups';
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.11.1';
+      const APP_VERSION = '1.11.2';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -5494,8 +5494,9 @@
               dashed: lineDashed,
               type: 'line'
             };
+            canvas.setPointerCapture(event.pointerId);
             activeDrawingPointerId = event.pointerId;
-            isDrawing = false;
+            isDrawing = true;
             redraw();
             return;
           }
@@ -5514,6 +5515,9 @@
             };
           }
           finalizeLineDraft();
+          releasePointerCapture(canvas, activeDrawingPointerId);
+          activeDrawingPointerId = null;
+          isDrawing = false;
           return;
         }
         canvas.setPointerCapture(event.pointerId);
@@ -5592,6 +5596,7 @@
             activeStroke = null;
             redraw();
           }
+          releasePointerCapture(canvas, event.pointerId ?? activeDrawingPointerId);
           activeDrawingPointerId = null;
           isDrawing = false;
           return;
