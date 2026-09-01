@@ -2341,7 +2341,7 @@
       }
 
       async function firebaseUploadRecord(record) {
-        if (!firebaseUser || !firebaseDb || !record?.id) return;
+        if (!firebaseUser || !firebaseDb || !record?.id) return false;
         const text = JSON.stringify(cloneProjectData(record));
         const chunks = Math.max(1, Math.ceil(text.length / firebaseChunkSize));
         const parent = firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid);
@@ -2350,7 +2350,7 @@
         const initial = await manifestRef.get();
         const initialCurrent = initial.exists ? initial.data() : { version: 1, records: {}, tombstones: {} };
         const initialMeta = initialCurrent.records?.[record.id];
-        if ((Date.parse(initialCurrent.tombstones?.[record.id] || '') || 0) > savedAt || (Date.parse(initialMeta?.updatedAt || '') || 0) > savedAt) return;
+        if ((Date.parse(initialCurrent.tombstones?.[record.id] || '') || 0) > savedAt || (Date.parse(initialMeta?.updatedAt || '') || 0) > savedAt) return false;
         if (initialMeta?.chunks) await firebaseArchiveRemoteRecord(initialMeta);
 
         const chunkVersion = String(record.updatedAt || new Date().toISOString());
@@ -2378,6 +2378,7 @@
           return true;
         });
         if (published) await firebaseBroadcastRealtimeSignal().catch((error) => console.warn('Semnalul live va fi reîncercat la următoarea modificare.', error));
+        return Boolean(published);
       }
       async function firebaseRecordDeletion(projectId, deletedAt = new Date().toISOString()) {
         if (!firebaseUser || !firebaseDb || !projectId) throw new Error('SYNC_UNAVAILABLE');
