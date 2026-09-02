@@ -1661,13 +1661,24 @@
       box-shadow: 0 0 0 1px rgba(225, 250, 255, .4), 0 10px 24px rgba(2, 8, 17, .38), 0 0 18px rgba(82, 198, 241, .32);
     }
     body.fullscreen-mode .fullscreen-drawing-toolbar-shell {
+      width: 100%;
+      max-width: none;
       padding: 6px 8px;
       border-color: rgba(214, 232, 247, .18);
       border-radius: 18px;
       background: linear-gradient(135deg, rgba(37, 47, 61, .98), rgba(20, 27, 37, .97));
       box-shadow: 0 18px 38px rgba(1, 6, 14, .42), inset 0 1px 0 rgba(255,255,255,.12);
+      overflow: visible;
     }
-    body.fullscreen-mode .drawing-toolbar-row { gap: 0; }
+    body.fullscreen-mode .fullscreen-drawing-toolbar {
+      width: min(calc(100vw - 24px), 1040px);
+      max-width: calc(100vw - 24px);
+    }
+    body.fullscreen-mode .drawing-toolbar-row {
+      width: 100%;
+      justify-content: center;
+      gap: 0;
+    }
     body.fullscreen-mode .drawing-tool-group {
       position: relative;
       gap: 5px;
@@ -1728,6 +1739,14 @@
     body.fullscreen-mode .drawing-tool-button.danger {
       border-color: rgba(255, 157, 166, .42);
       background: rgba(190, 66, 81, .16);
+    }
+    @media (max-width: 740px) {
+      body.fullscreen-mode .fullscreen-drawing-toolbar { width: calc(100vw - 20px); max-width: calc(100vw - 20px); }
+      body.fullscreen-mode .fullscreen-drawing-toolbar-shell { padding: 5px 6px; }
+      body.fullscreen-mode .drawing-toolbar-row { flex-wrap: wrap; row-gap: 4px; }
+      body.fullscreen-mode .drawing-tool-group { padding: 3px 6px; }
+      body.fullscreen-mode .drawing-tool-group + .drawing-tool-group::before { display: none; }
+      body.fullscreen-mode #fullscreenBrushSize { width: 54px; min-width: 54px; }
     }
 
     /* Navigare directă între imagini în ecran complet. */
@@ -2406,7 +2425,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.13.6';
+      const APP_VERSION = '1.13.7';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -6096,12 +6115,12 @@
       }
 
       function getFloatingToolbarBounds() {
-        const toolbarWidth = fullscreenDrawingToolbar?.offsetWidth || 720;
-        const toolbarHeight = fullscreenDrawingToolbar?.offsetHeight || 84;
+        const toggleWidth = fullscreenToolbarToggle?.offsetWidth || 44;
+        const toggleHeight = fullscreenToolbarToggle?.offsetHeight || 44;
         const minX = 10;
         const minY = 10;
-        const maxX = Math.max(minX, window.innerWidth - toolbarWidth - 10);
-        const maxY = Math.max(minY, window.innerHeight - toolbarHeight - 10);
+        const maxX = Math.max(minX, window.innerWidth - toggleWidth - 10);
+        const maxY = Math.max(minY, window.innerHeight - toggleHeight - 10);
         return { minX, minY, maxX, maxY };
       }
 
@@ -6150,17 +6169,28 @@
         const spaceLeft = buttonRect.left;
         const spaceBelow = window.innerHeight - buttonRect.bottom;
         const spaceAbove = buttonRect.top;
+        const fitsRight = spaceRight >= toolbarRect.width + offset;
+        const fitsLeft = spaceLeft >= toolbarRect.width + offset;
 
         let left = buttonRect.right + offset;
-        if (spaceRight < toolbarRect.width + offset && spaceLeft > toolbarRect.width + offset) {
+        if (!fitsRight && fitsLeft) {
           left = buttonRect.left - toolbarRect.width - offset;
         }
-        left = clamp(left, 10, Math.max(10, window.innerWidth - toolbarRect.width - 10));
 
         let top = buttonRect.top;
-        if (spaceBelow < toolbarRect.height + offset && spaceAbove > toolbarRect.height + offset) {
+        // Pe tabletă bara completă nu încape mereu lângă butonul flotant.
+        // O așezăm centrată sub el, ca să nu ascundem ultimele comenzi.
+        if (!fitsRight && !fitsLeft) {
+          left = (window.innerWidth - toolbarRect.width) / 2;
+          if (spaceBelow >= toolbarRect.height + offset) {
+            top = buttonRect.bottom + offset;
+          } else if (spaceAbove >= toolbarRect.height + offset) {
+            top = buttonRect.top - toolbarRect.height - offset;
+          }
+        } else if (spaceBelow < toolbarRect.height + offset && spaceAbove > toolbarRect.height + offset) {
           top = buttonRect.bottom - toolbarRect.height;
         }
+        left = clamp(left, 10, Math.max(10, window.innerWidth - toolbarRect.width - 10));
         if (top + toolbarRect.height > window.innerHeight - 10) {
           top = window.innerHeight - toolbarRect.height - 10;
         }
@@ -6244,6 +6274,9 @@
         floatingToolbarDragging = false;
         floatingToolbarPointerId = null;
         applyFloatingToolbarPosition();
+        if (floatingToolbarOpen) {
+          positionFloatingToolbar();
+        }
         saveFloatingToolbarPosition();
 
         // Pe tabletă, pointerdown + preventDefault nu garantează un click ulterior.
