@@ -2233,7 +2233,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.13.2';
+      const APP_VERSION = '1.13.3';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -6379,7 +6379,11 @@
 
       function beginPencilEditorStroke(event) {
         if (!pencilEditorOpen) return;
-        if (event.pointerType === 'mouse' && event.button !== undefined && event.button !== 0) return;
+        // Editorul de scris de mână este destinat exclusiv Apple Pencil. Safari
+        // trimite palmele și degetele ca "touch"; dacă le-am trata ca pe un pix,
+        // ar apărea linii nedorite în timp ce utilizatorul își sprijină mâna.
+        if (event.pointerType !== 'pen') return;
+        if (activePencilEditorPointerId !== null || activePencilEditorStroke) return;
         event.preventDefault();
         dismissKeyboardAndSelection();
         pencilEditorCanvas.setPointerCapture(event.pointerId);
@@ -6395,14 +6399,14 @@
       }
 
       function continuePencilEditorStroke(event) {
-        if (!activePencilEditorStroke) return;
+        if (event.pointerType !== 'pen' || !activePencilEditorStroke || event.pointerId !== activePencilEditorPointerId) return;
         event.preventDefault();
         activePencilEditorStroke.points.push(pointFromPencilEditorEvent(event));
         renderPencilEditorCanvas();
       }
 
       function finishPencilEditorStroke(event) {
-        if (!activePencilEditorStroke) return;
+        if (event.pointerType !== 'pen' || !activePencilEditorStroke || event.pointerId !== activePencilEditorPointerId) return;
         event.preventDefault();
         releasePointerCapture(pencilEditorCanvas, event.pointerId ?? activePencilEditorPointerId);
         activePencilEditorPointerId = null;
