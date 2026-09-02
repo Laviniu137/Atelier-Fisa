@@ -125,6 +125,37 @@
       width: 100%;
       background: rgba(120, 102, 78, .2);
     }
+    .project-status-filters {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .project-status-filter {
+      min-height: 34px;
+      padding: 7px 12px;
+      border: 1px solid #dfd4c5;
+      border-radius: 999px;
+      background: rgba(255, 253, 249, .82);
+      color: #6c5d4b;
+      font: inherit;
+      font-size: .78rem;
+      font-weight: 700;
+      line-height: 1;
+      cursor: pointer;
+      transition: border-color .16s ease, background .16s ease, color .16s ease, box-shadow .16s ease;
+    }
+    .project-status-filter:hover:not([aria-pressed="true"]) {
+      border-color: #bcae9c;
+      background: #fffdf9;
+    }
+    .project-status-filter[aria-pressed="true"] {
+      border-color: #77624d;
+      background: #584939;
+      color: #fffdf8;
+      box-shadow: 0 5px 12px rgba(66, 51, 33, .14);
+    }
     .project-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
@@ -1440,6 +1471,15 @@
       .project-manager-heading {
         margin-bottom: 16px;
       }
+      .project-status-filters {
+        margin-top: 14px;
+        gap: 7px;
+      }
+      .project-status-filter {
+        min-height: 32px;
+        padding: 7px 10px;
+        font-size: .74rem;
+      }
       .project-manager-page-title {
         font-size: clamp(2rem, 8vw, 2.25rem);
       }
@@ -1619,6 +1659,12 @@
       <div class="project-manager-heading">
         <h2 id="projectManagerTitle" class="project-manager-page-title">📁 Proiectele mele</h2>
         <p class="project-manager-subtitle">Toate proiectele salvate local.</p>
+        <div id="projectStatusFilters" class="project-status-filters" role="group" aria-label="Filtrează proiectele după stare">
+          <button type="button" class="project-status-filter" data-project-status-filter="all" aria-pressed="true">Toate</button>
+          <button type="button" class="project-status-filter" data-project-status-filter="to-measure" aria-pressed="false">📏 De măsurat</button>
+          <button type="button" class="project-status-filter" data-project-status-filter="in-progress" aria-pressed="false">● În lucru</button>
+          <button type="button" class="project-status-filter" data-project-status-filter="finalized" aria-pressed="false">✓ Finalizat</button>
+        </div>
         <div class="project-manager-divider" aria-hidden="true"></div>
       </div>
       <div id="projectCards" class="project-grid" aria-live="polite"></div>
@@ -1997,6 +2043,7 @@
       const editorView = document.getElementById('editorView');
       const projectCards = document.getElementById('projectCards');
       const projectEmptyState = document.getElementById('projectEmptyState');
+      const projectStatusFilters = Array.from(document.querySelectorAll('[data-project-status-filter]'));
       const editorProjectNameLabel = document.getElementById('editorProjectName');
       const editorProjectMetaLabel = document.getElementById('editorProjectMeta');
       const newProjectButton = document.getElementById('pmNewProject');
@@ -2136,6 +2183,7 @@
       let imageTitleCounter = 0;
       let currentProjectName = 'Proiect nou';
       let currentProjectStatus = 'in-progress';
+      let selectedProjectStatusFilter = 'all';
       let currentProjectUpdatedAt = null;
       let activeProjectId = null;
       let pendingProjectNameAction = null;
@@ -2233,7 +2281,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.13.3';
+      const APP_VERSION = '1.13.4';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -4155,16 +4203,39 @@
         projectManagerNeedsRefresh = false;
       }
 
+      function updateProjectStatusFilterButtons() {
+        projectStatusFilters.forEach((button) => {
+          button.setAttribute('aria-pressed', String(button.dataset.projectStatusFilter === selectedProjectStatusFilter));
+        });
+      }
+
+      function getProjectStatusFilterLabel(status) {
+        if (status === 'to-measure') return 'De măsurat';
+        if (status === 'finalized') return 'Finalizat';
+        return 'În lucru';
+      }
+
+      async function setProjectStatusFilter(status) {
+        selectedProjectStatusFilter = ['all', 'to-measure', 'in-progress', 'finalized'].includes(status) ? status : 'all';
+        updateProjectStatusFilterButtons();
+        await renderProjectCards();
+      }
+
       async function renderProjectCards() {
         const records = await readAllProjectRecords();
-        const filteredRecords = records.slice().sort((first, second) => {
+        const sortedRecords = records.slice().sort((first, second) => {
           return Date.parse(second?.updatedAt || '') - Date.parse(first?.updatedAt || '');
         });
+        const filteredRecords = selectedProjectStatusFilter === 'all'
+          ? sortedRecords
+          : sortedRecords.filter((record) => normalizeProjectStatus(record?.status || record?.payload?.projectStatus) === selectedProjectStatusFilter);
 
         projectCards.innerHTML = '';
         projectEmptyState.hidden = filteredRecords.length > 0;
         if (!filteredRecords.length) {
-          projectEmptyState.textContent = 'Nu există proiecte încă. Creează un proiect nou sau importă un fișier existent.';
+          projectEmptyState.textContent = selectedProjectStatusFilter === 'all'
+            ? 'Nu există proiecte încă. Creează un proiect nou sau importă un fișier existent.'
+            : `Nu există proiecte marcate „${getProjectStatusFilterLabel(selectedProjectStatusFilter)}”.`;
           return;
         }
 
@@ -7903,6 +7974,11 @@
       });
       cloudAccountDialog.addEventListener('pointerdown', (event) => {
         if (event.target === cloudAccountDialog) closeCloudAccountDialog();
+      });
+      projectStatusFilters.forEach((button) => {
+        button.addEventListener('click', () => {
+          setProjectStatusFilter(button.dataset.projectStatusFilter);
+        });
       });
       newProjectButton.addEventListener('click', () => {
         openSaveProjectDialog({
