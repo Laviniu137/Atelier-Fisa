@@ -1254,7 +1254,28 @@
       user-select: none;
       transition: box-shadow .16s ease, transform .16s ease, border-color .16s ease;
     }
+    .fullscreen-toolbar-toggle {
+      --toolbar-preview-color: #f4f9ff;
+    }
     .fullscreen-toolbar-toggle svg { width: 22px; height: 22px; stroke-width: 2.1; }
+    .fullscreen-toolbar-toggle .toolbar-toggle-preview { display: none; }
+    .fullscreen-toolbar-toggle .toolbar-toggle-preview path {
+      display: none;
+      fill: none;
+      stroke: var(--toolbar-preview-color);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 0 1px rgba(255, 255, 255, .65));
+    }
+    .fullscreen-toolbar-toggle[data-active-drawing-tool="pencil"] .toolbar-toggle-preview,
+    .fullscreen-toolbar-toggle[data-active-drawing-tool="line"] .toolbar-toggle-preview,
+    .fullscreen-toolbar-toggle[data-active-drawing-tool="dashed-line"] .toolbar-toggle-preview,
+    .fullscreen-toolbar-toggle[data-active-drawing-tool="eraser"] .toolbar-toggle-preview { display: block; }
+    .fullscreen-toolbar-toggle[data-active-drawing-tool="pencil"] .toolbar-toggle-preview-pencil,
+    .fullscreen-toolbar-toggle[data-active-drawing-tool="line"] .toolbar-toggle-preview-line,
+    .fullscreen-toolbar-toggle[data-active-drawing-tool="dashed-line"] .toolbar-toggle-preview-dashed,
+    .fullscreen-toolbar-toggle[data-active-drawing-tool="eraser"] .toolbar-toggle-preview-eraser { display: block; }
+    .fullscreen-toolbar-toggle[data-active-drawing-tool="eraser"] .toolbar-toggle-preview-eraser { stroke: #f4f9ff; }
     .fullscreen-toolbar-toggle:active { cursor: grabbing; }
     .fullscreen-toolbar-toggle:hover:not(:disabled) {
       transform: translateY(-1px);
@@ -1339,6 +1360,10 @@
       text-transform: uppercase;
       line-height: 1.1;
     }
+    .tool-label-active {
+      color: #d6f3ff;
+      text-shadow: 0 0 10px rgba(126, 217, 255, .3);
+    }
     .quick-colors { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
     .quick-color-button {
       width: 27px;
@@ -1409,6 +1434,7 @@
       background: rgba(0,0,0,.16);
     }
     .drawing-tool-button {
+      position: relative;
       width: 38px;
       height: 38px;
       min-width: 38px;
@@ -1425,6 +1451,18 @@
     .drawing-tool-button:hover:not(:disabled) { transform: translateY(-1px) scale(1.03); border-color: rgba(255,255,255,.58); box-shadow: 0 9px 17px rgba(0,0,0,.28); }
     .drawing-tool-button:active:not(:disabled) { transform: translateY(1px) scale(.97); }
     .drawing-tool-button.active { border-color: #a9e6ff; background: linear-gradient(165deg, rgba(102,205,249,.45), rgba(50,139,205,.3)); box-shadow: inset 0 0 0 1px rgba(239,250,255,.44), 0 0 0 2px rgba(116,211,255,.24), 0 9px 18px rgba(40,125,170,.28); }
+    .drawing-tool-button.active::after {
+      content: '';
+      position: absolute;
+      right: 4px;
+      bottom: 4px;
+      width: 5px;
+      height: 5px;
+      border: 1.5px solid #1e5f7b;
+      border-radius: 50%;
+      background: #e9fbff;
+      box-shadow: 0 0 5px rgba(225, 250, 255, .92);
+    }
     .drawing-tool-button.danger { border-color: rgba(255,141,150,.5); background: linear-gradient(165deg, rgba(255,132,142,.3), rgba(255,102,113,.14)); }
     .drawing-tool-button:disabled { opacity: .44; box-shadow: none; }
     .fullscreen-toolbar-close-fallback { display: none; }
@@ -1887,8 +1925,14 @@
         <button type="button" class="fullscreen-close-btn" id="fullscreenCloseButton" aria-label="Închide ecran complet" title="Închide ecran complet" hidden>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6 6 18"></path></svg>
         </button>
-        <button type="button" class="fullscreen-toolbar-toggle" id="fullscreenToolbarToggle" aria-label="Afișează instrumentele de desen" title="Instrumente desen" hidden>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-1 10-10a2.2 2.2 0 0 0 0-3.1l-.1-.1a2.2 2.2 0 0 0-3.1 0L5 15.7 4 20z"></path><path d="m13.4 7.4 3.2 3.2"></path></svg>
+      <button type="button" class="fullscreen-toolbar-toggle" id="fullscreenToolbarToggle" aria-label="Afișează instrumentele de desen" title="Instrumente desen" hidden>
+          <svg class="toolbar-toggle-preview" viewBox="0 0 24 24" aria-hidden="true">
+            <path class="toolbar-toggle-preview-pencil" d="m4 20 4.2-1 10-10a2.2 2.2 0 0 0 0-3.1l-.1-.1a2.2 2.2 0 0 0-3.1 0L5 15.7 4 20z"></path>
+            <path class="toolbar-toggle-preview-pencil" d="m13.4 7.4 3.2 3.2"></path>
+            <path class="toolbar-toggle-preview-line" d="M5 19 19 5"></path>
+            <path class="toolbar-toggle-preview-dashed" d="M5 19 7.5 16.5m2 0 2.5-2.5m2 0 2.5-2.5M18 6l1-1"></path>
+            <path class="toolbar-toggle-preview-eraser" d="m19.2 15.4-8.2-8.2a2.2 2.2 0 0 0-3.1 0l-4.1 4.1a2.2 2.2 0 0 0 0 3.1l3.3 3.3a2.2 2.2 0 0 0 1.5.6H17M13 20h8"></path>
+          </svg>
         </button>
         <div class="fullscreen-drawing-toolbar" id="fullscreenDrawingToolbar" hidden>
           <div class="fullscreen-drawing-toolbar-shell">
@@ -1908,7 +1952,7 @@
                 </div>
               </div>
               <div class="drawing-tool-group edit-group">
-                <span class="tool-label">Editare</span>
+                <span id="fullscreenActiveToolName" class="tool-label tool-label-active" aria-live="polite">Creion</span>
                 <div class="drawing-tool-group-row">
                   <button type="button" id="fullscreenPencilBtn" class="drawing-tool-button" aria-label="Creion" title="Creion" aria-pressed="false">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-1 10-10a2.2 2.2 0 0 0 0-3.1l-.1-.1a2.2 2.2 0 0 0-3.1 0L5 15.7 4 20z"></path><path d="m13.4 7.4 3.2 3.2"></path></svg>
@@ -2119,6 +2163,7 @@
       const fullscreenColorPicker = document.getElementById('fullscreenColorPicker');
       const fullscreenBrushSize = document.getElementById('fullscreenBrushSize');
       const fullscreenBrushSizeValue = document.getElementById('fullscreenBrushSizeValue');
+      const fullscreenActiveToolName = document.getElementById('fullscreenActiveToolName');
       const fullscreenPencilBtn = document.getElementById('fullscreenPencilBtn');
       const fullscreenLineBtn = document.getElementById('fullscreenLineBtn');
       const fullscreenDashedLineBtn = document.getElementById('fullscreenDashedLineBtn');
@@ -2281,7 +2326,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.13.4';
+      const APP_VERSION = '1.13.5';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -5545,6 +5590,21 @@
           const eraserActive = isErasing;
           fullscreenEraserBtn.classList.toggle('active', eraserActive);
           fullscreenEraserBtn.setAttribute('aria-pressed', eraserActive ? 'true' : 'false');
+        }
+        const activeToolPreview = isErasing
+          ? 'eraser'
+          : (activeDrawMode === 'line' ? (lineDashed ? 'dashed-line' : 'line') : 'pencil');
+        const activeToolLabel = activeToolPreview === 'eraser'
+          ? 'Radieră'
+          : (activeToolPreview === 'dashed-line' ? 'Punctată' : (activeToolPreview === 'line' ? 'Linie' : 'Creion'));
+        if (fullscreenToolbarToggle) {
+          fullscreenToolbarToggle.dataset.activeDrawingTool = activeToolPreview;
+          fullscreenToolbarToggle.style.setProperty('--toolbar-preview-color', brushColor);
+          fullscreenToolbarToggle.setAttribute('aria-label', `Instrument activ: ${activeToolLabel}. Afișează instrumentele de desen`);
+          fullscreenToolbarToggle.title = `Instrument activ: ${activeToolLabel}`;
+        }
+        if (fullscreenActiveToolName) {
+          fullscreenActiveToolName.textContent = activeToolLabel;
         }
         document.querySelectorAll('.quick-color-button').forEach((button) => {
           const isActive = button.dataset.color && button.dataset.color.toLowerCase() === brushColor.toLowerCase();
