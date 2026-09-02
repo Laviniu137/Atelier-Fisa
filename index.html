@@ -1749,43 +1749,86 @@
       body.fullscreen-mode #fullscreenBrushSize { width: 54px; min-width: 54px; }
     }
 
-    /* Paletă compactă pentru tabletă: comenzile rămân clare fără o bandă lungă. */
+    /* Paletă premium pentru tabletă: patru module echilibrate într-un singur card. */
     body.fullscreen-mode .fullscreen-drawing-toolbar {
       width: fit-content;
       max-width: calc(100vw - 24px);
+      --active-draw-color: #66cdf5;
     }
     body.fullscreen-mode .fullscreen-drawing-toolbar-shell {
       width: fit-content;
       min-height: 0;
       max-width: calc(100vw - 24px);
-      padding: 7px;
-      border-radius: 18px;
+      padding: 8px;
+      border: 1px solid rgba(223, 238, 250, .2);
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at 12% 0%, color-mix(in srgb, var(--active-draw-color) 18%, transparent), transparent 34%),
+        linear-gradient(145deg, rgba(44, 57, 73, .98), rgba(16, 23, 33, .98));
+      box-shadow: 0 20px 42px rgba(1, 7, 15, .5), inset 0 1px 0 rgba(255,255,255,.16), inset 0 -1px 0 rgba(0,0,0,.26);
     }
     body.fullscreen-mode .drawing-toolbar-row {
       display: grid;
-      grid-template-columns: max-content max-content;
+      grid-template-columns: minmax(252px, max-content) minmax(164px, max-content);
       grid-template-areas:
         "edit size"
         "color actions";
       width: auto;
       justify-content: start;
-      gap: 6px;
+      gap: 7px;
     }
     body.fullscreen-mode .color-group { grid-area: color; }
     body.fullscreen-mode .edit-group { grid-area: edit; }
     body.fullscreen-mode .size-group { grid-area: size; }
     body.fullscreen-mode .actions-group { grid-area: actions; }
     body.fullscreen-mode .drawing-tool-group {
-      min-height: 38px;
-      padding: 5px 8px;
-      border: 1px solid rgba(226, 239, 249, .12);
-      border-radius: 12px;
-      background: linear-gradient(145deg, rgba(255,255,255,.075), rgba(255,255,255,.025));
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.07);
+      position: relative;
+      min-height: 42px;
+      padding: 6px 9px;
+      border: 1px solid rgba(224, 239, 250, .1);
+      border-radius: 14px;
+      background: linear-gradient(145deg, rgba(255,255,255,.095), rgba(255,255,255,.026));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.09), 0 5px 12px rgba(0,0,0,.11);
     }
+    body.fullscreen-mode .edit-group { border-color: color-mix(in srgb, var(--active-draw-color) 46%, rgba(224,239,250,.12)); }
     body.fullscreen-mode .drawing-tool-group + .drawing-tool-group::before { display: none; }
-    body.fullscreen-mode .drawing-tool-group-row { min-height: 28px; }
-    body.fullscreen-mode .tool-label { min-width: 0; }
+    body.fullscreen-mode .drawing-tool-group-row { min-height: 30px; }
+    body.fullscreen-mode .tool-label {
+      min-width: 0;
+      color: rgba(214, 231, 244, .58);
+      font-size: .5rem;
+      letter-spacing: .1em;
+    }
+    body.fullscreen-mode .tool-label-active {
+      padding: 4px 5px;
+      border-radius: 7px;
+      color: #effbff;
+      background: color-mix(in srgb, var(--active-draw-color) 24%, rgba(255,255,255,.04));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
+    }
+    body.fullscreen-mode .drawing-tool-button {
+      border-radius: 9px;
+      border-color: rgba(226, 240, 250, .16);
+      background: linear-gradient(145deg, rgba(255,255,255,.12), rgba(255,255,255,.035));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 3px 7px rgba(0,0,0,.16);
+    }
+    body.fullscreen-mode .drawing-tool-button.active {
+      border-color: color-mix(in srgb, var(--active-draw-color) 72%, white);
+      background: linear-gradient(145deg, color-mix(in srgb, var(--active-draw-color) 54%, #55728a), color-mix(in srgb, var(--active-draw-color) 24%, #172737));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.38), 0 0 0 1px color-mix(in srgb, var(--active-draw-color) 18%, transparent), 0 7px 15px color-mix(in srgb, var(--active-draw-color) 22%, transparent);
+    }
+    body.fullscreen-mode .drawing-tool-button.active::after { background: #fff; }
+    body.fullscreen-mode .quick-color-button { box-shadow: inset 0 0 0 1px rgba(3, 9, 15, .34), 0 3px 7px rgba(0,0,0,.25); }
+    body.fullscreen-mode .quick-color-button.is-selected { box-shadow: inset 0 0 0 1px rgba(9,13,20,.3), 0 0 0 2px #fff, 0 0 0 4px color-mix(in srgb, var(--active-draw-color) 30%, transparent); }
+    body.fullscreen-mode .size-group,
+    body.fullscreen-mode .actions-group { justify-content: space-between; }
+    body.fullscreen-mode .actions-group .drawing-tool-group-row { margin-left: auto; }
+    body.fullscreen-mode .drawing-tool-button.danger { border-color: rgba(255, 148, 158, .48); background: linear-gradient(145deg, rgba(202, 73, 88, .34), rgba(137, 43, 56, .18)); }
+    body.fullscreen-mode .fullscreen-toolbar-toggle {
+      border-color: color-mix(in srgb, var(--toolbar-preview-color, #66cdf5) 62%, rgba(224,239,250,.35));
+      background: radial-gradient(circle at 30% 25%, color-mix(in srgb, var(--toolbar-preview-color, #66cdf5) 36%, transparent), transparent 45%), linear-gradient(145deg, #34465a, #17222f);
+      box-shadow: 0 12px 26px rgba(2, 8, 17, .42), inset 0 1px 0 rgba(255,255,255,.18);
+    }
     @media (max-width: 560px) {
       body.fullscreen-mode .fullscreen-drawing-toolbar { width: calc(100vw - 20px); }
       body.fullscreen-mode .fullscreen-drawing-toolbar-shell { width: 100%; max-width: none; }
@@ -1795,6 +1838,9 @@
         justify-content: stretch;
       }
       body.fullscreen-mode .drawing-tool-group { justify-content: center; }
+      body.fullscreen-mode .size-group,
+      body.fullscreen-mode .actions-group { justify-content: center; }
+      body.fullscreen-mode .actions-group .drawing-tool-group-row { margin-left: 0; }
     }
 
     /* Navigare directă între imagini în ecran complet. */
@@ -2473,7 +2519,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.14.1';
+      const APP_VERSION = '1.15.0';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -5826,6 +5872,9 @@
           fullscreenToolbarToggle.setAttribute('aria-label', `Instrument activ: ${activeToolLabel}. Afișează instrumentele de desen`);
           fullscreenToolbarToggle.title = `Instrument activ: ${activeToolLabel}`;
         }
+        if (fullscreenDrawingToolbar) {
+          fullscreenDrawingToolbar.style.setProperty('--active-draw-color', brushColor);
+        }
         if (fullscreenActiveToolName) {
           fullscreenActiveToolName.textContent = activeToolLabel;
         }
@@ -8114,7 +8163,9 @@
           const selectedColor = button.dataset.color;
           if (!selectedColor) return;
           brushColor = selectedColor;
-          setActiveDrawMode('freehand', { erasing: false });
+          // Alegerea culorii nu trebuie să schimbe instrumentul activ. De exemplu,
+          // o linie punctată rămâne punctată după alegerea unei culori noi.
+          applyDrawingToolState({ tool: 'draw', drawMode: activeDrawMode, erasing: false });
           brushSize = lastPenSize;
           applyCurrentBrushSettings();
           syncBrushControls();
