@@ -2473,7 +2473,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.14.0';
+      const APP_VERSION = '1.14.1';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2509,7 +2509,7 @@
       // fotografii trebuie scris în mai multe porții, chiar dacă fiecare bucată
       // individuală este sub limita unui document.
       const firebaseChunkBatchSize = 12;
-      let firebaseApp = null, firebaseAuth = null, firebaseDb = null, firebaseRealtimeDb = null, firebaseUser = null, firebaseManifestRef = null, firebaseManifest = null, firebaseManifestUnsubscribe = null, firebaseRealtimeSignalRef = null, firebaseRealtimeSignalListener = null, firebaseRealtimeSignalPrimed = false, firebaseSyncTimer = null, firebaseLiveRefreshTimer = null, firebaseRunning = false, firebasePendingRemote = null, firebaseManagerRefreshTimer = null, firebaseManagerLastInteractionAt = Date.now(), firebaseInitialized = false, firebaseLastRemoteUpdatedAt = '', firebaseLastRealtimeSignalAt = '', firebaseSyncInProgress = false, firebasePendingDeletionCount = 0;
+      let firebaseApp = null, firebaseAuth = null, firebaseDb = null, firebaseRealtimeDb = null, firebaseUser = null, firebaseManifestRef = null, firebaseManifest = null, firebaseManifestUnsubscribe = null, firebaseRealtimeSignalRef = null, firebaseRealtimeSignalListener = null, firebaseRealtimeSignalPrimed = false, firebaseSyncTimer = null, firebaseLiveRefreshTimer = null, firebaseRunning = false, firebasePendingRemote = null, firebaseManagerRefreshTimer = null, firebaseManagerLastInteractionAt = Date.now(), firebaseInitialized = false, firebaseLastRemoteUpdatedAt = '', firebaseLastRealtimeSignalAt = '', firebaseSyncInProgress = false, firebasePendingDeletionCount = 0, firebaseLastSyncError = '';
       const pendingFirebaseRecords = new Map();
 
       let googleDriveToken = null, googleDriveTokenExpires = 0, googleDriveFileId = null, googleDriveRemoteModified = '', googleDriveConnected = false, googleDriveAuthorizationNeeded = false, googleDriveTimer = null, googleDrivePoller = null, googleDriveRunning = false, googleDriveSyncScheduled = false;
@@ -2523,10 +2523,23 @@
       const pendingCloudDeletes = new Set();
 
       function isCloudReady() { return Boolean(window.supabase && SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY); }
-      function getCloudStatusMessage() { if (firebaseUser) return 'Sincronizare live activă prin Firebase între tabletă și PC.'; if (firebaseInitialized) return 'Conectează contul Google pentru sincronizare live între tabletă și PC.'; if (!googleDriveConnected) return 'Conectează Google Drive o singură dată pe fiecare dispozitiv pentru sincronizare automată.'; return googleDriveAuthorizationNeeded ? 'Google Drive este configurat. Apasă „Sincronizează acum” pentru a reîmprospăta accesul.' : 'Google Drive este conectat. Proiectele se salvează local și se actualizează automat între tabletă și PC.'; }
+      function getFirebaseSyncFailureMessage(error) {
+        const details = String(error?.code || error?.message || error || '').toLowerCase();
+        if (navigator.onLine === false || details.includes('network') || details.includes('unavailable')) return 'Conexiunea PC-ului a fost întreruptă. Datele rămân salvate local și vor fi retrimise automat.';
+        if (details.includes('permission') || details.includes('unauthenticated')) return 'Contul Google de pe PC nu mai are acces la sincronizare. Deconectează și conectează același cont folosit pe tabletă.';
+        if (details.includes('resource-exhausted') || details.includes('quota')) return 'Firebase a refuzat temporar încărcarea. Datele rămân salvate local și vor fi retrimise automat.';
+        return 'O copie locală nu a putut fi trimisă încă. Datele rămân salvate local; aplicația va reîncerca automat.';
+      }
+      function noteFirebaseSyncFailure(error) {
+        firebaseLastSyncError = getFirebaseSyncFailureMessage(error);
+        updateCloudAccountUi();
+      }
+      function clearFirebaseSyncFailure() { firebaseLastSyncError = ''; }
+      function getCloudStatusMessage() { if (firebaseUser) return firebaseLastSyncError || 'Sincronizare live activă prin Firebase între tabletă și PC.'; if (firebaseInitialized) return 'Conectează contul Google pentru sincronizare live între tabletă și PC.'; if (!googleDriveConnected) return 'Conectează Google Drive o singură dată pe fiecare dispozitiv pentru sincronizare automată.'; return googleDriveAuthorizationNeeded ? 'Google Drive este configurat. Apasă „Sincronizează acum” pentru a reîmprospăta accesul.' : 'Google Drive este conectat. Proiectele se salvează local și se actualizează automat între tabletă și PC.'; }
       function getSyncIndicatorLabel() {
         if (firebaseUser) {
           if (navigator.onLine === false) return '💾 Salvat local';
+          if (firebaseLastSyncError) return '⚠️ Verifică sincronizarea';
           return firebaseSyncInProgress || pendingFirebaseRecords.size || firebasePendingDeletionCount ? '↻ Se sincronizează' : '☁️ Sincronizat';
         }
         if (googleDriveConnected && !googleDriveAuthorizationNeeded) {
@@ -2758,22 +2771,32 @@
       }
 
       async function flushPendingFirebaseDeletions() {
-        if (!firebaseUser || !firebaseDb || navigator.onLine === false) return;
-        const pending = (await getMetaValue(firebasePendingDeletesMetaKey)) || {};
-        let changed = false;
-        for (const [projectId, deletedAt] of Object.entries(pending)) {
-          try {
-            await firebaseRecordDeletion(projectId, deletedAt);
-            delete pending[projectId];
-            changed = true;
-          } catch (error) {
-            console.warn('Ștergerea va fi retrimisă când conexiunea este disponibilă.', error);
-            break;
+        if (!firebaseUser || !firebaseDb || navigator.onLine === false) return false;
+        try {
+          const pending = (await getMetaValue(firebasePendingDeletesMetaKey)) || {};
+          let changed = false;
+          let completed = true;
+          for (const [projectId, deletedAt] of Object.entries(pending)) {
+            try {
+              await firebaseRecordDeletion(projectId, deletedAt);
+              delete pending[projectId];
+              changed = true;
+            } catch (error) {
+              completed = false;
+              noteFirebaseSyncFailure(error);
+              console.warn('Ștergerea va fi retrimisă când conexiunea este disponibilă.', error);
+              break;
+            }
           }
+          if (changed) await setMetaValue(firebasePendingDeletesMetaKey, pending);
+          firebasePendingDeletionCount = Object.keys(pending).length;
+          updateCloudAccountUi();
+          return completed && firebasePendingDeletionCount === 0;
+        } catch (error) {
+          noteFirebaseSyncFailure(error);
+          console.warn('Coada de ștergere Firebase nu a putut fi citită.', error);
+          return false;
         }
-        if (changed) await setMetaValue(firebasePendingDeletesMetaKey, pending);
-        firebasePendingDeletionCount = Object.keys(pending).length;
-        updateCloudAccountUi();
       }
       async function forceUploadFirebaseFromThisDevice() {
         if (!firebaseUser || !firebaseDb) throw new Error('AUTH_REQUIRED');
@@ -2880,13 +2903,14 @@
       }
 
       async function flushPendingFirebaseRecords() {
-        if (!firebaseUser || !firebaseDb || navigator.onLine === false || firebaseSyncInProgress) return;
+        if (!firebaseUser || !firebaseDb || navigator.onLine === false || firebaseSyncInProgress) return false;
         firebaseSyncInProgress = true;
         updateCloudAccountUi();
         let shouldRefreshFromCloud = false;
+        let completed = true;
         try {
           await loadPersistentFirebaseQueue();
-          await flushPendingFirebaseDeletions();
+          if (!(await flushPendingFirebaseDeletions())) completed = false;
           for (const [projectId, record] of Array.from(pendingFirebaseRecords.entries())) {
             try {
               const uploaded = await firebaseUploadRecord(record);
@@ -2902,6 +2926,8 @@
               pendingFirebaseRecords.delete(projectId);
               await removePersistentFirebaseQueueItem(projectId);
             } catch (error) {
+              completed = false;
+              noteFirebaseSyncFailure(error);
               console.warn('Proiectul rămâne în coada de sincronizare până revine conexiunea.', error);
               break;
             }
@@ -2909,6 +2935,12 @@
           // După ce eliberăm un proiect înlocuit de cloud, citim versiunea nouă.
           // Firebase păstrează automat copia locală de siguranță dacă datele diferă.
           if (shouldRefreshFromCloud) await firebaseRefreshFromCloud();
+          completed = completed && pendingFirebaseRecords.size === 0 && firebasePendingDeletionCount === 0;
+          if (completed) clearFirebaseSyncFailure();
+        } catch (error) {
+          completed = false;
+          noteFirebaseSyncFailure(error);
+          console.warn('Coada Firebase nu a putut fi procesată.', error);
         } finally {
           firebaseSyncInProgress = false;
           updateCloudAccountUi();
@@ -2917,6 +2949,7 @@
             firebaseSyncTimer = window.setTimeout(() => flushPendingFirebaseRecords(), 5000);
           }
         }
+        return completed;
       }
 
       function scheduleFirebaseSync(record) {
@@ -3029,6 +3062,7 @@
 
       async function activateFirebaseUser(user) {
         firebaseUser = user || null;
+        clearFirebaseSyncFailure();
         if (firebaseManifestUnsubscribe) { firebaseManifestUnsubscribe(); firebaseManifestUnsubscribe = null; }
         stopFirebaseRealtimeSignal();
         window.clearInterval(firebaseLiveRefreshTimer);
@@ -8188,8 +8222,8 @@
           if (firebaseInitialized && !firebaseUser) {
             throw new Error('AUTH_REQUIRED');
           } else if (firebaseUser) {
-            await flushPendingFirebaseDeletions();
-            await flushPendingFirebaseRecords();
+            const completed = await flushPendingFirebaseRecords();
+            if (!completed) throw new Error('SYNC_PENDING');
             const remoteRef = firebaseManifestRef || firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid).collection('state').doc('manifest');
             firebaseManifestRef = remoteRef;
             const remote = await remoteRef.get();
@@ -8209,7 +8243,7 @@
           updateCloudAccountUi();
           cloudAccountStatus.textContent = error?.message === 'AUTH_REQUIRED'
             ? 'Conectarea Google nu este încă activă. Apasă „Conectează Google pentru sincronizare live”, alege contul Google și încearcă din nou.'
-            : 'Nu am putut sincroniza acum. Proiectele locale nu au fost modificate. Verifică internetul și încearcă din nou.';
+            : (firebaseLastSyncError || 'Nu am putut sincroniza acum. Proiectele locale nu au fost modificate. Verifică internetul și încearcă din nou.');
           console.warn('Sincronizarea manuală a eșuat.', error);
         }
       });
