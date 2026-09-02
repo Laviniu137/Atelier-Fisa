@@ -2473,7 +2473,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.13.9';
+      const APP_VERSION = '1.14.0';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2505,6 +2505,10 @@
       const firebaseConfig = { apiKey: 'AIzaSyCMUavm_4Uc66Gv0BFjsm6UsPXIAeu6kYE', authDomain: 'atelier-mobila-cloud.firebaseapp.com', databaseURL: 'https://atelier-mobila-cloud-default-rtdb.europe-west1.firebasedatabase.app', projectId: 'atelier-mobila-cloud', appId: '1:242123502161:web:590fd44106e4cc67533e70' };
       const firebaseSyncCollection = 'atelierFisaSyncV1';
       const firebaseChunkSize = 480000;
+      // Firestore limitează dimensiunea totală a unei operații. Un proiect cu multe
+      // fotografii trebuie scris în mai multe porții, chiar dacă fiecare bucată
+      // individuală este sub limita unui document.
+      const firebaseChunkBatchSize = 12;
       let firebaseApp = null, firebaseAuth = null, firebaseDb = null, firebaseRealtimeDb = null, firebaseUser = null, firebaseManifestRef = null, firebaseManifest = null, firebaseManifestUnsubscribe = null, firebaseRealtimeSignalRef = null, firebaseRealtimeSignalListener = null, firebaseRealtimeSignalPrimed = false, firebaseSyncTimer = null, firebaseLiveRefreshTimer = null, firebaseRunning = false, firebasePendingRemote = null, firebaseManagerRefreshTimer = null, firebaseManagerLastInteractionAt = Date.now(), firebaseInitialized = false, firebaseLastRemoteUpdatedAt = '', firebaseLastRealtimeSignalAt = '', firebaseSyncInProgress = false, firebasePendingDeletionCount = 0;
       const pendingFirebaseRecords = new Map();
 
@@ -2607,29 +2611,52 @@
         return text ? JSON.parse(text) : null;
       }
 
+      async function firebaseWriteTextChunks(collectionRef, text, getDocumentId, updatedAt = '') {
+        const chunks = Math.max(1, Math.ceil(text.length / firebaseChunkSize));
+        for (let start = 0; start < chunks; start += firebaseChunkBatchSize) {
+          const batch = firebaseDb.batch();
+          const end = Math.min(chunks, start + firebaseChunkBatchSize);
+          for (let index = start; index < end; index += 1) {
+            const value = { data: text.slice(index * firebaseChunkSize, (index + 1) * firebaseChunkSize) };
+            if (updatedAt) value.updatedAt = updatedAt;
+            batch.set(collectionRef.doc(getDocumentId(index)), value);
+          }
+          await batch.commit();
+        }
+        return chunks;
+      }
+
+      async function firebaseDeleteDocumentsInBatches(documentRefs) {
+        for (let start = 0; start < documentRefs.length; start += 400) {
+          const batch = firebaseDb.batch();
+          documentRefs.slice(start, start + 400).forEach((reference) => batch.delete(reference));
+          await batch.commit();
+        }
+      }
+
       async function firebaseArchiveRemoteRecord(meta) {
         if (!firebaseUser || !firebaseDb || !meta?.id || !meta?.chunks) return null;
         const remoteRecord = await firebaseLoadRecord(meta);
         if (!remoteRecord) return null;
         const text = JSON.stringify(cloneProjectData(remoteRecord));
-        const chunks = Math.max(1, Math.ceil(text.length / firebaseChunkSize));
         const parent = firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid);
         const backupRef = parent.collection('backups').doc(firebaseBackupDocumentId(meta.id));
         const previousBackup = await backupRef.get();
-        const batch = firebaseDb.batch();
-        for (let index = 0; index < chunks; index += 1) {
-          batch.set(backupRef.collection('chunks').doc(String(index)), { data: text.slice(index * firebaseChunkSize, (index + 1) * firebaseChunkSize) });
-        }
-        for (let index = chunks; index < Number(previousBackup.data()?.chunks || 0); index += 1) {
-          batch.delete(backupRef.collection('chunks').doc(String(index)));
-        }
-        batch.set(backupRef, {
+        const archivedAt = new Date().toISOString();
+        const chunks = await firebaseWriteTextChunks(backupRef.collection('chunks'), text, (index) => String(index), archivedAt);
+        // Publicăm descrierea backupului numai după ce toate bucățile există.
+        // Astfel o citire concurentă nu poate vedea un backup incomplet.
+        await backupRef.set({
           id: meta.id,
           updatedAt: meta.updatedAt || firebaseRecordUpdatedAt(remoteRecord),
           chunks,
-          archivedAt: new Date().toISOString()
+          archivedAt
         });
-        await batch.commit();
+        const obsoleteChunkRefs = [];
+        for (let index = chunks; index < Number(previousBackup.data()?.chunks || 0); index += 1) {
+          obsoleteChunkRefs.push(backupRef.collection('chunks').doc(String(index)));
+        }
+        await firebaseDeleteDocumentsInBatches(obsoleteChunkRefs);
         return remoteRecord;
       }
 
@@ -2661,6 +2688,16 @@
         if (initialMeta?.chunks) await firebaseArchiveRemoteRecord(initialMeta);
 
         const chunkVersion = String(record.updatedAt || new Date().toISOString());
+        // Încărcăm datele înainte de actualizarea manifestului. Manifestul este
+        // publicat doar după aceea, așa că celelalte dispozitive nu pot citi o
+        // versiune parțială. Înainte toate bucățile erau incluse în tranzacție,
+        // iar proiectele mari depășeau limita Firebase de 10 MB.
+        await firebaseWriteTextChunks(
+          parent.collection('chunks'),
+          text,
+          (index) => firebaseChunkId(record.id, index, chunkVersion),
+          record.updatedAt || chunkVersion
+        );
         const published = await firebaseDb.runTransaction(async (transaction) => {
           const snapshot = await transaction.get(manifestRef);
           const current = snapshot.exists ? snapshot.data() : { version: 1, records: {}, tombstones: {} };
@@ -2671,12 +2708,6 @@
           if (deletedAt > savedAt || cloudAt > savedAt) {
             firebaseManifest = current;
             return false;
-          }
-          for (let index = 0; index < chunks; index += 1) {
-            transaction.set(parent.collection('chunks').doc(firebaseChunkId(record.id, index, chunkVersion)), {
-              data: text.slice(index * firebaseChunkSize, (index + 1) * firebaseChunkSize),
-              updatedAt: record.updatedAt || new Date().toISOString()
-            });
           }
           delete tombstones[record.id];
           records[record.id] = { id: record.id, updatedAt: record.updatedAt || new Date().toISOString(), chunks, chunkVersion };
