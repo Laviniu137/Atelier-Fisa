@@ -2233,7 +2233,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.13.1';
+      const APP_VERSION = '1.13.2';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -2644,6 +2644,13 @@
         window.clearTimeout(firebaseSyncTimer);
         firebaseSyncTimer = window.setTimeout(() => flushPendingFirebaseRecords(), 750);
       }
+      async function resumePendingFirebaseSync({ reloadQueue = false } = {}) {
+        if (!firebaseUser || !firebaseDb) return;
+        if (reloadQueue) await loadPersistentFirebaseQueue();
+        if (navigator.onLine === false) return;
+        await flushPendingFirebaseDeletions();
+        await flushPendingFirebaseRecords();
+      }
       function canAutoRefreshProjectManager() {
         const blockingDialogs = [cloudAccountDialog, deleteProjectDialog, saveProjectDialog, autosaveRecoveryDialog, clearAllDialog, removeImageDialog, exportImageDialog, exportProjectDialog, deleteNoteDialog, pencilEditorOverlay, pencilUnsavedDialog];
         return Boolean(
@@ -2731,7 +2738,10 @@
       function startFirebaseLiveRefresh() {
         window.clearInterval(firebaseLiveRefreshTimer);
         firebaseLiveRefreshTimer = window.setInterval(() => {
-          if (navigator.onLine) firebaseRefreshFromCloud();
+          if (navigator.onLine === false) return;
+          const hasPendingOfflineWork = pendingFirebaseRecords.size || firebasePendingDeletionCount;
+          const syncAttempt = hasPendingOfflineWork ? resumePendingFirebaseSync() : Promise.resolve();
+          syncAttempt.catch((error) => console.warn('Coada offline Firebase va reîncerca.', error)).finally(() => firebaseRefreshFromCloud());
         }, 10000);
       }
 
@@ -2748,9 +2758,7 @@
         // Trimitem mai întâi munca păstrată offline. Abia apoi ascultăm actualizările
         // venite din cloud, astfel încât ele nu pot înlocui nota de pe tabletă la reconectare.
         // Încărcăm coada și fără internet, ca indicatorul să nu afirme greșit că totul este sincronizat.
-        await loadPersistentFirebaseQueue();
-        await flushPendingFirebaseDeletions();
-        await flushPendingFirebaseRecords();
+        await resumePendingFirebaseSync({ reloadQueue: true });
         firebaseManifestUnsubscribe = firebaseManifestRef.onSnapshot((snapshot) => {
           const data = snapshot.data();
           if (!data) { firebaseReconcile({ version: 1, records: {}, tombstones: {} }).catch(() => {}); return; }
@@ -3015,6 +3023,7 @@
       }
 
       window.addEventListener('online', async () => {
+        resumePendingFirebaseSync({ reloadQueue: true }).catch((error) => console.warn('Sincronizarea Firebase va reîncerca.', error));
         const driveWasEnabled = Boolean(await getMetaValue(googleDriveStateKey));
         if (driveWasEnabled) {
           await initializeGoogleDrive();
@@ -7823,7 +7832,7 @@
       window.visualViewport?.addEventListener('resize', refreshEditorViewportAfterRotation);
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
-          firebaseRefreshFromCloud();
+          resumePendingFirebaseSync({ reloadQueue: true }).catch((error) => console.warn('Coada offline Firebase va reîncerca.', error)).finally(() => firebaseRefreshFromCloud());
           return;
         }
         if (!projectDirty) return;
@@ -8240,16 +8249,24 @@
               window.location.reload();
             });
 
-            registration.update().catch(() => {});
+            const checkForAppUpdate = () => {
+              if (navigator.onLine === false) return;
+              registration.update().catch(() => {});
+            };
+            checkForAppUpdate();
 
             window.setInterval(() => {
-              if (!navigator.onLine) return;
-              registration.update().catch(() => {});
-            }, 15 * 60 * 1000);
+              checkForAppUpdate();
+            }, 5 * 60 * 1000);
+
+            window.addEventListener('focus', checkForAppUpdate);
+            window.addEventListener('pageshow', checkForAppUpdate);
+            document.addEventListener('visibilitychange', () => {
+              if (document.visibilityState === 'visible') checkForAppUpdate();
+            });
 
             window.addEventListener('online', () => {
-              registration.update().catch(() => {});
-              flushPendingFirebaseDeletions().then(() => flushPendingFirebaseRecords()).finally(() => firebaseRefreshFromCloud());
+              checkForAppUpdate();
             });
           }).catch(() => {});
         });
