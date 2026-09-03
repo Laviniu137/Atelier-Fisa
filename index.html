@@ -1803,7 +1803,10 @@
       align-items: center;
       justify-content: center;
       gap: 7px;
-      min-width: 60px;
+      margin-right: -37px;
+      width: 94px;
+      min-width: 94px;
+      flex: 0 0 94px;
       min-height: 48px;
       padding: 0 8px;
       border: 1px solid rgba(104, 190, 255, .72);
@@ -1819,39 +1822,31 @@
       height: 17px;
       flex: 0 0 17px;
     }
-    body.fullscreen-mode .active-tool-symbol::before {
-      content: '';
+    body.fullscreen-mode .active-tool-symbol svg {
       position: absolute;
-      left: 1px;
-      top: 7px;
-      width: 15px;
-      border-top: 2px solid #e8f7ff;
+      inset: 0;
+      width: 17px;
+      height: 17px;
+      fill: none;
+      stroke: #e8f7ff;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
       filter: drop-shadow(0 1px 2px rgba(0,0,0,.32));
-      transform: rotate(-45deg);
-      transform-origin: center;
     }
-    body.fullscreen-mode .tool-label-active[data-tool="dashed-line"] .active-tool-symbol::before {
-      border-top-style: dashed;
+    body.fullscreen-mode .active-tool-symbol svg:not(.tool-symbol-pencil) { display: none; }
+    body.fullscreen-mode .tool-label-active[data-tool="line"] .tool-symbol-pencil,
+    body.fullscreen-mode .tool-label-active[data-tool="dashed-line"] .tool-symbol-pencil,
+    body.fullscreen-mode .tool-label-active[data-tool="eraser"] .tool-symbol-pencil { display: none; }
+    body.fullscreen-mode .tool-label-active[data-tool="line"] .tool-symbol-line,
+    body.fullscreen-mode .tool-label-active[data-tool="dashed-line"] .tool-symbol-dashed,
+    body.fullscreen-mode .tool-label-active[data-tool="eraser"] .tool-symbol-eraser { display: block; }
+    /* Instrumentul activ este arătat în piesa mare; spațiul lui rămâne rezervat,
+       astfel încât celelalte unelte nu sar la stânga sau la dreapta. */
+    body.fullscreen-mode .edit-group .drawing-tool-button.active {
+      visibility: hidden;
+      pointer-events: none;
     }
-    body.fullscreen-mode .tool-label-active[data-tool="pencil"] .active-tool-symbol::before {
-      top: 6px;
-      width: 13px;
-      height: 4px;
-      border: 2px solid #e8f7ff;
-      border-radius: 2px 5px 2px 2px;
-      transform: rotate(-45deg);
-    }
-    body.fullscreen-mode .tool-label-active[data-tool="eraser"] .active-tool-symbol::before {
-      top: 3px;
-      left: 3px;
-      width: 10px;
-      height: 10px;
-      border: 2px solid #e8f7ff;
-      border-radius: 3px;
-      transform: rotate(45deg);
-    }
-    /* Instrumentul activ devine prima piesă a paletei, ca în referința aleasă. */
-    body.fullscreen-mode .edit-group .drawing-tool-button.active { display: none; }
     body.fullscreen-mode .edit-group .drawing-tool-button {
       width: 37px;
       height: 42px;
@@ -1907,8 +1902,8 @@
     body.fullscreen-mode .quick-colors { gap: 8px; }
     body.fullscreen-mode .quick-color-button { width: 31px; height: 31px; min-width: 31px; min-height: 31px; box-shadow: inset 0 0 0 1px rgba(3, 9, 15, .34), 0 3px 7px rgba(0,0,0,.28); }
     body.fullscreen-mode .quick-color-button.is-selected { box-shadow: inset 0 0 0 1px rgba(9,13,20,.3), 0 0 0 2px #fff, 0 0 0 4px rgba(93, 188, 255, .38), 0 0 14px rgba(76, 167, 244, .45); }
-    /* Culoarea aleasă se vede o singură dată, în cercul cu bifă. */
-    body.fullscreen-mode .quick-color-button.is-current-custom-color { display: none; }
+    /* Roșul este reprezentat de cercul cu bifă: pozițiile culorilor rapide rămân fixe. */
+    body.fullscreen-mode .quick-color-button[data-color="#e53935"] { display: none; }
     body.fullscreen-mode .size-group,
     body.fullscreen-mode .actions-group { justify-content: space-between; }
     body.fullscreen-mode #fullscreenBrushSize { width: 112px; min-width: 112px; }
@@ -2249,7 +2244,7 @@
                 </div>
               </div>
               <div class="drawing-tool-group edit-group">
-                <span id="fullscreenActiveToolDisplay" class="tool-label tool-label-active" data-tool="pencil"><span class="active-tool-symbol" aria-hidden="true"></span><span id="fullscreenActiveToolName" aria-live="polite">Creion</span></span>
+                <span id="fullscreenActiveToolDisplay" class="tool-label tool-label-active" data-tool="pencil"><span class="active-tool-symbol" aria-hidden="true"><svg class="tool-symbol-pencil" viewBox="0 0 24 24"><path d="m4 20 4.2-1 10-10a2.2 2.2 0 0 0 0-3.1l-.1-.1a2.2 2.2 0 0 0-3.1 0L5 15.7 4 20z"></path><path d="m13.4 7.4 3.2 3.2"></path></svg><svg class="tool-symbol-line" viewBox="0 0 24 24"><path d="M5 19 19 5"></path></svg><svg class="tool-symbol-dashed" viewBox="0 0 24 24"><path d="M5 19 7.5 16.5"></path><path d="m9.5 14.5 2.5-2.5"></path><path d="m14 10 2.5-2.5"></path><path d="M18 6 19 5"></path></svg><svg class="tool-symbol-eraser" viewBox="0 0 24 24"><path d="M19.2 15.4 11 7.2a2.2 2.2 0 0 0-3.1 0L3.8 11.3a2.2 2.2 0 0 0 0 3.1l3.3 3.3a2.2 2.2 0 0 0 1.5.6H17"></path><path d="M13 20h8"></path></svg></span><span id="fullscreenActiveToolName" aria-live="polite">Creion</span></span>
                 <div class="drawing-tool-group-row">
                   <button type="button" id="fullscreenPencilBtn" class="drawing-tool-button" aria-label="Creion" title="Creion" aria-pressed="false">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-1 10-10a2.2 2.2 0 0 0 0-3.1l-.1-.1a2.2 2.2 0 0 0-3.1 0L5 15.7 4 20z"></path><path d="m13.4 7.4 3.2 3.2"></path></svg>
@@ -2628,7 +2623,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.2';
+      const APP_VERSION = '1.15.3';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -5998,7 +5993,6 @@
         document.querySelectorAll('.quick-color-button').forEach((button) => {
           const isActive = button.dataset.color && button.dataset.color.toLowerCase() === brushColor.toLowerCase();
           button.classList.toggle('is-selected', isActive);
-          button.classList.toggle('is-current-custom-color', isActive);
         });
         if (fullscreenUndoBtn) {
           fullscreenUndoBtn.disabled = strokes.length === 0;
