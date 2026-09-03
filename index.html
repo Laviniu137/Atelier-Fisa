@@ -1803,10 +1803,10 @@
       align-items: center;
       justify-content: center;
       gap: 7px;
-      margin-right: -37px;
-      width: 94px;
-      min-width: 94px;
-      flex: 0 0 94px;
+      margin-right: 0;
+      width: 108px;
+      min-width: 108px;
+      flex: 0 0 108px;
       min-height: 48px;
       padding: 0 8px;
       border: 1px solid rgba(104, 190, 255, .72);
@@ -1814,6 +1814,11 @@
       color: #e8f7ff;
       background: linear-gradient(145deg, rgba(74, 163, 231, .45), rgba(37, 90, 155, .28));
       box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 0 17px rgba(68, 169, 255, .38);
+    }
+    body.fullscreen-mode #fullscreenActiveToolName {
+      white-space: nowrap;
+      font-size: .54rem;
+      letter-spacing: .06em;
     }
     body.fullscreen-mode .active-tool-symbol {
       position: relative;
@@ -1841,11 +1846,10 @@
     body.fullscreen-mode .tool-label-active[data-tool="line"] .tool-symbol-line,
     body.fullscreen-mode .tool-label-active[data-tool="dashed-line"] .tool-symbol-dashed,
     body.fullscreen-mode .tool-label-active[data-tool="eraser"] .tool-symbol-eraser { display: block; }
-    /* Instrumentul activ este arătat în piesa mare; spațiul lui rămâne rezervat,
-       astfel încât celelalte unelte nu sar la stânga sau la dreapta. */
+    /* Instrumentul activ este deja arătat în piesa mare; este eliminat din rând
+       ca să nu poată intra peste numele și simbolul selectat. */
     body.fullscreen-mode .edit-group .drawing-tool-button.active {
-      visibility: hidden;
-      pointer-events: none;
+      display: none;
     }
     body.fullscreen-mode .edit-group .drawing-tool-button {
       width: 37px;
@@ -1901,7 +1905,9 @@
     }
     body.fullscreen-mode .quick-colors { gap: 8px; }
     body.fullscreen-mode .quick-color-button { width: 31px; height: 31px; min-width: 31px; min-height: 31px; box-shadow: inset 0 0 0 1px rgba(3, 9, 15, .34), 0 3px 7px rgba(0,0,0,.28); }
-    body.fullscreen-mode .quick-color-button.is-selected { box-shadow: inset 0 0 0 1px rgba(9,13,20,.3), 0 0 0 2px #fff, 0 0 0 4px rgba(93, 188, 255, .38), 0 0 14px rgba(76, 167, 244, .45); }
+    /* Cercul mare cu bifă este singurul indicator de culoare selectată.
+       Astfel nu apar două selecții vizuale pentru aceeași culoare. */
+    body.fullscreen-mode .quick-color-button.is-selected { box-shadow: inset 0 0 0 1px rgba(3, 9, 15, .34), 0 3px 7px rgba(0,0,0,.28); }
     /* Roșul este reprezentat de cercul cu bifă: pozițiile culorilor rapide rămân fixe. */
     body.fullscreen-mode .quick-color-button[data-color="#e53935"] { display: none; }
     body.fullscreen-mode .size-group,
@@ -2623,7 +2629,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.3';
+      const APP_VERSION = '1.15.4';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
