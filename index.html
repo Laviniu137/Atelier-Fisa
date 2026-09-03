@@ -1760,12 +1760,12 @@
       min-height: 0;
       max-width: none;
       padding: 10px;
-      border: 1px solid rgba(174, 212, 247, .45);
+      border: 1px solid rgba(140, 199, 255, .5);
       border-radius: 23px;
       background:
-        radial-gradient(ellipse at 18% 0%, rgba(88, 152, 237, .26), transparent 42%),
-        linear-gradient(145deg, rgba(37, 51, 74, .98), rgba(14, 22, 35, .99));
-      box-shadow: 0 20px 38px rgba(2, 8, 18, .52), 0 0 0 3px rgba(77, 146, 229, .13), inset 0 1px 0 rgba(255,255,255,.2), inset 0 -1px 0 rgba(0,0,0,.3);
+        radial-gradient(ellipse at 24% 0%, rgba(88, 164, 255, .34), transparent 44%),
+        linear-gradient(145deg, rgba(31, 48, 74, .99), rgba(13, 21, 35, .99));
+      box-shadow: 0 24px 42px rgba(2, 8, 18, .56), 0 0 0 3px rgba(77, 159, 250, .18), 0 0 24px rgba(75, 162, 255, .2), inset 0 1px 0 rgba(255,255,255,.22), inset 0 -1px 0 rgba(0,0,0,.3);
     }
     body.fullscreen-mode .drawing-toolbar-row {
       display: grid;
@@ -1799,13 +1799,78 @@
       letter-spacing: .09em;
     }
     body.fullscreen-mode .tool-label-active {
-      min-height: 42px;
-      padding: 0 9px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-width: 60px;
+      min-height: 48px;
+      padding: 0 8px;
       border: 1px solid rgba(104, 190, 255, .72);
-      border-radius: 11px;
+      border-radius: 13px;
       color: #e8f7ff;
       background: linear-gradient(145deg, rgba(74, 163, 231, .45), rgba(37, 90, 155, .28));
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 0 15px rgba(68, 169, 255, .32);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 0 17px rgba(68, 169, 255, .38);
+    }
+    body.fullscreen-mode .active-tool-symbol {
+      position: relative;
+      display: inline-block;
+      width: 17px;
+      height: 17px;
+      flex: 0 0 17px;
+    }
+    body.fullscreen-mode .active-tool-symbol::before {
+      content: '';
+      position: absolute;
+      left: 1px;
+      top: 7px;
+      width: 15px;
+      border-top: 2px solid #e8f7ff;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,.32));
+      transform: rotate(-45deg);
+      transform-origin: center;
+    }
+    body.fullscreen-mode .tool-label-active[data-tool="dashed-line"] .active-tool-symbol::before {
+      border-top-style: dashed;
+    }
+    body.fullscreen-mode .tool-label-active[data-tool="pencil"] .active-tool-symbol::before {
+      top: 6px;
+      width: 13px;
+      height: 4px;
+      border: 2px solid #e8f7ff;
+      border-radius: 2px 5px 2px 2px;
+      transform: rotate(-45deg);
+    }
+    body.fullscreen-mode .tool-label-active[data-tool="eraser"] .active-tool-symbol::before {
+      top: 3px;
+      left: 3px;
+      width: 10px;
+      height: 10px;
+      border: 2px solid #e8f7ff;
+      border-radius: 3px;
+      transform: rotate(45deg);
+    }
+    /* Instrumentul activ devine prima piesă a paletei, ca în referința aleasă. */
+    body.fullscreen-mode .edit-group .drawing-tool-button.active { display: none; }
+    body.fullscreen-mode .edit-group .drawing-tool-button {
+      width: 37px;
+      height: 42px;
+      min-width: 37px;
+      min-height: 42px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      box-shadow: none;
+    }
+    body.fullscreen-mode .edit-group .drawing-tool-button:hover:not(:disabled) { background: rgba(255,255,255,.09); box-shadow: none; }
+    body.fullscreen-mode #fullscreenEraserBtn:not(.active)::after {
+      content: '';
+      position: absolute;
+      top: 8px;
+      right: -7px;
+      bottom: 8px;
+      width: 1px;
+      background: linear-gradient(180deg, transparent, rgba(190, 219, 246, .28), transparent);
     }
     body.fullscreen-mode .drawing-tool-button {
       width: 38px;
@@ -1823,16 +1888,39 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,.42), 0 0 0 2px rgba(93, 188, 255, .22), 0 0 18px rgba(53, 154, 249, .43);
     }
     body.fullscreen-mode .drawing-tool-button.active::after { background: #dff6ff; }
+    body.fullscreen-mode .color-picker-control { position: relative; display: inline-flex; width: 36px; height: 36px; }
     body.fullscreen-mode #fullscreenColorPicker { width: 36px; height: 36px; min-width: 36px; min-height: 36px; border-radius: 50%; }
     body.fullscreen-mode #fullscreenColorPicker::-webkit-color-swatch { border-radius: 50%; }
+    body.fullscreen-mode .color-picker-check {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 900;
+      line-height: 1;
+      text-shadow: 0 1px 3px rgba(0,0,0,.58);
+    }
     body.fullscreen-mode .quick-colors { gap: 8px; }
     body.fullscreen-mode .quick-color-button { width: 31px; height: 31px; min-width: 31px; min-height: 31px; box-shadow: inset 0 0 0 1px rgba(3, 9, 15, .34), 0 3px 7px rgba(0,0,0,.28); }
     body.fullscreen-mode .quick-color-button.is-selected { box-shadow: inset 0 0 0 1px rgba(9,13,20,.3), 0 0 0 2px #fff, 0 0 0 4px rgba(93, 188, 255, .38), 0 0 14px rgba(76, 167, 244, .45); }
+    /* Culoarea aleasă se vede o singură dată, în cercul cu bifă. */
+    body.fullscreen-mode .quick-color-button.is-current-custom-color { display: none; }
     body.fullscreen-mode .size-group,
     body.fullscreen-mode .actions-group { justify-content: space-between; }
     body.fullscreen-mode #fullscreenBrushSize { width: 112px; min-width: 112px; }
     body.fullscreen-mode #fullscreenBrushSizeValue { min-width: 43px; padding: 6px 7px; font-size: .67rem; }
     body.fullscreen-mode .actions-group .drawing-tool-group-row { margin-left: auto; }
+    body.fullscreen-mode .actions-group .erase-utility {
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      color: rgba(240, 248, 255, .94);
+    }
+    body.fullscreen-mode .actions-group .erase-utility:hover:not(:disabled) { background: rgba(255,255,255,.08); box-shadow: none; }
     body.fullscreen-mode .drawing-tool-button.danger { border-color: rgba(255, 133, 149, .56); background: linear-gradient(145deg, rgba(200, 63, 79, .4), rgba(122, 34, 51, .23)); }
     body.fullscreen-mode .fullscreen-toolbar-toggle {
       width: 60px;
@@ -2149,7 +2237,7 @@
               <div class="drawing-tool-group color-group">
                 <span class="tool-label">Desen</span>
                 <div class="drawing-tool-group-row">
-                  <input id="fullscreenColorPicker" type="color" value="#000000" aria-label="Alege culoarea creionului" title="Culoare personalizată">
+                  <span class="color-picker-control"><input id="fullscreenColorPicker" type="color" value="#000000" aria-label="Alege culoarea creionului" title="Culoare personalizată"><span class="color-picker-check" aria-hidden="true">✓</span></span>
                   <div class="quick-colors" aria-label="Culori rapide">
                     <button type="button" class="quick-color-button is-selected" data-color="#000000" style="--swatch:#000000" title="Negru" aria-label="Negru"></button>
                     <button type="button" class="quick-color-button" data-color="#e53935" style="--swatch:#e53935" title="Roșu" aria-label="Roșu"></button>
@@ -2161,7 +2249,7 @@
                 </div>
               </div>
               <div class="drawing-tool-group edit-group">
-                <span id="fullscreenActiveToolName" class="tool-label tool-label-active" aria-live="polite">Creion</span>
+                <span id="fullscreenActiveToolDisplay" class="tool-label tool-label-active" data-tool="pencil"><span class="active-tool-symbol" aria-hidden="true"></span><span id="fullscreenActiveToolName" aria-live="polite">Creion</span></span>
                 <div class="drawing-tool-group-row">
                   <button type="button" id="fullscreenPencilBtn" class="drawing-tool-button" aria-label="Creion" title="Creion" aria-pressed="false">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-1 10-10a2.2 2.2 0 0 0 0-3.1l-.1-.1a2.2 2.2 0 0 0-3.1 0L5 15.7 4 20z"></path><path d="m13.4 7.4 3.2 3.2"></path></svg>
@@ -2193,6 +2281,9 @@
               <div class="drawing-tool-group actions-group">
                 <span class="tool-label">Ștergere</span>
                 <div class="drawing-tool-group-row">
+                  <button type="button" id="fullscreenQuickEraserBtn" class="drawing-tool-button erase-utility" aria-label="Radieră" title="Radieră">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m19 15-7-7-7 7 4 4h6l4-4z"></path><path d="m13 19 5-5"></path></svg>
+                  </button>
                   <button type="button" id="fullscreenClearBtn" class="drawing-tool-button danger" aria-label="Șterge desenul" title="Șterge desenul">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg>
                   </button>
@@ -2372,11 +2463,13 @@
       const fullscreenColorPicker = document.getElementById('fullscreenColorPicker');
       const fullscreenBrushSize = document.getElementById('fullscreenBrushSize');
       const fullscreenBrushSizeValue = document.getElementById('fullscreenBrushSizeValue');
+      const fullscreenActiveToolDisplay = document.getElementById('fullscreenActiveToolDisplay');
       const fullscreenActiveToolName = document.getElementById('fullscreenActiveToolName');
       const fullscreenPencilBtn = document.getElementById('fullscreenPencilBtn');
       const fullscreenLineBtn = document.getElementById('fullscreenLineBtn');
       const fullscreenDashedLineBtn = document.getElementById('fullscreenDashedLineBtn');
       const fullscreenEraserBtn = document.getElementById('fullscreenEraserBtn');
+      const fullscreenQuickEraserBtn = document.getElementById('fullscreenQuickEraserBtn');
       const fullscreenUndoBtn = document.getElementById('fullscreenUndoBtn');
       const fullscreenRedoBtn = document.getElementById('fullscreenRedoBtn');
       const fullscreenClearBtn = document.getElementById('fullscreenClearBtn');
@@ -2535,7 +2628,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.1';
+      const APP_VERSION = '1.15.2';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -5891,12 +5984,21 @@
         if (fullscreenDrawingToolbar) {
           fullscreenDrawingToolbar.style.setProperty('--active-draw-color', brushColor);
         }
+        if (fullscreenQuickEraserBtn) {
+          const eraserActive = isErasing;
+          fullscreenQuickEraserBtn.classList.toggle('active', eraserActive);
+          fullscreenQuickEraserBtn.setAttribute('aria-pressed', eraserActive ? 'true' : 'false');
+        }
+        if (fullscreenActiveToolDisplay) {
+          fullscreenActiveToolDisplay.dataset.tool = activeToolPreview;
+        }
         if (fullscreenActiveToolName) {
           fullscreenActiveToolName.textContent = activeToolLabel;
         }
         document.querySelectorAll('.quick-color-button').forEach((button) => {
           const isActive = button.dataset.color && button.dataset.color.toLowerCase() === brushColor.toLowerCase();
           button.classList.toggle('is-selected', isActive);
+          button.classList.toggle('is-current-custom-color', isActive);
         });
         if (fullscreenUndoBtn) {
           fullscreenUndoBtn.disabled = strokes.length === 0;
@@ -8158,13 +8260,17 @@
           scheduleSave();
         });
       }
-      fullscreenEraserBtn.addEventListener('click', () => {
+      const activateFullscreenEraser = () => {
         setActiveDrawMode('freehand', { erasing: true });
         brushSize = lastEraserSize;
         applyCurrentBrushSettings();
         syncBrushControls();
         scheduleSave();
-      });
+      };
+      fullscreenEraserBtn.addEventListener('click', activateFullscreenEraser);
+      if (fullscreenQuickEraserBtn) {
+        fullscreenQuickEraserBtn.addEventListener('click', activateFullscreenEraser);
+      }
       fullscreenUndoBtn.addEventListener('click', () => {
         undoLastLine();
       });
