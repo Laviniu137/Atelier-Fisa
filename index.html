@@ -2102,6 +2102,123 @@
       box-shadow: 0 10px 24px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.1);
     }
   </style>
+
+  <style id="atelier-studio-theme">
+    /* Manager theme only: editing and fullscreen canvas retain their geometry. */
+    body:has(#projectManagerView:not([hidden])) { background: #f4f3ee; }
+    #projectManagerView {
+      --studio-ink: #243c35; --studio-muted: #777b71; --studio-line: #e1e3da;
+      grid-template-columns: 236px minmax(0,1fr);
+      grid-template-rows: auto 1fr;
+      gap: 0 40px; padding: 16px 40px 16px 16px;
+      color: #29392f; max-width: 2040px; margin-inline: auto;
+    }
+    #projectManagerView .workspace-sidebar {
+      top: 16px; min-height: calc(100dvh - 32px); padding: 32px 18px 18px;
+      border: 1px solid #2c463b; border-radius: 22px;
+      background: linear-gradient(155deg,#263f35 0%,#182e26 100%);
+      box-shadow: 0 16px 44px #1d352017; overflow: hidden;
+    }
+    #projectManagerView .workspace-logo { margin: 4px 10px 46px; }
+    #projectManagerView .workspace-logo strong { color: #f7f2e4; font: 600 28px/1.2 Georgia,serif; letter-spacing: -.8px; white-space: nowrap; }
+    #projectManagerView .workspace-logo small { color: #c2c8b9; font-size: 11px; letter-spacing: .08em; margin-top: 10px; }
+    #projectManagerView .workspace-nav { gap: 8px; }
+    #projectManagerView .workspace-nav button {
+      min-height: 49px; padding: 12px 16px; border-radius: 12px;
+      color: #c8d0c7; font-size: 14px; font-weight: 550;
+      background: transparent; border: 1px solid transparent; gap: 13px;
+    }
+    #projectManagerView .workspace-nav button:hover { background: #ffffff0c; transform: none; }
+    #projectManagerView .workspace-nav button[aria-current="page"] {
+      background: #e9e2d0; color: #243d32; border-color: #e9e2d0;
+      box-shadow: 0 4px 12px #09190d1a;
+    }
+    #projectManagerView .workspace-nav button svg { width: 18px; height: 18px; }
+    #projectManagerView .workspace-sidebar-footer {
+      position: relative; min-height: 178px; padding: 26px 16px; margin-top: auto;
+      border: 1px solid #f0e9d520; background: linear-gradient(145deg,#ffffff09,#a9ae7f12);
+      color: #d7daca; border-radius: 14px; font: 15px/1.75 Georgia,serif;
+    }
+    #projectManagerView .workspace-sidebar-footer::before {
+      content: 'ATELIER • DESIGN • DETALIU'; display: block; margin-bottom: 20px;
+      color: #b7bea6; font: 9px/1.4 system-ui,sans-serif; letter-spacing: .13em;
+    }
+    #projectManagerView > .project-manager-header {
+      min-height: 76px; padding: 8px 0 18px; border: 0; border-bottom: 1px solid var(--studio-line);
+      border-radius: 0; background: transparent; box-shadow: none; gap: 20px;
+      justify-content: space-between; margin-bottom: 32px;
+    }
+    .studio-header-label { color: #777b71; font-size: 11px; font-weight: 600; letter-spacing: .15em; text-transform: uppercase; }
+    #projectManagerView #pmCloudAccount { min-height: 40px; border-radius: 999px; padding: 9px 16px; font-size: 12px; box-shadow: none; }
+    #projectManagerView > .project-manager-content, #projectManagerView > #workspaceNotes { padding: 0 0 24px; }
+    #projectManagerView .project-manager-heading {
+      display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center;
+      gap: 10px 20px; margin-bottom: 26px;
+    }
+    #projectManagerView .project-manager-page-title { color: #25392f; font: 500 clamp(30px,2.5vw,44px)/1.16 Georgia,serif; letter-spacing: -1.1px; }
+    #projectManagerView .project-manager-subtitle { color: #767c71; font-size: 13px; font-weight: 400; letter-spacing: 0; line-height: 1.6; margin: 0; }
+    #projectManagerView .project-manager-heading > .project-manager-subtitle { grid-column: 1; grid-row: 2; }
+    #projectManagerView .project-section-actions { grid-column: 2; grid-row: 1 / 3; margin: 0; gap: 10px; }
+    #projectManagerView .project-section-actions button, #projectManagerView #workspaceAddNote {
+      min-width: 0; min-height: 46px; padding: 12px 18px; font-size: 13px;
+      border-radius: 11px; font-weight: 600; letter-spacing: 0; box-shadow: none;
+    }
+    #projectManagerView #pmImportProject { background: #fbfbf7; border-color: #dcded3; color: #384739; }
+    #projectManagerView #pmNewProject, #projectManagerView #workspaceAddNote {
+      background: #294b3b; border-color: #294b3b; color: #fffdf5; box-shadow: 0 4px 10px #294b3b12;
+    }
+    #projectManagerView #pmNewProject:hover, #projectManagerView #workspaceAddNote:hover { background: #365c48; }
+    #projectManagerView .project-status-filters { grid-column: 1 / -1; gap: 6px; margin-top: 20px; padding: 5px; border-radius: 12px; width: fit-content; max-width: 100%; background: #eaece4; }
+    #projectManagerView .project-status-filter { min-height: 36px; padding: 10px 15px; border-radius: 8px; border-color: transparent; background: transparent; color: #697264; font-size: 12px; font-weight: 550; box-shadow: none; }
+    #projectManagerView .project-status-filter[aria-pressed="true"] { background: #fffef8; color: #2b4937; border-color: #dce0d3; box-shadow: 0 2px 5px #243c3509; }
+    #projectManagerView .project-status-filter:hover:not([aria-pressed="true"]) { background: #f4f5ef; }
+    #projectManagerView .project-manager-divider { display: none; }
+    #projectManagerView .project-grid { grid-template-columns: repeat(auto-fill,minmax(255px,1fr)); gap: 24px; }
+    #projectManagerView .project-card { grid-template-rows: 192px minmax(160px,1fr); min-height: 352px; border: 1px solid #e0e3d9; border-radius: 16px; background: #fffefb; box-shadow: 0 4px 16px #243c3505; }
+    #projectManagerView .project-card:hover { transform: translateY(-3px); border-color: #b8c3ae; box-shadow: 0 14px 28px #243c3510; }
+    #projectManagerView .project-card-thumb-wrap { border-radius: 15px 15px 0 0; border-bottom: 1px solid #e5e6de; background: #e9ede3; }
+    #projectManagerView .project-card-body { padding: 18px; min-height: 160px; gap: 18px; }
+    #projectManagerView .project-card-open { color: #293d30; font-size: 14px; line-height: 1.45; font-weight: 650; }
+    #projectManagerView .project-card-date { font-size: 10.5px; line-height: 1.7; color: #7d8177; margin-top: 5px; }
+    #projectManagerView .project-card-menu summary { background: #f7f8f1; border-color: #e2e5db; color: #68755d; border-radius: 9px; }
+    #projectManagerView .project-status { font-size: 10px; font-weight: 600; margin-top: 10px; min-height: 24px; padding: 5px 9px; }
+    #projectManagerView .project-status.is-in-progress { background: #eaf0eb; color: #47644e; border-color: #cddcd0; box-shadow: none; }
+    #projectManagerView .project-status.is-to-measure { background: #f6f0e3; color: #887039; border-color: #e5d8b9; }
+    #projectManagerView .project-status.is-finalized { background: #e6eee0; color: #416233; border-color: #c8d7bd; }
+    #projectManagerView .project-card-stats { border-top: 1px solid #eceee5; padding-top: 12px; gap: 0; }
+    #projectManagerView .project-stat { min-height: 24px; padding: 4px 8px; border: 0; border-radius: 0; background: transparent; color: #7b826f; font-size: 11px; font-weight: 500; }
+    #projectManagerView .project-stat + .project-stat { border-left: 1px solid #e5e8dc; }
+    #projectManagerView .project-manager-version { margin-top: 24px; color: #858d7e; }
+    #projectManagerView .workspace-note-card { border-color: #dfe4d6; border-radius: 16px; background: #fffefb; box-shadow: 0 4px 16px #243c3505; }
+    #projectManagerView .workspace-note-card input, #projectManagerView .workspace-note-card textarea { border-color: #dfe4d6; background: #fcfcf7; color: #293d30; }
+    #projectManagerView .workspace-note-card label, #projectManagerView #workspaceNotesStatus { color: #64715c; }
+    #projectManagerView button:focus-visible, #projectManagerView input:focus-visible, #projectManagerView textarea:focus-visible, #projectManagerView summary:focus-visible { outline: 3px solid #8fa67c; outline-offset: 3px; }
+    @media (min-width: 1700px) { #projectManagerView .project-grid { grid-template-columns: repeat(4,minmax(0,1fr)); } #projectManagerView .project-card { grid-template-rows: 220px minmax(160px,1fr); } }
+    @media (max-width: 1100px) {
+      #projectManagerView { grid-template-columns: 194px minmax(0,1fr); padding-right: 24px; column-gap: 24px; }
+      #projectManagerView .workspace-sidebar { padding-inline: 12px; }
+      #projectManagerView .workspace-logo { margin-inline: 6px; }
+      #projectManagerView .workspace-logo strong { font-size: 24px; }
+      #projectManagerView .project-manager-heading { grid-template-columns: minmax(0,1fr); }
+      #projectManagerView .project-section-actions { grid-column: 1; grid-row: 3; margin-top: 8px; }
+      #projectManagerView .project-status-filters { margin-top: 6px; }
+    }
+    @media (max-width: 700px) {
+      #projectManagerView { grid-template-columns: minmax(0,1fr); padding: 12px; gap: 20px; }
+      #projectManagerView .workspace-sidebar { position: static; grid-column: 1; grid-row: auto; min-height: auto; padding: 22px 16px 16px; }
+      #projectManagerView .workspace-logo { margin: 0 6px 22px; }
+      #projectManagerView .workspace-logo strong { font-size: 28px; }
+      #projectManagerView .workspace-nav { grid-template-columns: 1fr 1fr; }
+      #projectManagerView .workspace-sidebar-footer { display: none; }
+      #projectManagerView > .project-manager-header, #projectManagerView > .project-manager-content, #projectManagerView > #workspaceNotes { grid-column: 1; }
+      #projectManagerView > .project-manager-header { min-height: 48px; margin-bottom: 0; padding: 0 0 16px; }
+      #projectManagerView .studio-header-label { font-size: 9px; letter-spacing: .08em; }
+      #projectManagerView .project-grid { grid-template-columns: repeat(auto-fill,minmax(min(255px,100%),1fr)); gap: 18px; }
+      #projectManagerView .project-section-actions { flex-wrap: wrap; }
+      #projectManagerView .project-status-filter { padding: 9px 10px; }
+    }
+    @media (prefers-reduced-motion: reduce) { #projectManagerView .project-card, #projectManagerView button { transition: none; } #projectManagerView .project-card:hover { transform: none; } }
+  </style>
 </head>
 <body>
   <div id="saveToast" class="save-toast" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -2115,7 +2232,8 @@
       <div class="workspace-sidebar-footer">Transformăm<br>ideile în mobilier unic.<br><span aria-hidden="true">—</span></div>
     </aside>
 
-    <section class="project-manager-header" aria-label="Branding și acțiuni proiecte">
+    <section class="project-manager-header" aria-label="Cont și sincronizare">
+      <span class="studio-header-label">Spațiul tău de lucru</span>
       <div class="project-manager-brand">
         <div class="brand-block" aria-label="La-Tâmplar Mobilă la comandă">
           <h1 class="brand-title">La-Tâmplar</h1>
@@ -2128,17 +2246,17 @@
     </section>
     <section class="project-manager-content">
       <div class="project-manager-heading">
-        <h2 id="projectManagerTitle" class="project-manager-page-title">📁 Proiectele mele</h2>
+        <h2 id="projectManagerTitle" class="project-manager-page-title">Proiectele mele</h2>
         <p class="project-manager-subtitle">Toate proiectele salvate local.</p>
         <div class="project-manager-actions project-section-actions" aria-label="Acțiuni proiecte">
         <button type="button" id="pmImportProject"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg><span>Importă proiect</span></button>
-        <button type="button" id="pmNewProject"><span>➕ Proiect nou</span></button>
+        <button type="button" id="pmNewProject"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Proiect nou</span></button>
         </div>
         <div id="projectStatusFilters" class="project-status-filters" role="group" aria-label="Filtrează proiectele după stare">
           <button type="button" class="project-status-filter" data-project-status-filter="all" aria-pressed="true">Toate</button>
-          <button type="button" class="project-status-filter" data-project-status-filter="to-measure" aria-pressed="false">📏 De măsurat</button>
-          <button type="button" class="project-status-filter" data-project-status-filter="in-progress" aria-pressed="false">● În lucru</button>
-          <button type="button" class="project-status-filter" data-project-status-filter="finalized" aria-pressed="false">✓ Finalizat</button>
+          <button type="button" class="project-status-filter" data-project-status-filter="to-measure" aria-pressed="false">De măsurat</button>
+          <button type="button" class="project-status-filter" data-project-status-filter="in-progress" aria-pressed="false">În lucru</button>
+          <button type="button" class="project-status-filter" data-project-status-filter="finalized" aria-pressed="false">Finalizat</button>
         </div>
         <div class="project-manager-divider" aria-hidden="true"></div>
       </div>
@@ -2771,7 +2889,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.16';
+      const APP_VERSION = '1.15.17';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
