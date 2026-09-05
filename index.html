@@ -483,20 +483,27 @@
     #drawingCanvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
     .note-layer { position: absolute; inset: 0; pointer-events: none; }
     .image-stage { touch-action: none; }
-    .note-marker { position: absolute; display: grid; place-items: center; width: 31px; height: 31px; transform: translate(-50%, -50%) scale(var(--note-marker-screen-scale, 1)); transform-origin: center; border: 0; border-radius: 999px; background: linear-gradient(140deg, #8b5e3c, #6a3d22); color: #fffdfa; font-weight: 800; font-size: .78rem; box-shadow: 0 6px 14px rgba(61, 39, 23, .22); cursor: grab; pointer-events: auto; touch-action: none; -webkit-tap-highlight-color: transparent; }
+    .note-marker { position: absolute; display: grid; place-items: center; width: 30px; height: 30px; min-width: 30px; min-height: 30px; padding: 0; gap: 0; transform-origin: center; border: 1px solid rgba(255,255,255,.8); border-radius: 999px; background: linear-gradient(140deg, #8b5e3c, #6a3d22); color: #fffdfa; font-weight: 750; font-size: 12px; line-height: 1; letter-spacing: 0; box-shadow: 0 2px 6px rgba(61, 39, 23, .2); cursor: grab; pointer-events: auto; touch-action: none; -webkit-tap-highlight-color: transparent; transition: background .16s ease, box-shadow .16s ease; }
+    /* Cercul vizibil este compact, dar zona de atingere rămâne de 44px. */
+    .note-marker::before { content: ''; position: absolute; inset: -8px; border-radius: 999px; }
+    .note-marker,
+    .note-marker:hover:not(:disabled),
+    .note-marker:active:not(:disabled) { transform: translate(-50%, -50%) scale(var(--note-marker-screen-scale, 1)); }
+    .note-marker:hover:not(:disabled) { border-color: #fff; box-shadow: 0 3px 8px rgba(61, 39, 23, .25); }
+    .note-marker:focus-visible { outline: 2px solid #79c7e8; outline-offset: 2px; }
     .note-marker:active { cursor: grabbing; }
     .note-marker.is-placement-pending {
-      outline: 3px solid rgba(121, 216, 255, .9);
-      outline-offset: 3px;
+      outline: 2px solid rgba(121, 216, 255, .9);
+      outline-offset: 2px;
       animation: note-placement-pulse 1.15s ease-in-out infinite;
     }
     @keyframes note-placement-pulse {
       50% {
-        transform: translate(-50%, -50%) scale(calc(var(--note-marker-screen-scale, 1) * 1.16));
-        box-shadow: 0 0 0 9px rgba(121, 216, 255, .14), 0 8px 18px rgba(26, 82, 110, .28);
+        box-shadow: 0 0 0 4px rgba(121, 216, 255, .14), 0 3px 8px rgba(26, 82, 110, .2);
       }
     }
-    .note-marker.selected { background: linear-gradient(140deg, #2f6f51, #1f4e3d); transform: translate(-50%, -50%) scale(calc(var(--note-marker-screen-scale, 1) * 1.03)); }
+    .note-marker.selected { background: linear-gradient(140deg, #2f6f51, #1f4e3d); }
+    @media (prefers-reduced-motion: reduce) { .note-marker.is-placement-pending { animation: none; } }
     .empty { max-width: 290px; padding: 24px; color: #7c7265; text-align: center; font-size: .92rem; line-height: 1.55; }
     .toolbar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
     .toolbar button { width: 100%; max-width: none; margin-inline: 0; padding: 8px 10px; min-height: 40px; font-size: .9rem; border-radius: 12px; display: inline-flex; justify-content: center; align-items: center; }
@@ -2675,7 +2682,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.11';
+      const APP_VERSION = '1.15.12';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -5781,7 +5788,7 @@
 
       function drawExportMarkers(targetContext, width, height, scaleMultiplier = 1) {
         if (!interactiveNotes.length) return;
-        const markerRadius = 15.5 * scaleMultiplier;
+        const markerRadius = 15 * scaleMultiplier;
         interactiveNotes.forEach((note, index) => {
           const x = clamp(note.x, 0, 1) * width;
           const y = clamp(note.y, 0, 1) * height;
@@ -7176,6 +7183,7 @@
           marker.dataset.noteId = note.id;
           positionMarkerElement(marker, note, frame);
           marker.textContent = String(index + 1);
+          marker.setAttribute('aria-label', `Nota ${index + 1}: ${getNoteDisplayName(note)}`);
           marker.addEventListener('click', (event) => {
             event.stopPropagation();
             selectNote(note.id);
