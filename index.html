@@ -2033,6 +2033,7 @@
   </style>
 
   <style id="workspace-navigation-style">
+    .project-section-actions { margin-top: 20px; justify-content: flex-start; flex-wrap: wrap; }
     #projectManagerView { grid-template-columns: 210px minmax(0, 1fr); grid-template-rows: auto 1fr; gap: 22px; align-items: start; min-height: 100dvh; }
     .workspace-sidebar { grid-column: 1; grid-row: 1 / 3; position: sticky; top: 24px; min-height: calc(100dvh - 48px); padding: 24px 14px 16px; display: flex; flex-direction: column; border: 1px solid #e6dfd4; border-radius: 20px; background: #fcfaf6; box-shadow: 0 8px 24px #4839250a; }
     .workspace-logo { margin: 0 8px 32px; }
@@ -2078,14 +2079,16 @@
       </div>
       <div class="project-manager-actions">
         <button type="button" id="pmCloudAccount"><span>☁️ Cont & sincronizare</span></button>
-        <button type="button" id="pmImportProject"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg><span>Importă proiect</span></button>
-        <button type="button" id="pmNewProject"><span>➕ Proiect nou</span></button>
       </div>
     </section>
     <section class="project-manager-content">
       <div class="project-manager-heading">
         <h2 id="projectManagerTitle" class="project-manager-page-title">📁 Proiectele mele</h2>
         <p class="project-manager-subtitle">Toate proiectele salvate local.</p>
+        <div class="project-manager-actions project-section-actions" aria-label="Acțiuni proiecte">
+        <button type="button" id="pmImportProject"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg><span>Importă proiect</span></button>
+        <button type="button" id="pmNewProject"><span>➕ Proiect nou</span></button>
+        </div>
         <div id="projectStatusFilters" class="project-status-filters" role="group" aria-label="Filtrează proiectele după stare">
           <button type="button" class="project-status-filter" data-project-status-filter="all" aria-pressed="true">Toate</button>
           <button type="button" class="project-status-filter" data-project-status-filter="to-measure" aria-pressed="false">📏 De măsurat</button>
@@ -2723,7 +2726,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.13';
+      const APP_VERSION = '1.15.14';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
