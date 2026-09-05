@@ -1087,7 +1087,7 @@
     .sheet-type-dialog { width: min(640px, 100%); padding: 24px; }
     .sheet-type-dialog > p { max-width: 510px; }
     .sheet-type-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 18px; }
-    .sheet-type-choice { display: grid; grid-template-rows: 64px auto 1fr; align-items: start; gap: 9px; min-height: 166px; padding: 16px; text-align: left; border: 1px solid #ded3c4; border-radius: 17px; background: linear-gradient(145deg, #fffefa, #fbf7f0); color: #342b21; box-shadow: 0 3px 9px rgba(69, 52, 30, .04); }
+    .sheet-type-choice { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: 64px auto 1fr; align-items: start; gap: 9px; min-height: 166px; padding: 16px; text-align: left; border: 1px solid #ded3c4; border-radius: 17px; background: linear-gradient(145deg, #fffefa, #fbf7f0); color: #342b21; box-shadow: 0 3px 9px rgba(69, 52, 30, .04); }
     .sheet-type-choice:hover { border-color: #a98758; background: #fffaf0; box-shadow: 0 10px 22px rgba(93, 66, 31, .12); transform: translateY(-2px); }
     .sheet-type-choice:focus-visible { outline: 3px solid rgba(97, 145, 190, .45); outline-offset: 3px; }
     .sheet-type-choice strong { align-self: end; font-size: 1rem; letter-spacing: -.01em; }
@@ -2675,7 +2675,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.10';
+      const APP_VERSION = '1.15.11';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
