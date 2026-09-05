@@ -1799,7 +1799,7 @@
       letter-spacing: .09em;
     }
     body.fullscreen-mode .tool-label-active {
-      display: inline-flex;
+      display: none;
       align-items: center;
       justify-content: center;
       gap: 0;
@@ -1858,7 +1858,55 @@
       box-shadow: none;
     }
     body.fullscreen-mode .edit-group .drawing-tool-button:hover:not(:disabled) { background: rgba(255,255,255,.09); box-shadow: none; }
-    body.fullscreen-mode #fullscreenEraserBtn:not(.active)::after {
+    /* Eticheta apare în butonul selectat; dimensiunile și ordinea rămân fixe. */
+    body.fullscreen-mode .edit-group .drawing-tool-group-row { gap: 5px; }
+    body.fullscreen-mode .edit-group .drawing-tool-button {
+      flex-shrink: 0;
+      height: 52px;
+      min-height: 52px;
+      padding: 0;
+      transform: none;
+    }
+    body.fullscreen-mode .edit-group .drawing-tool-button[data-tool-label] {
+      width: 54px;
+      min-width: 54px;
+      border-radius: 12px;
+    }
+    body.fullscreen-mode .edit-group .drawing-tool-button[data-tool-label] svg {
+      position: absolute;
+      top: 9px;
+      left: 17px;
+      width: 20px;
+      height: 20px;
+    }
+    body.fullscreen-mode .edit-group .drawing-tool-button[data-tool-label]::after {
+      content: attr(data-tool-label);
+      position: absolute;
+      top: auto;
+      right: 0;
+      bottom: 6px;
+      left: 0;
+      width: auto;
+      height: auto;
+      border: 0;
+      border-radius: 0;
+      transform: none;
+      background: none;
+      box-shadow: none;
+      color: #e8f7ff;
+      font-size: 8px;
+      font-weight: 750;
+      line-height: 10px;
+      letter-spacing: .02em;
+      text-align: center;
+      text-transform: uppercase;
+      white-space: nowrap;
+      visibility: hidden;
+    }
+    body.fullscreen-mode .edit-group .drawing-tool-button[data-tool-label].active::after {
+      visibility: visible;
+    }
+    body.fullscreen-mode #fullscreenEraserBtn::before {
       content: '';
       position: absolute;
       top: 8px;
@@ -2260,16 +2308,16 @@
               <div class="drawing-tool-group edit-group">
                 <span id="fullscreenActiveToolDisplay" class="tool-label tool-label-active" data-tool="pencil"><span class="active-tool-symbol" aria-hidden="true"><svg class="tool-symbol-pencil" viewBox="0 0 24 24"><path d="m4 20 4.2-1 10-10a2.2 2.2 0 0 0 0-3.1l-.1-.1a2.2 2.2 0 0 0-3.1 0L5 15.7 4 20z"></path><path d="m13.4 7.4 3.2 3.2"></path></svg><svg class="tool-symbol-line" viewBox="0 0 24 24"><path d="M5 19 19 5"></path></svg><svg class="tool-symbol-dashed" viewBox="0 0 24 24"><path d="M5 19 7.5 16.5"></path><path d="m9.5 14.5 2.5-2.5"></path><path d="m14 10 2.5-2.5"></path><path d="M18 6 19 5"></path></svg><svg class="tool-symbol-eraser" viewBox="0 0 24 24"><path d="M19.2 15.4 11 7.2a2.2 2.2 0 0 0-3.1 0L3.8 11.3a2.2 2.2 0 0 0 0 3.1l3.3 3.3a2.2 2.2 0 0 0 1.5.6H17"></path><path d="M13 20h8"></path></svg></span><span id="fullscreenActiveToolName" aria-live="polite">Creion</span></span>
                 <div class="drawing-tool-group-row">
-                  <button type="button" id="fullscreenPencilBtn" class="drawing-tool-button" aria-label="Creion" title="Creion" aria-pressed="false">
+                  <button type="button" id="fullscreenPencilBtn" class="drawing-tool-button" data-tool-label="Creion" aria-label="Creion" title="Creion" aria-pressed="false">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-1 10-10a2.2 2.2 0 0 0 0-3.1l-.1-.1a2.2 2.2 0 0 0-3.1 0L5 15.7 4 20z"></path><path d="m13.4 7.4 3.2 3.2"></path></svg>
                   </button>
-                  <button type="button" id="fullscreenLineBtn" class="drawing-tool-button" aria-label="Linie" title="Linie" aria-pressed="false">
+                  <button type="button" id="fullscreenLineBtn" class="drawing-tool-button" data-tool-label="Linie" aria-label="Linie" title="Linie" aria-pressed="false">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5"></path></svg>
                   </button>
-                  <button type="button" id="fullscreenDashedLineBtn" class="drawing-tool-button" aria-label="Linie punctată" title="Linie punctată" aria-pressed="false">
+                  <button type="button" id="fullscreenDashedLineBtn" class="drawing-tool-button" data-tool-label="Punctată" aria-label="Linie punctată" title="Linie punctată" aria-pressed="false">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 7.5 16.5"></path><path d="m9.5 14.5 2.5-2.5"></path><path d="m14 10 2.5-2.5"></path><path d="M18 6 19 5"></path></svg>
                   </button>
-                  <button type="button" id="fullscreenEraserBtn" class="drawing-tool-button" aria-label="Radieră" title="Radieră">
+                  <button type="button" id="fullscreenEraserBtn" class="drawing-tool-button" data-tool-label="Radieră" aria-label="Radieră" title="Radieră">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.2 15.4 11 7.2a2.2 2.2 0 0 0-3.1 0L3.8 11.3a2.2 2.2 0 0 0 0 3.1l3.3 3.3a2.2 2.2 0 0 0 1.5.6H17"></path><path d="M13 20h8"></path></svg>
                   </button>
                   <button type="button" id="fullscreenUndoBtn" class="drawing-tool-button" aria-label="Anulează ultima linie" title="Undo">
@@ -2638,7 +2686,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.5';
+      const APP_VERSION = '1.15.6';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
