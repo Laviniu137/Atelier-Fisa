@@ -2771,7 +2771,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.15';
+      const APP_VERSION = '1.15.16';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -8100,8 +8100,28 @@
         scheduleSave();
       }
 
-      function openClearAllDialog() {
+      let clearDrawingOnly = false;
+      const clearAllDialogOriginalDescription = document.getElementById('clearAllDialogDescription').textContent;
+
+      function clearCurrentImageDrawing() {
+        activeStroke = null;
+        redoStack = [];
+        strokes = [];
+        redraw();
+        setControls();
+        syncBrushControls();
+        scheduleSave();
+      }
+
+      function openClearAllDialog({ drawingOnly = false } = {}) {
         if (!sourceImage) return;
+        clearDrawingOnly = drawingOnly;
+        document.getElementById('clearAllDialogTitle').textContent = drawingOnly ? 'Șterge desenul' : 'Ștergere proiect';
+        document.getElementById('clearAllDialogDescription').textContent = drawingOnly
+          ? 'Ștergi doar desenul de pe imaginea curentă? Imaginea, notițele, marcatoarele și scrisul din notițe se păstrează.'
+          : clearAllDialogOriginalDescription;
+        clearAllDialog.querySelector('ul').hidden = drawingOnly;
+        confirmClearAllButton.textContent = drawingOnly ? 'Șterge desenul' : 'Șterge';
         clearAllDialog.hidden = false;
         requestAnimationFrame(() => {
           cancelClearAllButton.focus();
@@ -8416,7 +8436,7 @@
         redoLastLine();
       });
       fullscreenClearBtn.addEventListener('click', () => {
-        openClearAllDialog();
+        openClearAllDialog({ drawingOnly: true });
       });
       document.querySelectorAll('.quick-color-button').forEach((button) => {
         button.addEventListener('click', () => {
@@ -8644,7 +8664,11 @@
       cancelClearAllButton.addEventListener('click', closeClearAllDialog);
       confirmClearAllButton.addEventListener('click', () => {
         closeClearAllDialog();
-        clearCurrentImageData();
+        if (clearDrawingOnly) {
+          clearCurrentImageDrawing();
+        } else {
+          clearCurrentImageData();
+        }
       });
       clearAllDialog.addEventListener('pointerdown', (event) => {
         if (event.target !== clearAllDialog) return;
