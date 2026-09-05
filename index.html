@@ -12,7 +12,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Fișă atelier">
   <link rel="manifest" href="manifest.webmanifest?v=1.4.24">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.4.24">\n  <link rel="apple-touch-icon" href="icon-180.png?v=1.4.24">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.4.24">
+  <link rel="apple-touch-icon" href="icon-180.png?v=1.4.24">
   <link rel="apple-touch-startup-image" href="startup-ipad-portrait.png" media="(device-width: 820px) and (device-height: 1180px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
   <link rel="apple-touch-startup-image" href="startup-ipad-landscape.png" media="(device-width: 1180px) and (device-height: 820px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
   <title>Notițe pe imagini</title>
@@ -2030,10 +2031,44 @@
     body.fullscreen-mode .fullscreen-image-nav-next { right: calc(env(safe-area-inset-right, 0px) + 10px); }
     body.fullscreen-mode .fullscreen-image-nav svg { width: 22px; height: 22px; stroke-width: 2.5; }
   </style>
+
+  <style id="workspace-navigation-style">
+    #projectManagerView { grid-template-columns: 210px minmax(0, 1fr); grid-template-rows: auto 1fr; gap: 22px; align-items: start; min-height: 100dvh; }
+    .workspace-sidebar { grid-column: 1; grid-row: 1 / 3; position: sticky; top: 24px; min-height: calc(100dvh - 48px); padding: 24px 14px 16px; display: flex; flex-direction: column; border: 1px solid #e6dfd4; border-radius: 20px; background: #fcfaf6; box-shadow: 0 8px 24px #4839250a; }
+    .workspace-logo { margin: 0 8px 32px; }
+    .workspace-logo strong { display: block; font: bold 27px Georgia, serif; white-space: nowrap; color: #30281e; }
+    .workspace-logo small { display: block; margin-top: 6px; color: #7a6b58; font-size: 12px; }
+    .workspace-nav { display: grid; gap: 8px; }
+    .workspace-nav button { justify-content: flex-start; border-color: transparent; background: transparent; box-shadow: none; color: #766551; }
+    .workspace-nav button[aria-current="page"] { background: linear-gradient(135deg,#6a5843,#4a3e31); color: #fffaf2; box-shadow: 0 5px 12px #48392520; }
+    .workspace-sidebar-footer { margin-top: auto; padding: 70px 14px 22px; color: #7a6851; font: 14px/1.6 Georgia, serif; background: linear-gradient(0deg,#ede3d2,transparent); border-radius: 12px; }
+    #projectManagerView > .project-manager-header { grid-column: 2; min-width: 0; display: flex; justify-content: flex-end; padding: 16px; }
+    #projectManagerView > .project-manager-header .project-manager-brand { display: none; }
+    #projectManagerView > .project-manager-content { grid-column: 2; min-width: 0; padding: 12px 4px; }
+    #workspaceNotes { grid-column: 2; min-width: 0; padding: 12px 4px; }
+    #workspaceNotes[hidden], #projectManagerView > .project-manager-content[hidden] { display: none !important; }
+    .workspace-notes-heading { display: flex; gap: 16px; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .workspace-note-card { padding: 24px; border: 1px solid #dfd4c5; border-radius: 18px; background: #fffcf6; margin-bottom: 16px; }
+    .workspace-note-card label { display: block; margin-bottom: 8px; color: #6c5d4b; font-size: 13px; }
+    .workspace-note-card input,.workspace-note-card textarea { display: block; width: 100%; padding: 12px; border: 1px solid #dfd4c5; border-radius: 10px; background: #fffefa; color: #30281e; font: inherit; margin-bottom: 16px; }
+    .workspace-note-card textarea { min-height: 180px; resize: vertical; }
+    #workspaceNotesStatus { color: #6c5d4b; }
+    @media (max-width: 900px) { #projectManagerView { grid-template-columns: 170px minmax(0,1fr); gap: 14px; } .workspace-logo strong { font-size: 24px; } #projectManagerView .project-manager-actions { flex-wrap: wrap; } }
+    @media (max-width: 600px) { #projectManagerView { grid-template-columns: minmax(0,1fr); padding: 12px; } .workspace-sidebar { grid-column: 1; grid-row: auto; position: static; min-height: auto; padding: 16px; } .workspace-logo { margin-bottom: 16px; } .workspace-nav { grid-template-columns: 1fr 1fr; } .workspace-sidebar-footer { display: none; } #projectManagerView > .project-manager-header, #projectManagerView > .project-manager-content, #workspaceNotes { grid-column: 1; } .workspace-notes-heading { align-items: flex-start; flex-wrap: wrap; } }
+  </style>
 </head>
 <body>
   <div id="saveToast" class="save-toast" role="status" aria-live="polite" aria-atomic="true"></div>
   <div id="projectManagerView" class="project-manager-view">
+    <aside class="workspace-sidebar" aria-label="Meniu principal">
+      <div class="workspace-logo"><strong>La-Tâmplar</strong><small>Mobilă la comandă</small></div>
+      <nav class="workspace-nav" aria-label="Secțiuni">
+        <button type="button" id="workspaceProjectsNav" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V5h6l2 2h10v13H3Z"/></svg>Proiecte</button>
+        <button type="button" id="workspaceNotesNav"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6Z"/><path d="M9 10h6M9 14h6M9 18h4"/></svg>Notițe</button>
+      </nav>
+      <div class="workspace-sidebar-footer">Transformăm<br>ideile în mobilier unic.<br><span aria-hidden="true">—</span></div>
+    </aside>
+
     <section class="project-manager-header" aria-label="Branding și acțiuni proiecte">
       <div class="project-manager-brand">
         <div class="brand-block" aria-label="La-Tâmplar Mobilă la comandă">
@@ -2064,6 +2099,12 @@
       <div id="projectEmptyState" class="project-empty" hidden>
         Nu există proiecte încă. Creează un proiect nou sau importă un fișier existent.
       </div>
+    </section>
+
+    <section id="workspaceNotes" hidden aria-labelledby="workspaceNotesTitle">
+      <div class="workspace-notes-heading"><div><h2 id="workspaceNotesTitle" class="project-manager-page-title" tabindex="-1">Notițe</h2><p class="project-manager-subtitle">Însemnările tale generale, salvate pe acest dispozitiv.</p></div><button type="button" id="workspaceAddNote">＋ Notiță nouă</button></div>
+      <p id="workspaceNotesStatus" role="status" aria-live="polite"></p>
+      <div id="workspaceNotesList"></div>
     </section>
   </div>
   <div id="cloudAccountDialog" class="save-dialog-backdrop" hidden>
@@ -2682,7 +2723,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.12';
+      const APP_VERSION = '1.15.13';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -8872,5 +8913,76 @@
       }
     })();
   </script>
+
+<script>
+(() => {
+  const projects = document.querySelector('#projectManagerView > .project-manager-content');
+  const notesPanel = document.getElementById('workspaceNotes');
+  const projectNav = document.getElementById('workspaceProjectsNav');
+  const noteNav = document.getElementById('workspaceNotesNav');
+  const list = document.getElementById('workspaceNotesList');
+  const status = document.getElementById('workspaceNotesStatus');
+  const storageKey = 'atelier-fisa-general-notes-v1';
+  let notes = [];
+  let readable = true;
+  try {
+    const raw = localStorage.getItem(storageKey);
+    const data = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(data) || data.some(n => !n || typeof n.title !== 'string' || typeof n.content !== 'string')) throw new Error('Invalid notes');
+    notes = data;
+  } catch (_) {
+    readable = false;
+    status.textContent = 'Notițele nu au putut fi citite. Reîncarcă pagina pentru a încerca din nou.';
+  }
+  function showNotes(show) {
+    projects.hidden = show;
+    notesPanel.hidden = !show;
+    (show ? noteNav : projectNav).setAttribute('aria-current', 'page');
+    (show ? projectNav : noteNav).removeAttribute('aria-current');
+    document.title = (show ? 'Notițe' : 'Proiectele mele') + ' | La-Tâmplar';
+  }
+  projectNav.addEventListener('click', () => showNotes(false));
+  noteNav.addEventListener('click', () => showNotes(true));
+  ['pmNewProject','pmImportProject','backToProjects'].forEach(id => document.getElementById(id).addEventListener('click', () => showNotes(false)));
+  function save() {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(notes));
+      status.textContent = 'Notițele au fost salvate pe acest dispozitiv.';
+    } catch (_) {
+      status.textContent = 'Salvarea nu a reușit. Păstrează pagina deschisă și copiază textul înainte de a pleca.';
+    }
+  }
+  function render() {
+    list.replaceChildren();
+    if (!notes.length && readable) {
+      const empty = document.createElement('p');
+      empty.className = 'project-empty';
+      empty.textContent = 'Nu ai încă notițe. Apasă „Notiță nouă” pentru prima însemnare.';
+      list.append(empty);
+    }
+    notes.forEach((note, index) => {
+      const card = document.createElement('article');
+      card.className = 'workspace-note-card';
+      [['title','Titlu','input'],['content','Notiță','textarea']].forEach(([key,caption,tag]) => {
+        const label = document.createElement('label');
+        const input = document.createElement(tag);
+        input.id = 'general-note-' + index + '-' + key;
+        label.htmlFor = input.id;
+        label.textContent = caption;
+        input.value = note[key];
+        input.addEventListener('input', () => { note[key] = input.value; save(); });
+        card.append(label,input);
+      });
+      list.append(card);
+    });
+  }
+  document.getElementById('workspaceAddNote').disabled = !readable;
+  document.getElementById('workspaceAddNote').addEventListener('click', () => {
+    notes.unshift({title: '', content: ''});
+    save(); render(); list.querySelector('input').focus();
+  });
+  render();
+})();
+</script>
 </body>
 </html>
