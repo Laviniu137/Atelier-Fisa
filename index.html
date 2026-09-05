@@ -2057,6 +2057,51 @@
     @media (max-width: 900px) { #projectManagerView { grid-template-columns: 170px minmax(0,1fr); gap: 14px; } .workspace-logo strong { font-size: 24px; } #projectManagerView .project-manager-actions { flex-wrap: wrap; } }
     @media (max-width: 600px) { #projectManagerView { grid-template-columns: minmax(0,1fr); padding: 12px; } .workspace-sidebar { grid-column: 1; grid-row: auto; position: static; min-height: auto; padding: 16px; } .workspace-logo { margin-bottom: 16px; } .workspace-nav { grid-template-columns: 1fr 1fr; } .workspace-sidebar-footer { display: none; } #projectManagerView > .project-manager-header, #projectManagerView > .project-manager-content, #workspaceNotes { grid-column: 1; } .workspace-notes-heading { align-items: flex-start; flex-wrap: wrap; } }
   </style>
+
+  <style id="fullscreen-refinement">
+    body.fullscreen-mode .image-panel.fullscreen-panel .image-panel-heading { display: none; }
+    body.fullscreen-mode .fullscreen-overlay,
+    body.fullscreen-mode .image-panel.fullscreen-panel,
+    body.fullscreen-mode .image-panel.fullscreen-panel .canvas-shell {
+      background: radial-gradient(ellipse at 50% 35%, #34312c 0%, #1c1b19 65%, #131312 100%);
+    }
+    body.fullscreen-mode .fullscreen-close-btn,
+    body.fullscreen-mode .fullscreen-image-nav {
+      border: 1px solid rgba(230, 216, 193, .25);
+      background: linear-gradient(145deg, rgba(65, 61, 54, .88), rgba(28, 27, 25, .9));
+      color: #faf4e9;
+      box-shadow: 0 8px 24px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.08);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 16px;
+    }
+    body.fullscreen-mode .fullscreen-close-btn:hover,
+    body.fullscreen-mode .fullscreen-image-nav:hover:not(:disabled) {
+      border-color: rgba(230,216,193,.55);
+      background: #4a4339;
+      box-shadow: 0 10px 28px rgba(0,0,0,.3);
+    }
+    body.fullscreen-mode .image-panel.fullscreen-panel .fullscreen-image-title {
+      top: calc(env(safe-area-inset-top, 0px) + 20px);
+      padding: 9px 18px;
+      border: 1px solid rgba(230,216,193,.18);
+      border-radius: 999px;
+      background: rgba(30,29,26,.76);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      color: #f8f1e5;
+      font-size: .78rem;
+      font-weight: 500;
+      letter-spacing: .045em;
+      text-shadow: none;
+      box-shadow: 0 4px 16px rgba(0,0,0,.18);
+    }
+    body.fullscreen-mode .fullscreen-toolbar-toggle {
+      border-color: rgba(230,216,193,.35);
+      background: linear-gradient(145deg,#51483b,#282622);
+      box-shadow: 0 10px 24px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.1);
+    }
+  </style>
 </head>
 <body>
   <div id="saveToast" class="save-toast" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -2726,7 +2771,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.14';
+      const APP_VERSION = '1.15.15';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
