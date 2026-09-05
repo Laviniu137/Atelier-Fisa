@@ -1971,13 +1971,6 @@
     body.fullscreen-mode #fullscreenBrushSize { width: 96px; min-width: 96px; }
     body.fullscreen-mode #fullscreenBrushSizeValue { min-width: 43px; padding: 6px 7px; font-size: .67rem; }
     body.fullscreen-mode .actions-group .drawing-tool-group-row { margin-left: auto; }
-    body.fullscreen-mode .actions-group .erase-utility {
-      border: 0;
-      background: transparent;
-      box-shadow: none;
-      color: rgba(240, 248, 255, .94);
-    }
-    body.fullscreen-mode .actions-group .erase-utility:hover:not(:disabled) { background: rgba(255,255,255,.08); box-shadow: none; }
     body.fullscreen-mode .drawing-tool-button.danger { border-color: rgba(255, 133, 149, .56); background: linear-gradient(145deg, rgba(200, 63, 79, .4), rgba(122, 34, 51, .23)); }
     body.fullscreen-mode .fullscreen-toolbar-toggle {
       width: 60px;
@@ -2338,9 +2331,6 @@
               <div class="drawing-tool-group actions-group">
                 <span class="tool-label">Ștergere</span>
                 <div class="drawing-tool-group-row">
-                  <button type="button" id="fullscreenQuickEraserBtn" class="drawing-tool-button erase-utility" aria-label="Radieră" title="Radieră">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m19 15-7-7-7 7 4 4h6l4-4z"></path><path d="m13 19 5-5"></path></svg>
-                  </button>
                   <button type="button" id="fullscreenClearBtn" class="drawing-tool-button danger" aria-label="Șterge desenul" title="Șterge desenul">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg>
                   </button>
@@ -2527,7 +2517,6 @@
       const fullscreenLineBtn = document.getElementById('fullscreenLineBtn');
       const fullscreenDashedLineBtn = document.getElementById('fullscreenDashedLineBtn');
       const fullscreenEraserBtn = document.getElementById('fullscreenEraserBtn');
-      const fullscreenQuickEraserBtn = document.getElementById('fullscreenQuickEraserBtn');
       const fullscreenUndoBtn = document.getElementById('fullscreenUndoBtn');
       const fullscreenRedoBtn = document.getElementById('fullscreenRedoBtn');
       const fullscreenClearBtn = document.getElementById('fullscreenClearBtn');
@@ -2686,7 +2675,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.8';
+      const APP_VERSION = '1.15.9';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -6039,11 +6028,6 @@
         if (fullscreenDrawingToolbar) {
           fullscreenDrawingToolbar.style.setProperty('--active-draw-color', brushColor);
         }
-        if (fullscreenQuickEraserBtn) {
-          const eraserActive = isErasing;
-          fullscreenQuickEraserBtn.classList.toggle('active', eraserActive);
-          fullscreenQuickEraserBtn.setAttribute('aria-pressed', eraserActive ? 'true' : 'false');
-        }
         if (fullscreenActiveToolDisplay) {
           fullscreenActiveToolDisplay.dataset.tool = activeToolPreview;
         }
@@ -8328,9 +8312,6 @@
         scheduleSave();
       };
       fullscreenEraserBtn.addEventListener('click', activateFullscreenEraser);
-      if (fullscreenQuickEraserBtn) {
-        fullscreenQuickEraserBtn.addEventListener('click', activateFullscreenEraser);
-      }
       fullscreenUndoBtn.addEventListener('click', () => {
         undoLastLine();
       });
