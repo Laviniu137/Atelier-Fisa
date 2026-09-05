@@ -1751,7 +1751,7 @@
 
     /* Paletă de desen premium: două rânduri late, cu reflex albastru și grupe egale. */
     body.fullscreen-mode .fullscreen-drawing-toolbar {
-      width: min(594px, calc(100vw - 96px));
+      width: min(630px, calc(100vw - 96px));
       max-width: calc(100vw - 96px);
       --active-draw-color: #5ebdf0;
     }
@@ -1769,7 +1769,7 @@
     }
     body.fullscreen-mode .drawing-toolbar-row {
       display: grid;
-      grid-template-columns: minmax(0, 1.45fr) minmax(205px, 1fr);
+      grid-template-columns: minmax(364px, 1.6fr) minmax(228px, 1fr);
       grid-template-areas:
         "edit size"
         "color actions";
@@ -1802,12 +1802,12 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 7px;
+      gap: 0;
       margin-right: 0;
-      width: 108px;
-      min-width: 108px;
-      flex: 0 0 108px;
-      min-height: 48px;
+      width: 75px;
+      min-width: 75px;
+      flex: 0 0 75px;
+      min-height: 42px;
       padding: 0 8px;
       border: 1px solid rgba(104, 190, 255, .72);
       border-radius: 13px;
@@ -1821,11 +1821,7 @@
       letter-spacing: .06em;
     }
     body.fullscreen-mode .active-tool-symbol {
-      position: relative;
-      display: inline-block;
-      width: 17px;
-      height: 17px;
-      flex: 0 0 17px;
+      display: none;
     }
     body.fullscreen-mode .active-tool-symbol svg {
       position: absolute;
@@ -1846,10 +1842,10 @@
     body.fullscreen-mode .tool-label-active[data-tool="line"] .tool-symbol-line,
     body.fullscreen-mode .tool-label-active[data-tool="dashed-line"] .tool-symbol-dashed,
     body.fullscreen-mode .tool-label-active[data-tool="eraser"] .tool-symbol-eraser { display: block; }
-    /* Instrumentul activ este deja arătat în piesa mare; este eliminat din rând
-       ca să nu poată intra peste numele și simbolul selectat. */
+    /* Toate uneltele își păstrează poziția. Unealta activă este marcată doar,
+       fără să fie scoasă din rând. */
     body.fullscreen-mode .edit-group .drawing-tool-button.active {
-      display: none;
+      display: inline-flex;
     }
     body.fullscreen-mode .edit-group .drawing-tool-button {
       width: 37px;
@@ -1894,7 +1890,7 @@
       position: absolute;
       inset: 0;
       z-index: 1;
-      display: grid;
+      display: none;
       place-items: center;
       pointer-events: none;
       color: #fff;
@@ -1903,16 +1899,28 @@
       line-height: 1;
       text-shadow: 0 1px 3px rgba(0,0,0,.58);
     }
+    body.fullscreen-mode .color-picker-control:not(.is-preset-color) .color-picker-check { display: grid; }
     body.fullscreen-mode .quick-colors { gap: 8px; }
-    body.fullscreen-mode .quick-color-button { width: 31px; height: 31px; min-width: 31px; min-height: 31px; box-shadow: inset 0 0 0 1px rgba(3, 9, 15, .34), 0 3px 7px rgba(0,0,0,.28); }
-    /* Cercul mare cu bifă este singurul indicator de culoare selectată.
-       Astfel nu apar două selecții vizuale pentru aceeași culoare. */
-    body.fullscreen-mode .quick-color-button.is-selected { box-shadow: inset 0 0 0 1px rgba(3, 9, 15, .34), 0 3px 7px rgba(0,0,0,.28); }
-    /* Roșul este reprezentat de cercul cu bifă: pozițiile culorilor rapide rămân fixe. */
-    body.fullscreen-mode .quick-color-button[data-color="#e53935"] { display: none; }
+    body.fullscreen-mode .quick-color-button { position: relative; width: 31px; height: 31px; min-width: 31px; min-height: 31px; box-shadow: inset 0 0 0 1px rgba(3, 9, 15, .34), 0 3px 7px rgba(0,0,0,.28); }
+    body.fullscreen-mode .quick-color-button.is-selected {
+      border-color: rgba(255,255,255,.98);
+      box-shadow: inset 0 0 0 1px rgba(3, 9, 15, .34), 0 0 0 2px rgba(255,255,255,.82), 0 0 13px rgba(100, 194, 255, .42);
+    }
+    body.fullscreen-mode .quick-color-button.is-selected::after {
+      content: '✓';
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 900;
+      line-height: 1;
+      text-shadow: 0 1px 3px rgba(0,0,0,.58);
+    }
     body.fullscreen-mode .size-group,
     body.fullscreen-mode .actions-group { justify-content: space-between; }
-    body.fullscreen-mode #fullscreenBrushSize { width: 112px; min-width: 112px; }
+    body.fullscreen-mode #fullscreenBrushSize { width: 96px; min-width: 96px; }
     body.fullscreen-mode #fullscreenBrushSizeValue { min-width: 43px; padding: 6px 7px; font-size: .67rem; }
     body.fullscreen-mode .actions-group .drawing-tool-group-row { margin-left: auto; }
     body.fullscreen-mode .actions-group .erase-utility {
@@ -2462,6 +2470,7 @@
       const fullscreenToolbarToggle = document.getElementById('fullscreenToolbarToggle');
       const fullscreenDrawingToolbar = document.getElementById('fullscreenDrawingToolbar');
       const fullscreenColorPicker = document.getElementById('fullscreenColorPicker');
+      const fullscreenColorPickerControl = document.querySelector('.color-picker-control');
       const fullscreenBrushSize = document.getElementById('fullscreenBrushSize');
       const fullscreenBrushSizeValue = document.getElementById('fullscreenBrushSizeValue');
       const fullscreenActiveToolDisplay = document.getElementById('fullscreenActiveToolDisplay');
@@ -2629,7 +2638,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.4';
+      const APP_VERSION = '1.15.5';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -5996,10 +6005,16 @@
         if (fullscreenActiveToolName) {
           fullscreenActiveToolName.textContent = activeToolLabel;
         }
+        let matchesPresetColor = false;
         document.querySelectorAll('.quick-color-button').forEach((button) => {
           const isActive = button.dataset.color && button.dataset.color.toLowerCase() === brushColor.toLowerCase();
           button.classList.toggle('is-selected', isActive);
+          button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+          matchesPresetColor = matchesPresetColor || isActive;
         });
+        if (fullscreenColorPickerControl) {
+          fullscreenColorPickerControl.classList.toggle('is-preset-color', matchesPresetColor);
+        }
         if (fullscreenUndoBtn) {
           fullscreenUndoBtn.disabled = strokes.length === 0;
         }
