@@ -2105,94 +2105,94 @@
 
   <style id="atelier-studio-theme">
     /* Manager theme only: editing and fullscreen canvas retain their geometry. */
-    body:has(#projectManagerView:not([hidden])) { background: #f4f3ee; }
+    body:has(#projectManagerView:not([hidden])) { background: #eef1f4; }
     #projectManagerView {
-      --studio-ink: #243c35; --studio-muted: #777b71; --studio-line: #e1e3da;
+      --studio-ink: #242e3c; --studio-muted: #657487; --studio-line: #dadee3;
       grid-template-columns: 236px minmax(0,1fr);
       grid-template-rows: auto 1fr;
       gap: 0 40px; padding: 16px 40px 16px 16px;
-      color: #29392f; max-width: 2040px; margin-inline: auto;
+      color: #293039; max-width: 2040px; margin-inline: auto;
     }
     #projectManagerView .workspace-sidebar {
       top: 16px; min-height: calc(100dvh - 32px); padding: 32px 18px 18px;
-      border: 1px solid #2c463b; border-radius: 22px;
-      background: linear-gradient(155deg,#263f35 0%,#182e26 100%);
-      box-shadow: 0 16px 44px #1d352017; overflow: hidden;
+      border: 1px solid #2c3746; border-radius: 22px;
+      background: linear-gradient(155deg,#26313f 0%,#18222e 100%);
+      box-shadow: 0 16px 44px #1d273517; overflow: hidden;
     }
     #projectManagerView .workspace-logo { margin: 4px 10px 46px; }
-    #projectManagerView .workspace-logo strong { color: #f7f2e4; font: 600 28px/1.2 Georgia,serif; letter-spacing: -.8px; white-space: nowrap; }
-    #projectManagerView .workspace-logo small { color: #c2c8b9; font-size: 11px; letter-spacing: .08em; margin-top: 10px; }
+    #projectManagerView .workspace-logo strong { color: #e4ecf7; font: 600 28px/1.2 Georgia,serif; letter-spacing: -.8px; white-space: nowrap; }
+    #projectManagerView .workspace-logo small { color: #b8bfc9; font-size: 11px; letter-spacing: .08em; margin-top: 10px; }
     #projectManagerView .workspace-nav { gap: 8px; }
     #projectManagerView .workspace-nav button {
       min-height: 49px; padding: 12px 16px; border-radius: 12px;
-      color: #c8d0c7; font-size: 14px; font-weight: 550;
+      color: #c4cbd3; font-size: 14px; font-weight: 550;
       background: transparent; border: 1px solid transparent; gap: 13px;
     }
     #projectManagerView .workspace-nav button:hover { background: #ffffff0c; transform: none; }
     #projectManagerView .workspace-nav button[aria-current="page"] {
-      background: #e9e2d0; color: #243d32; border-color: #e9e2d0;
-      box-shadow: 0 4px 12px #09190d1a;
+      background: #d0dbe9; color: #242f3d; border-color: #d0dbe9;
+      box-shadow: 0 4px 12px #0910191a;
     }
     #projectManagerView .workspace-nav button svg { width: 18px; height: 18px; }
     #projectManagerView .workspace-sidebar-footer {
       position: relative; min-height: 178px; padding: 26px 16px; margin-top: auto;
-      border: 1px solid #f0e9d520; background: linear-gradient(145deg,#ffffff09,#a9ae7f12);
-      color: #d7daca; border-radius: 14px; font: 15px/1.75 Georgia,serif;
+      border: 1px solid #d5e1f020; background: linear-gradient(145deg,#ffffff09,#7f93ae12);
+      color: #cad1da; border-radius: 14px; font: 15px/1.75 Georgia,serif;
     }
     #projectManagerView .workspace-sidebar-footer::before {
       content: 'ATELIER • DESIGN • DETALIU'; display: block; margin-bottom: 20px;
-      color: #b7bea6; font: 9px/1.4 system-ui,sans-serif; letter-spacing: .13em;
+      color: #a6b0be; font: 9px/1.4 system-ui,sans-serif; letter-spacing: .13em;
     }
     #projectManagerView > .project-manager-header {
       min-height: 76px; padding: 8px 0 18px; border: 0; border-bottom: 1px solid var(--studio-line);
       border-radius: 0; background: transparent; box-shadow: none; gap: 20px;
       justify-content: space-between; margin-bottom: 32px;
     }
-    .studio-header-label { color: #777b71; font-size: 11px; font-weight: 600; letter-spacing: .15em; text-transform: uppercase; }
+    .studio-header-label { color: #657487; font-size: 11px; font-weight: 600; letter-spacing: .15em; text-transform: uppercase; }
     #projectManagerView #pmCloudAccount { min-height: 40px; border-radius: 999px; padding: 9px 16px; font-size: 12px; box-shadow: none; }
     #projectManagerView > .project-manager-content, #projectManagerView > #workspaceNotes { padding: 0 0 24px; }
     #projectManagerView .project-manager-heading {
       display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center;
       gap: 10px 20px; margin-bottom: 26px;
     }
-    #projectManagerView .project-manager-page-title { color: #25392f; font: 500 clamp(30px,2.5vw,44px)/1.16 Georgia,serif; letter-spacing: -1.1px; }
-    #projectManagerView .project-manager-subtitle { color: #767c71; font-size: 13px; font-weight: 400; letter-spacing: 0; line-height: 1.6; margin: 0; }
+    #projectManagerView .project-manager-page-title { color: #252e39; font: 500 clamp(30px,2.5vw,44px)/1.16 Georgia,serif; letter-spacing: -1.1px; }
+    #projectManagerView .project-manager-subtitle { color: #667487; font-size: 13px; font-weight: 400; letter-spacing: 0; line-height: 1.6; margin: 0; }
     #projectManagerView .project-manager-heading > .project-manager-subtitle { grid-column: 1; grid-row: 2; }
     #projectManagerView .project-section-actions { grid-column: 2; grid-row: 1 / 3; margin: 0; gap: 10px; }
     #projectManagerView .project-section-actions button, #projectManagerView #workspaceAddNote {
       min-width: 0; min-height: 46px; padding: 12px 18px; font-size: 13px;
       border-radius: 11px; font-weight: 600; letter-spacing: 0; box-shadow: none;
     }
-    #projectManagerView #pmImportProject { background: #fbfbf7; border-color: #dcded3; color: #384739; }
+    #projectManagerView #pmImportProject { background: #f7f9fb; border-color: #d3d8de; color: #373e48; }
     #projectManagerView #pmNewProject, #projectManagerView #workspaceAddNote {
-      background: #294b3b; border-color: #294b3b; color: #fffdf5; box-shadow: 0 4px 10px #294b3b12;
+      background: #29384b; border-color: #29384b; color: #f7fafd; box-shadow: 0 4px 10px #29384b12;
     }
-    #projectManagerView #pmNewProject:hover, #projectManagerView #workspaceAddNote:hover { background: #365c48; }
-    #projectManagerView .project-status-filters { grid-column: 1 / -1; gap: 6px; margin-top: 20px; padding: 5px; border-radius: 12px; width: fit-content; max-width: 100%; background: #eaece4; }
-    #projectManagerView .project-status-filter { min-height: 36px; padding: 10px 15px; border-radius: 8px; border-color: transparent; background: transparent; color: #697264; font-size: 12px; font-weight: 550; box-shadow: none; }
-    #projectManagerView .project-status-filter[aria-pressed="true"] { background: #fffef8; color: #2b4937; border-color: #dce0d3; box-shadow: 0 2px 5px #243c3509; }
-    #projectManagerView .project-status-filter:hover:not([aria-pressed="true"]) { background: #f4f5ef; }
+    #projectManagerView #pmNewProject:hover, #projectManagerView #workspaceAddNote:hover { background: #36465c; }
+    #projectManagerView .project-status-filters { grid-column: 1 / -1; gap: 6px; margin-top: 20px; padding: 5px; border-radius: 12px; width: fit-content; max-width: 100%; background: #e4e7ec; }
+    #projectManagerView .project-status-filter { min-height: 36px; padding: 10px 15px; border-radius: 8px; border-color: transparent; background: transparent; color: #5c697a; font-size: 12px; font-weight: 550; box-shadow: none; }
+    #projectManagerView .project-status-filter[aria-pressed="true"] { background: #f9fbfe; color: #2b3849; border-color: #d3d9e0; box-shadow: 0 2px 5px #242e3c09; }
+    #projectManagerView .project-status-filter:hover:not([aria-pressed="true"]) { background: #eff2f5; }
     #projectManagerView .project-manager-divider { display: none; }
     #projectManagerView .project-grid { grid-template-columns: repeat(auto-fill,minmax(255px,1fr)); gap: 24px; }
-    #projectManagerView .project-card { grid-template-rows: 192px minmax(160px,1fr); min-height: 352px; border: 1px solid #e0e3d9; border-radius: 16px; background: #fffefb; box-shadow: 0 4px 16px #243c3505; }
-    #projectManagerView .project-card:hover { transform: translateY(-3px); border-color: #b8c3ae; box-shadow: 0 14px 28px #243c3510; }
-    #projectManagerView .project-card-thumb-wrap { border-radius: 15px 15px 0 0; border-bottom: 1px solid #e5e6de; background: #e9ede3; }
+    #projectManagerView .project-card { grid-template-rows: 192px minmax(160px,1fr); min-height: 352px; border: 1px solid #d9dde3; border-radius: 16px; background: #fcfdfe; box-shadow: 0 4px 16px #242e3c05; }
+    #projectManagerView .project-card:hover { transform: translateY(-3px); border-color: #aeb7c3; box-shadow: 0 14px 28px #242e3c10; }
+    #projectManagerView .project-card-thumb-wrap { border-radius: 15px 15px 0 0; border-bottom: 1px solid #dee1e6; background: #e3e7ed; }
     #projectManagerView .project-card-body { padding: 18px; min-height: 160px; gap: 18px; }
-    #projectManagerView .project-card-open { color: #293d30; font-size: 14px; line-height: 1.45; font-weight: 650; }
-    #projectManagerView .project-card-date { font-size: 10.5px; line-height: 1.7; color: #7d8177; margin-top: 5px; }
-    #projectManagerView .project-card-menu summary { background: #f7f8f1; border-color: #e2e5db; color: #68755d; border-radius: 9px; }
+    #projectManagerView .project-card-open { color: #29323d; font-size: 14px; line-height: 1.45; font-weight: 650; }
+    #projectManagerView .project-card-date { font-size: 10.5px; line-height: 1.7; color: #6b7a8d; margin-top: 5px; }
+    #projectManagerView .project-card-menu summary { background: #f1f4f8; border-color: #dbdfe5; color: #5a6778; border-radius: 9px; }
     #projectManagerView .project-status { font-size: 10px; font-weight: 600; margin-top: 10px; min-height: 24px; padding: 5px 9px; }
-    #projectManagerView .project-status.is-in-progress { background: #eaf0eb; color: #47644e; border-color: #cddcd0; box-shadow: none; }
-    #projectManagerView .project-status.is-to-measure { background: #f6f0e3; color: #887039; border-color: #e5d8b9; }
-    #projectManagerView .project-status.is-finalized { background: #e6eee0; color: #416233; border-color: #c8d7bd; }
-    #projectManagerView .project-card-stats { border-top: 1px solid #eceee5; padding-top: 12px; gap: 0; }
-    #projectManagerView .project-stat { min-height: 24px; padding: 4px 8px; border: 0; border-radius: 0; background: transparent; color: #7b826f; font-size: 11px; font-weight: 500; }
-    #projectManagerView .project-stat + .project-stat { border-left: 1px solid #e5e8dc; }
-    #projectManagerView .project-manager-version { margin-top: 24px; color: #858d7e; }
-    #projectManagerView .workspace-note-card { border-color: #dfe4d6; border-radius: 16px; background: #fffefb; box-shadow: 0 4px 16px #243c3505; }
-    #projectManagerView .workspace-note-card input, #projectManagerView .workspace-note-card textarea { border-color: #dfe4d6; background: #fcfcf7; color: #293d30; }
-    #projectManagerView .workspace-note-card label, #projectManagerView #workspaceNotesStatus { color: #64715c; }
-    #projectManagerView button:focus-visible, #projectManagerView input:focus-visible, #projectManagerView textarea:focus-visible, #projectManagerView summary:focus-visible { outline: 3px solid #8fa67c; outline-offset: 3px; }
+    #projectManagerView .project-status.is-in-progress { background: #eaedf0; color: #475464; border-color: #cdd4dc; box-shadow: none; }
+    #projectManagerView .project-status.is-to-measure { background: #e3ebf6; color: #395b88; border-color: #b9cce5; }
+    #projectManagerView .project-status.is-finalized { background: #e0e6ee; color: #334762; border-color: #bdc8d7; }
+    #projectManagerView .project-card-stats { border-top: 1px solid #e5e9ee; padding-top: 12px; gap: 0; }
+    #projectManagerView .project-stat { min-height: 24px; padding: 4px 8px; border: 0; border-radius: 0; background: transparent; color: #687689; font-size: 11px; font-weight: 500; }
+    #projectManagerView .project-stat + .project-stat { border-left: 1px solid #dce1e8; }
+    #projectManagerView .project-manager-version { margin-top: 24px; color: #748397; }
+    #projectManagerView .workspace-note-card { border-color: #d6dce4; border-radius: 16px; background: #fcfdfe; box-shadow: 0 4px 16px #242e3c05; }
+    #projectManagerView .workspace-note-card input, #projectManagerView .workspace-note-card textarea { border-color: #d6dce4; background: #f7f9fc; color: #29323d; }
+    #projectManagerView .workspace-note-card label, #projectManagerView #workspaceNotesStatus { color: #586575; }
+    #projectManagerView button:focus-visible, #projectManagerView input:focus-visible, #projectManagerView textarea:focus-visible, #projectManagerView summary:focus-visible { outline: 3px solid #7c8ea6; outline-offset: 3px; }
     @media (min-width: 1700px) { #projectManagerView .project-grid { grid-template-columns: repeat(4,minmax(0,1fr)); } #projectManagerView .project-card { grid-template-rows: 220px minmax(160px,1fr); } }
     @media (max-width: 1100px) {
       #projectManagerView { grid-template-columns: 194px minmax(0,1fr); padding-right: 24px; column-gap: 24px; }
@@ -2218,6 +2218,98 @@
       #projectManagerView .project-status-filter { padding: 9px 10px; }
     }
     @media (prefers-reduced-motion: reduce) { #projectManagerView .project-card, #projectManagerView button { transition: none; } #projectManagerView .project-card:hover { transform: none; } }
+  </style>
+
+  <style id="atelier-blue-app-theme">
+    :root { --ui-blue: #275a94; --ui-blue-dark: #173552; --ui-ink: #233d59; --ui-muted: #6b7f93; --ui-line: #d9e3ed; --ui-bg: #f0f4f8; --ui-surface: #fbfdff; accent-color: #346da8; color: var(--ui-ink); background: var(--ui-bg); }
+    body { background: linear-gradient(145deg,#f6f9fc,#eaf0f6); }
+    button { background: #fbfdff; border-color: #d6e1ec; color: #354e69; box-shadow: 0 2px 5px #16375406; }
+    button:hover:not(:disabled) { border-color: #9eb9d4; box-shadow: 0 6px 16px #18395912; }
+    button:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 3px solid #86add4; outline-offset: 3px; }
+    button:disabled { color: #98a8b8; background: #f0f4f8; border-color: #e0e7ef; }
+    .app > header { background: #fbfdfff2; border-color: var(--ui-line); box-shadow: 0 6px 24px #1839590a; border-radius: 18px; }
+    .brand-title, .editor-project-name, .notes-title, .save-dialog h2, .danger-dialog h2, .autosave-recovery-dialog h2, .unsaved-dialog h2, .export-dialog h2 { color: var(--ui-ink); }
+    .brand-block::before { background: #6388ad; }
+    .brand-subtitle, .editor-project-label, .editor-project-meta, .section-label, .help, .image-thumb-caption, .note-form label { color: var(--ui-muted); }
+    .image-panel, .notes { background: var(--ui-surface); border-color: var(--ui-line); box-shadow: 0 7px 22px #18395908; border-radius: 20px; }
+    .section-label::after, .notes-title::after { background: var(--ui-line); }
+    .canvas-shell { border-color: #d7e2ed; background: linear-gradient(180deg,#edf3f9,#e5edf5); box-shadow: inset 0 1px 3px #16375405; }
+    .image-stage { box-shadow: 0 8px 24px #16375418; }
+    .empty, .help { color: #6c8196; }
+    .toolbar, .image-gallery, .notes-toolbar, .note-input-toolbar { border-color: var(--ui-line); }
+    #addImage, #save, #saveImage, #addNote, .pencil-editor-save, #confirmProjectSave, #confirmExportImage, #confirmExportProject, #cloudLogin, #cloudSyncNow {
+      color: #fafdff; background: linear-gradient(135deg,#346ca5,#254f7d); border-color: #2b5d91; box-shadow: 0 5px 14px #254f7d1c;
+    }
+    #addImage:hover:not(:disabled), #save:hover:not(:disabled), #saveImage:hover:not(:disabled), #addNote:hover:not(:disabled), .pencil-editor-save:hover:not(:disabled) { background: #224c78; border-color: #224c78; color: #fff; }
+    .thumbnail-add-btn, .thumbnail-add-note-btn { background: #edf4fb; border-color: #bfd2e5; color: #38648e; }
+    .thumbnail-add-btn:hover:not(:disabled), .thumbnail-add-note-btn:hover:not(:disabled) { background: #e0edf9; border-color: #91b1d1; }
+    .image-thumb { border-color: #d4e0ec; background: #eaf0f6; }
+    .image-thumb.is-active { border-color: #477faf; box-shadow: 0 0 0 3px #477faf20; }
+    .image-thumb.is-active::after { background: #477faf; }
+    .image-thumb:hover:not(.is-active) { border-color: #a2bed8; }
+    .thumbnail-strip::-webkit-scrollbar-thumb { background: #bacdde; }
+    .mode-switcher { background: #e8eff6; border-color: #d7e3ef; }
+    .mode-switcher button { background: transparent; border-color: transparent; color: #627b94; }
+    .mode-switcher button.active, .note-input-toolbar button.active { background: #2d5d8b; border-color: #2d5d8b; color: #fff; box-shadow: 0 3px 9px #244d7515; }
+    .mode-switcher button:hover:not(.active) { background: #dce8f3; color: #2e5579; }
+    .note-list-item { border-color: #dce6f0; background: #f4f8fc; color: var(--ui-ink); }
+    .note-list-item.selected { background: #e6f0fa; border-color: #92b5d7; box-shadow: 0 3px 10px #285b8a0b; }
+    .note-list-index { background: #d9e8f7; color: #315d87; border-color: #b7d0e6; }
+    .note-list-name, .note-list-item.selected .note-list-name { color: #294c6d; }
+    .note-list-name:focus { background: #fff; border-color: #89aed0; }
+    .note-list-empty-icon { color: #7799b7; background: #e8f0f8; border-color: #d9e5f0; }
+    .note-list-empty-title, .note-editor-empty { color: #496682; }
+    .note-list-empty-subtitle { color: #7a8ea2; }
+    .note-form input, .note-form textarea, #noteContent, .image-title-input, .save-dialog input { color: #2b4762; background: #fff; border-color: #cddce9; }
+    #noteContent:focus { border-color: #7da5cd; outline-color: #9cbfe1; box-shadow: 0 0 0 3px #346da812; }
+    #noteContent::placeholder { color: #8b9caf; }
+    .handwriting-panel, .handwriting-preview { background: #f4f8fc; border-color: #d6e3ef; }
+    .handwriting-preview-header, .handwriting-preview-empty { color: #6f879d; }
+    .note-marker { background: linear-gradient(140deg,#487aab,#234f7d); box-shadow: 0 2px 6px #193c5f33; }
+    .note-marker.selected { background: linear-gradient(140deg,#397fbc,#1d568b); border-color: #cde8ff; box-shadow: 0 0 0 2px #86b9e450,0 3px 8px #16375428; }
+    .save-dialog-backdrop, .danger-dialog-backdrop, .pencil-editor-overlay { background: rgba(13,31,51,.48); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    .save-dialog, .danger-dialog, .autosave-recovery-dialog, .unsaved-dialog, .export-dialog, .sheet-type-dialog, .pencil-editor-dialog {
+      background: #fbfdff; color: #334e69; border: 1px solid #d5e2ef; border-radius: 22px; box-shadow: 0 24px 80px #102b4a30;
+    }
+    .save-dialog label, .save-dialog p, .danger-dialog p, .danger-dialog li, .autosave-recovery-dialog p, .unsaved-dialog p, .export-section legend, .sheet-type-dialog > p { color: #61788e; }
+    .save-dialog-actions button, .danger-dialog-actions button, .autosave-recovery-actions button, .unsaved-dialog-actions button, .export-dialog-actions button { border-radius: 11px; }
+    .export-section, .export-option, .sheet-type-choice { border-color: #d8e4ef; background: #f4f8fc; color: #3b5873; }
+    .export-option:has(input:checked), .sheet-type-choice:hover { border-color: #7da7cd; background: #eaf3fc; }
+    .sheet-type-choice strong { color: #345775; }
+    .sheet-type-choice span { color: #728ba1; }
+    .pencil-editor-toolbar { background: #eaf1f8; border-color: #d2e0ed; color: #365878; }
+    .pencil-editor-tool { border-color: #ccdceb; background: #fbfdff; color: #456786; }
+    .pencil-editor-tool.active { background: #2d5d8b; color: white; border-color: #2d5d8b; }
+    .pencil-editor-divider { background: #cbdbe9; }
+    .pencil-editor-size-value { color: #537492; }
+    .pencil-editor-canvas-wrap { background: #dce7f1; }
+    .pencil-editor-cancel { background: #f5f9fd; color: #49647f; border-color: #ccdcea; }
+    .save-toast { background: #234f79; color: #fff; border-color: #517fa5; box-shadow: 0 8px 28px #173e6925; }
+    body.fullscreen-mode, body.fullscreen-mode .fullscreen-overlay,
+    body.fullscreen-mode .image-panel.fullscreen-panel,
+    body.fullscreen-mode .image-panel.fullscreen-panel .canvas-shell { background: radial-gradient(ellipse at 50% 35%,#223b53,#101f30 65%,#0b1724); }
+    body.fullscreen-mode .fullscreen-close-btn, body.fullscreen-mode .fullscreen-image-nav, body.fullscreen-mode .fullscreen-toolbar-toggle {
+      background: linear-gradient(145deg,#294c6be8,#122c44ed); color: #eff7ff; border-color: #99c0e14d; box-shadow: 0 8px 24px #06142140,inset 0 1px 0 #e4f4ff12;
+    }
+    body.fullscreen-mode .fullscreen-close-btn:hover, body.fullscreen-mode .fullscreen-image-nav:hover:not(:disabled) { background: #345d80; border-color: #a6cdec80; }
+    body.fullscreen-mode .image-panel.fullscreen-panel .fullscreen-image-title { background: #142e47d9; border-color: #aacfea30; color: #e9f4ff; }
+    body.fullscreen-mode .fullscreen-drawing-toolbar-shell { background: linear-gradient(145deg,#213f5a,#132c44); border-color: #799ab840; }
+
+    .fullscreen-inline #fullscreenBtn { background: linear-gradient(135deg,#346ca5,#254f7d); color: #fff; border-color: #2b5d91; box-shadow: 0 6px 16px #254f7d20; }
+    .fullscreen-inline #fullscreenBtn:hover:not(:disabled) { background: #224c78; border-color: #224c78; box-shadow: 0 8px 20px #254f7d28; }
+    .note-list-item.note-list-empty { background: linear-gradient(180deg,#fbfdff,#edf4fb); border-color: #d8e4ef; }
+    .image-thumb.is-active::after { background: transparent; border-color: #eaf4ff; }
+    .image-thumb-title { color: #607991; }
+    .help::before { color: #6e91b0; background: #6e91b0; }
+    .cloud-account-status { background: #edf5fc; border-color: #d1e2f1; color: #456d91; }
+    #cloudLogin[hidden] + #cloudSyncNow { background: linear-gradient(135deg,#346ca5,#254f7d); border-color: #2b5d91; color: #fff; }
+    #projectManagerView #pmCloudAccount { background: #edf5fc; border-color: #bbd2e7; color: #37658e; }
+    #projectManagerView #pmCloudAccount:hover:not(:disabled) { background: #e1effb; border-color: #87aece; }
+
+    /* Destructive actions stay visibly red; canvas pixels, swatches and user colors are untouched. */
+    .danger-confirm-btn, .danger-dialog-actions .danger-confirm-btn { background: #b8323b; color: #fff; border-color: #b8323b; }
+    .danger-confirm-btn:hover:not(:disabled), .danger-dialog-actions .danger-confirm-btn:hover:not(:disabled) { background: #99262f; border-color: #99262f; }
+    #removeImage, #removeActiveImage, #deleteSelectedNote { background: #fff3f4; color: #a82d3c; border-color: #efc5cc; }
   </style>
 </head>
 <body>
@@ -2889,7 +2981,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.17';
+      const APP_VERSION = '1.15.18';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
