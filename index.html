@@ -2724,6 +2724,29 @@ body:not(.fullscreen-mode) #editorView .image-panel > .mode-switcher button { fl
 body:not(.fullscreen-mode) #editorView .image-panel > .mode-switcher button.active { background: #fffdf9; color: #294d73; border-color: #e2ded6; box-shadow: 0 2px 5px #25374b0a; }
 body:not(.fullscreen-mode) #editorView .image-panel > .mode-switcher button:hover:not(.active) { background: #e3dfd6; color: #3f5269; }
 </style>
+<style id="atelier-sheet-title">
+body:not(.fullscreen-mode) #editorView #addImage,
+body:not(.fullscreen-mode) #editorView .editor-context-bar { display: none; }
+body:not(.fullscreen-mode) #editorView .layout { margin-top: 16px; }
+body:not(.fullscreen-mode) #editorView .image-panel-heading { flex: 0 0 auto; width: 100%; min-width: 0; gap: 12px; margin: 0 0 12px; }
+body:not(.fullscreen-mode) #editorView .sheet-title-icon { display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 42px; border-radius: 11px; color: #375673; background: #e8e5dc; }
+body:not(.fullscreen-mode) #editorView .sheet-title-icon svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+body:not(.fullscreen-mode) #editorView #imageLabel { display: flex; align-items: center; gap: 6px; min-width: 0; text-transform: none; letter-spacing: -.02em; font-size: 20px; font-weight: 600; color: #293e55; }
+body:not(.fullscreen-mode) #editorView .image-title-text { max-width: none; min-width: 0; }
+body:not(.fullscreen-mode) #editorView .image-title-edit-btn { display: grid; place-items: center; flex: 0 0 44px; color: #7c7d79; border-radius: 10px; padding: 10px; }
+body:not(.fullscreen-mode) #editorView .image-title-edit-btn:hover { color: #315f91; background: #e9e6de; }
+.image-title-edit-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+body:not(.fullscreen-mode) #editorView .image-title-input { max-width: 100%; width: min(100%,440px); font-size: 18px; min-height: 40px; }
+body:not(.fullscreen-mode) #editorView .gallery-add-actions #save { min-height: 44px; height: 44px; padding: 10px 14px; border-radius: 10px; font-size: 12px; white-space: nowrap; }
+body:not(.fullscreen-mode) #editorView .gallery-add-actions { flex-wrap: wrap; }
+@media (max-width: 600px) {
+ body:not(.fullscreen-mode) #editorView .header-actions { display: flex; flex-wrap: wrap; }
+ body:not(.fullscreen-mode) #editorView .header-actions .toolbar { display: flex; flex: 1 1 100%; }
+ body:not(.fullscreen-mode) #editorView .header-actions .toolbar button { flex: 1; }
+ body:not(.fullscreen-mode) #editorView .gallery-add-actions #save { flex: 1 1 100%; }
+ body:not(.fullscreen-mode) #editorView #imageLabel { font-size: 18px; }
+}
+</style>
 </head>
 <body>
   <div id="saveToast" class="save-toast" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -2948,9 +2971,9 @@ body:not(.fullscreen-mode) #editorView .image-panel > .mode-switcher button:hove
       </div>
       <div class="header-actions">
         <button type="button" id="backToProjects"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path><path d="M9 12h12"></path></svg><span>Proiectele mele</span></button>
-        <button type="button" id="addImage"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="M7 8l5-5 5 5"></path><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"></path></svg><span>Adaugă imagine</span></button>
+        <button type="button" id="addImage" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="M7 8l5-5 5 5"></path><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"></path></svg><span>Adaugă imagine</span></button>
         <div class="toolbar" aria-label="Acțiune principală">
-          <button type="button" id="save" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg><span>Salvează</span></button>
+          
           <button type="button" id="exportProject" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V9"></path><path d="m7 14 5-5 5 5"></path><path d="M5 4h14"></path></svg><span>Exportă proiect</span></button>
           <button type="button" id="saveImage" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10" r="1.4"></circle><path d="m21 16-5.3-5.3a1 1 0 0 0-1.4 0L8 17"></path></svg><span>Salvează imaginea</span></button>
         </div>
@@ -2959,10 +2982,7 @@ body:not(.fullscreen-mode) #editorView .image-panel > .mode-switcher button:hove
     </header>
 
 <div class="editor-context-bar" aria-label="Mod de lucru și instrumente">
-  <div class="editor-context-top"><div class="image-panel-heading">
-          <span class="section-label" id="imageLabel">Imagine</span>
-          <button type="button" id="removeActiveImage" aria-label="Șterge imaginea" title="Șterge imaginea" class="image-header-delete" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg><span>Șterge</span></button>
-        </div></div>
+  <div class="editor-context-top"></div>
   <div id="editorToolsDock" class="editor-tools-dock"><div class="fullscreen-drawing-toolbar" id="fullscreenDrawingToolbar" hidden>
           <div class="fullscreen-drawing-toolbar-shell">
             <div class="drawing-toolbar-row">
@@ -3037,7 +3057,11 @@ body:not(.fullscreen-mode) #editorView .image-panel > .mode-switcher button:hove
         <div class="fullscreen-image-title" id="fullscreenImageTitle" aria-hidden="true"></div>
         
         
-        <div class="mode-switcher" role="toolbar" aria-label="Mod de lucru">
+        <div class="image-panel-heading">
+          <span class="sheet-title-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg></span><span class="section-label" id="imageLabel">Imagine</span>
+          <button type="button" id="removeActiveImage" aria-label="Șterge imaginea" title="Șterge imaginea" class="image-header-delete" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg><span>Șterge</span></button>
+        </div>
+<div class="mode-switcher" role="toolbar" aria-label="Mod de lucru">
           <button type="button" id="drawModeBtn" class="active"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-1 10-10a2.2 2.2 0 0 0 0-3.1l-.1-.1a2.2 2.2 0 0 0-3.1 0L5 15.7 4 20z"></path><path d="m13.4 7.4 3.2 3.2"></path></svg><span>Desen</span></button>
           <button type="button" id="notesModeBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V10z"></path><path d="M14 3v7h7"></path><path d="M7 14h10M7 17h7"></path></svg><span>Note</span></button>
         </div>
@@ -3061,7 +3085,7 @@ body:not(.fullscreen-mode) #editorView .image-panel > .mode-switcher button:hove
 </div>
 <div class="image-gallery" aria-label="Miniaturi imagini">
           <div class="thumbnail-strip" id="thumbnailStrip"></div>
-          <div class="gallery-add-actions">
+          <div class="gallery-add-actions"><button type="button" id="save" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg><span>Salvează</span></button>
             <button type="button" id="thumbnailAddBlankSheet" class="thumbnail-add-btn thumbnail-add-note-btn">+ Adaugă foaie</button>
             <button type="button" id="thumbnailAddImage" class="thumbnail-add-btn">+ Adaugă imagine</button>
           </div>
@@ -3412,7 +3436,7 @@ body:not(.fullscreen-mode) #editorView .image-panel > .mode-switcher button:hove
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.24';
+      const APP_VERSION = '1.15.25';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -6223,7 +6247,7 @@ body:not(.fullscreen-mode) #editorView .image-panel > .mode-switcher button:hove
             editBtn.className = 'image-title-edit-btn';
             editBtn.setAttribute('aria-label', 'Redenumește imaginea');
             editBtn.title = 'Redenumește imaginea';
-            editBtn.textContent = '✏️';
+            editBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 5 5M4 15 16 3a2 2 0 0 1 5 5L9 20l-6 1z"/></svg>';
             editBtn.addEventListener('click', (event) => {
               event.stopPropagation();
               beginImageTitleEdit(currentImage.id, imageTitleLabel);
