@@ -2520,16 +2520,16 @@ body:not(.fullscreen-mode) #editorView .canvas-shell {
 }
 body:not(.fullscreen-mode) #editorView .image-stage { box-shadow: 0 10px 24px #2e374117, 0 1px 3px #2e37410a; }
 body:not(.fullscreen-mode) #editorView #fullscreenBtn {
-  background: #293a4f; border-color: #293a4f; color: #fffaf2;
-  box-shadow: 0 3px 8px #1f2b3a12, inset 0 1px 0 #ffffff0e;
+  background: linear-gradient(110deg, #263a53, #406386); border-color: #3e5b7a; color: #fffaf2;
+  box-shadow: 0 4px 10px #263a5320, inset 0 1px 0 #ffffff26;
 }
 body:not(.fullscreen-mode) #editorView #fullscreenBtn:hover:not(:disabled) { background: #354b65; border-color: #354b65; box-shadow: 0 4px 12px #1f2b3a18; }
 body:not(.fullscreen-mode) #editorView .image-thumb {
   background: #f6f3ed; border-color: #ded7cb; box-shadow: 0 2px 5px #443d3108;
 }
 body:not(.fullscreen-mode) #editorView .image-thumb.is-active {
-  background: #fffdf9; border-color: #527aa4;
-  box-shadow: 0 0 0 2px #315f911c, 0 3px 8px #28333e0b;
+  background: #eaf2fb; border-color: #527aa4;
+  box-shadow: 0 0 0 2px #315f9126, 0 3px 8px #28333e0b;
 }
 body:not(.fullscreen-mode) #editorView .image-thumb:hover:not(.is-active) { border-color: #b8a98f; box-shadow: 0 4px 8px #443d310d; }
 body:not(.fullscreen-mode) #editorView .image-thumb-title { color: #6e6b65; }
@@ -2540,14 +2540,14 @@ body:not(.fullscreen-mode) #editorView .thumbnail-add-btn {
 body:not(.fullscreen-mode) #editorView .thumbnail-add-btn:hover:not(:disabled) { background: #eee7db; border-color: #bba98e; box-shadow: 0 4px 10px #443d310b; }
 body:not(.fullscreen-mode) #editorView .mode-switcher,
 body:not(.fullscreen-mode) #editorView .note-input-toolbar {
-  background: #ece9e3; border-color: #ddd7cd; box-shadow: inset 0 1px 2px #50443207;
+  background: #e4e8ed; border-color: #cfd7e0; box-shadow: inset 0 1px 2px #233d590a;
 }
 body:not(.fullscreen-mode) #editorView .mode-switcher button,
 body:not(.fullscreen-mode) #editorView .note-input-toolbar button { background: transparent; border-color: transparent; color: #6e6b65; box-shadow: none; }
 body:not(.fullscreen-mode) #editorView .mode-switcher button.active,
 body:not(.fullscreen-mode) #editorView .note-input-toolbar button.active {
-  background: #fffdf9; border-color: #cfc5b7; color: #294b70;
-  box-shadow: 0 2px 5px #5044320d, inset 0 1px 0 #ffffff;
+  background: #315f91; border-color: #315f91; color: #ffffff;
+  box-shadow: 0 3px 8px #315f9126, inset 0 1px 0 #ffffff20;
 }
 body:not(.fullscreen-mode) #editorView .mode-switcher button:hover:not(.active),
 body:not(.fullscreen-mode) #editorView .note-input-toolbar button:hover:not(.active) { background: #f5f1ea; color: #484b4f; }
@@ -2565,6 +2565,25 @@ body:not(.fullscreen-mode) #editorView #deleteSelectedNote:hover:not(:disabled) 
 body:not(.fullscreen-mode) #editorView .note-list-item { background: #f7f4ee; box-shadow: inset 0 1px 0 #ffffff; }
 body:not(.fullscreen-mode) #editorView .note-list-item.selected { background: #f0e8dc; border-color: #c4b49d; box-shadow: 0 2px 6px #50443208; }
 body:not(.fullscreen-mode) #editorView .help { color: #6e716f; }
+/* Complementary accents give the lower editor controls distinct roles. */
+body:not(.fullscreen-mode) #editorView #thumbnailAddBlankSheet {
+  background: #ede0c8; border-color: #cbb58e; color: #665036;
+  box-shadow: inset 0 3px 0 #c3a775, 0 3px 8px #71593b0b;
+}
+body:not(.fullscreen-mode) #editorView #thumbnailAddBlankSheet:hover:not(:disabled) { background: #e4d2b2; border-color: #b79b6f; }
+body:not(.fullscreen-mode) #editorView #thumbnailAddImage {
+  background: #e5edf7; border-color: #b4c8de; color: #365b80;
+  box-shadow: inset 0 3px 0 #88a7c8, 0 3px 8px #315f910b;
+}
+body:not(.fullscreen-mode) #editorView #thumbnailAddImage:hover:not(:disabled) { background: #d6e5f5; border-color: #8aa9ca; }
+body:not(.fullscreen-mode) #editorView #notesModeBtn:not(.active) { background: #f3eadc; border-color: #e1d4c0; color: #68523b; }
+body:not(.fullscreen-mode) #editorView #notesModeBtn:not(.active):hover { background: #e9dbc5; border-color: #cbb58e; }
+body:not(.fullscreen-mode) #editorView #notesModeBtn.active { background: #79664e; border-color: #79664e; color: #ffffff; box-shadow: 0 3px 8px #79664e26, inset 0 1px 0 #ffffff20; }
+body:not(.fullscreen-mode) #editorView #exportProject { background: #e7d7bd; border-color: #c9b393; color: #5c4832; box-shadow: inset 0 1px 0 #ffffff70, 0 3px 7px #71593b0d; }
+body:not(.fullscreen-mode) #editorView #exportProject:hover:not(:disabled) { background: #ddc7a5; border-color: #b89a71; color: #513d28; }
+body:not(.fullscreen-mode) #editorView #saveImage { background: #e0ebf7; border-color: #aec4dc; color: #30587f; box-shadow: inset 0 1px 0 #ffffff90, 0 3px 7px #315f910d; }
+body:not(.fullscreen-mode) #editorView #saveImage:hover:not(:disabled) { background: #cddff2; border-color: #8daac9; color: #24476b; }
+
 </style>
 </head>
 <body>
@@ -3236,7 +3255,7 @@ body:not(.fullscreen-mode) #editorView .help { color: #6e716f; }
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.21';
+      const APP_VERSION = '1.15.22';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
