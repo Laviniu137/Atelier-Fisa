@@ -3133,6 +3133,10 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   body:not(.fullscreen-mode) #editorView .image-title-text { color: var(--ds-navy); font-size: 1.02rem; font-weight: 750; }
   body:not(.fullscreen-mode) #editorView .image-title-edit-btn { width: 38px; height: 38px; padding: 0; border: 1px solid var(--ds-line); border-radius: 12px; background: var(--ds-surface); color: var(--ds-muted); opacity: 1; box-shadow: none; }
   body:not(.fullscreen-mode) #editorView .image-title-edit-btn:hover { border-color: var(--ds-blue-line); background: var(--ds-surface-blue); color: var(--ds-blue-dark); }
+  body:not(.fullscreen-mode) #editorView .image-panel-heading { min-height: 42px; margin: 0 0 10px; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+  body:not(.fullscreen-mode) #editorView .image-panel-heading #imageLabel { width: fit-content; max-width: 100%; padding: 4px 6px 4px 10px; border: 1px solid var(--ds-line); border-radius: 13px; background: #f6f8fa; box-shadow: var(--ds-shadow-sm); }
+  body:not(.fullscreen-mode) #editorView .image-panel-heading #imageLabel::after { display: none; }
+  body:not(.fullscreen-mode) #editorView .image-panel-heading #imageLabel { flex: 0 1 auto; width: fit-content; }
   body:not(.fullscreen-mode) #editorView #backToProjects,
   body:not(.fullscreen-mode) #editorView #exportProject,
   body:not(.fullscreen-mode) #editorView #saveImage { min-height: 44px; border-radius: var(--ds-radius-md); }
@@ -3143,8 +3147,12 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   body:not(.fullscreen-mode) #editorView #exportProject:hover:not(:disabled) { background: var(--ds-blue-dark); border-color: var(--ds-blue-dark); }
   body:not(.fullscreen-mode) #editorView #saveImage:hover:not(:disabled) { background: #dceaf5; border-color: #9fb9d1; }
   body:not(.fullscreen-mode) #editorView .image-gallery { gap: 14px; padding: 8px 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
-  body:not(.fullscreen-mode) #editorView .thumbnail-strip { gap: 10px; padding: 4px 2px; scrollbar-color: var(--ds-line-strong) transparent; }
+  body:not(.fullscreen-mode) #editorView .thumbnail-strip { flex: 0 1 auto; width: max-content; max-width: calc(100% - 270px); gap: 10px; padding: 4px 2px; scrollbar-color: var(--ds-line-strong) transparent; }
   body:not(.fullscreen-mode) #editorView .gallery-add-actions { gap: 8px; padding-left: 14px; border-left: 1px solid var(--ds-line); }
+  @media (min-width: 701px) {
+    body:not(.fullscreen-mode) #editorView .thumbnail-strip { flex: 1 1 auto; width: auto; max-width: none; }
+    body:not(.fullscreen-mode) #editorView .gallery-add-actions { margin-left: auto; }
+  }
   body:not(.fullscreen-mode) #editorView .thumbnail-add-btn,
   body:not(.fullscreen-mode) #editorView #thumbnailAddBlankSheet,
   body:not(.fullscreen-mode) #editorView #thumbnailAddImage { min-height: 46px; border: 1px solid var(--ds-line); border-radius: var(--ds-radius-md); background: var(--ds-surface-soft); color: var(--ds-blue-dark); box-shadow: var(--ds-shadow-sm); }
@@ -3210,6 +3218,11 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
     #projectManagerView .project-grid { gap: 14px; }
     body:not(.fullscreen-mode) #editorView .layout { gap: 14px; }
     body:not(.fullscreen-mode) #editorView .app { padding-inline: 18px; }
+  }
+  @media (max-width: 700px) {
+    body:not(.fullscreen-mode) #editorView .image-gallery { flex-wrap: wrap; }
+    body:not(.fullscreen-mode) #editorView .thumbnail-strip { width: 100%; max-width: 100%; flex-basis: 100%; }
+    body:not(.fullscreen-mode) #editorView .gallery-add-actions { width: 100%; padding-left: 0; border-left: 0; }
   }
   @media (max-width: 600px) {
     #projectManagerView { padding: 12px; }
@@ -3916,7 +3929,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.43';
+      const APP_VERSION = '1.15.46';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
