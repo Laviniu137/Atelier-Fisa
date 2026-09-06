@@ -3139,12 +3139,18 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   body:not(.fullscreen-mode) #editorView .image-panel-heading #imageLabel { width: fit-content; max-width: 100%; padding: 4px 6px 4px 10px; border: 1px solid var(--ds-line); border-radius: 13px; background: #f6f8fa; box-shadow: var(--ds-shadow-sm); }
   body:not(.fullscreen-mode) #editorView .image-panel-heading #imageLabel::after { display: none; }
   body:not(.fullscreen-mode) #editorView .image-panel-heading #imageLabel { flex: 0 1 auto; width: fit-content; }
+  body:not(.fullscreen-mode) #editorView .sheet-title-icon,
+  body:not(.fullscreen-mode) #editorView .image-panel-heading #imageLabel { min-height: 44px; height: 44px; border-radius: 13px; }
+  body:not(.fullscreen-mode) #editorView .sheet-title-icon { width: 44px; flex: 0 0 44px; }
+  body:not(.fullscreen-mode) #editorView .image-panel-heading #imageLabel { padding: 4px 6px 4px 12px; }
+  body:not(.fullscreen-mode) #editorView .image-panel-heading #imageLabel .image-title-edit-btn { width: 34px; min-width: 34px; height: 34px; min-height: 34px; border-radius: 10px; }
   body:not(.fullscreen-mode) #editorView #backToProjects,
   body:not(.fullscreen-mode) #editorView #exportProject,
   body:not(.fullscreen-mode) #editorView #saveImage { min-height: 44px; border-radius: var(--ds-radius-md); }
   body:not(.fullscreen-mode) #editorView #backToProjects { background: var(--ds-surface-soft); border-color: var(--ds-line); color: var(--ds-ink); }
   body:not(.fullscreen-mode) #editorView #exportProject { background: var(--ds-blue); border-color: var(--ds-blue); color: #fff; box-shadow: 0 7px 16px rgba(49,95,145,.18); }
   body:not(.fullscreen-mode) #editorView #saveImage { background: var(--ds-surface-blue); border-color: var(--ds-blue-line); color: var(--ds-blue-dark); }
+  body:not(.fullscreen-mode) #editorView #saveImage { min-width: 158px; padding: 10px 16px; background: #eaf2f9; border-color: #b9cde0; color: var(--ds-blue-dark); box-shadow: 0 4px 10px rgba(49,95,145,.10), inset 0 1px 0 #fff; }
   body:not(.fullscreen-mode) #editorView #backToProjects:hover:not(:disabled) { background: #dcdcd8; border-color: #c0c1bc; }
   body:not(.fullscreen-mode) #editorView #exportProject:hover:not(:disabled) { background: var(--ds-blue-dark); border-color: var(--ds-blue-dark); }
   body:not(.fullscreen-mode) #editorView #saveImage:hover:not(:disabled) { background: #dceaf5; border-color: #9fb9d1; }
@@ -3159,6 +3165,9 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   body:not(.fullscreen-mode) #editorView #thumbnailAddBlankSheet,
   body:not(.fullscreen-mode) #editorView #thumbnailAddImage { min-height: 46px; border: 1px solid var(--ds-line); border-radius: var(--ds-radius-md); background: var(--ds-surface-soft); color: var(--ds-blue-dark); box-shadow: var(--ds-shadow-sm); }
   body:not(.fullscreen-mode) #editorView .thumbnail-add-btn:hover:not(:disabled) { background: #dcdcd8; border-color: #c0c1bc; }
+  body:not(.fullscreen-mode) #editorView #thumbnailAddImage { min-width: 158px; padding: 10px 16px; background: #eaf2f9; border-color: #b9cde0; color: var(--ds-blue-dark); box-shadow: 0 4px 10px rgba(49,95,145,.10), inset 0 1px 0 #fff; }
+  body:not(.fullscreen-mode) #editorView #thumbnailAddImage svg { color: var(--ds-blue); }
+  body:not(.fullscreen-mode) #editorView #thumbnailAddImage:hover:not(:disabled) { background: #dceaf5; border-color: #9fb9d1; color: var(--ds-blue-dark); }
   body:not(.fullscreen-mode) #editorView .image-thumb-wrap { width: 104px; flex-basis: 104px; gap: 7px; padding: 6px 6px 7px; border: 1px solid var(--ds-line); border-radius: 16px; background: #f6f8fa; box-shadow: 0 3px 10px rgba(31,49,69,.07); }
   body:not(.fullscreen-mode) #editorView .image-thumb { width: 92px; min-width: 92px; height: 70px; min-height: 70px; flex-basis: 70px; border: 2px solid var(--ds-blue-line); border-radius: 12px; background: var(--ds-surface-blue); box-shadow: 0 4px 10px rgba(31,49,69,.10), inset 0 1px 0 #fff; }
   body:not(.fullscreen-mode) #editorView .image-thumb::before { height: 4px; background: #a9bfd3; border-radius: 11px 11px 0 0; }
@@ -3933,7 +3942,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.47';
+      const APP_VERSION = '1.16.1';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
