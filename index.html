@@ -2747,6 +2747,35 @@ body:not(.fullscreen-mode) #editorView .gallery-add-actions { flex-wrap: wrap; }
  body:not(.fullscreen-mode) #editorView #imageLabel { font-size: 18px; }
 }
 </style>
+<style id="atelier-refined-filmstrip">
+#editorView #save { display: none !important; }
+body:not(.fullscreen-mode) #editorView .image-gallery { align-items: center; gap: 24px; padding: 14px 0 12px; border-bottom: 1px solid #e4e0d8; }
+body:not(.fullscreen-mode) #editorView .thumbnail-strip { gap: 12px; padding: 4px 3px; align-items: flex-start; }
+body:not(.fullscreen-mode) #editorView .image-thumb-wrap { width: 80px; flex-basis: 80px; gap: 7px; }
+body:not(.fullscreen-mode) #editorView .image-thumb { width: 80px; min-width: 80px; height: 60px; min-height: 60px; flex-basis: 60px; padding: 5px; border: 2px solid transparent; border-radius: 10px; background: #fffdfa; box-shadow: 0 0 0 1px #ddd8ce, 0 2px 4px #24374e08; transform: none; }
+body:not(.fullscreen-mode) #editorView .image-thumb img { border-radius: 4px; }
+body:not(.fullscreen-mode) #editorView .image-thumb:hover:not(.is-active) { border-color: #c6cdd4; box-shadow: 0 0 0 1px #c6cdd4; transform: none; }
+body:not(.fullscreen-mode) #editorView .image-thumb.is-active { background: #fffdfa; border-color: #507499; box-shadow: 0 2px 6px #315f9114; transform: none; }
+body:not(.fullscreen-mode) #editorView .image-thumb.is-active::after { display: none; }
+body:not(.fullscreen-mode) #editorView .image-thumb-title { max-width: 80px; font-size: 11px; line-height: 1.4; color: #72746f; }
+body:not(.fullscreen-mode) #editorView .image-thumb-wrap:has(.is-active) .image-thumb-title { color: #304f70; font-weight: 600; }
+body:not(.fullscreen-mode) #editorView .gallery-add-actions { gap: 10px; flex-wrap: nowrap; align-items: center; padding-left: 22px; border-left: 1px solid #e1dcd2; }
+body:not(.fullscreen-mode) #editorView #thumbnailAddBlankSheet,
+body:not(.fullscreen-mode) #editorView #thumbnailAddImage { display: flex; align-items: center; justify-content: center; gap: 9px; height: 46px; min-height: 46px; padding: 11px 16px; border: 1px solid #d9d5cc; border-radius: 10px; background: #fffdf9; color: #435369; font-size: 12px; font-weight: 600; white-space: nowrap; box-shadow: 0 2px 4px #29374706; transform: none; }
+body:not(.fullscreen-mode) #editorView #thumbnailAddBlankSheet:hover:not(:disabled),
+body:not(.fullscreen-mode) #editorView #thumbnailAddImage:hover:not(:disabled) { background: #ede9e0; border-color: #bdb6a8; box-shadow: 0 2px 5px #29374709; transform: none; }
+body:not(.fullscreen-mode) #editorView .thumbnail-add-btn svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+body:not(.fullscreen-mode) #editorView #thumbnailAddBlankSheet svg { color: #8a7559; }
+body:not(.fullscreen-mode) #editorView #thumbnailAddImage svg { color: #486c91; }
+body:not(.fullscreen-mode) #editorView .help { margin: 10px 0 0; color: #747872; font-size: 11px; text-align: left; }
+body:not(.fullscreen-mode) #editorView .help::before { display: none; }
+@media (max-width: 700px) {
+ body:not(.fullscreen-mode) #editorView .image-gallery { flex-wrap: wrap; gap: 12px; }
+ body:not(.fullscreen-mode) #editorView .thumbnail-strip { flex-basis: 100%; }
+ body:not(.fullscreen-mode) #editorView .gallery-add-actions { width: 100%; padding: 0; border: 0; }
+ body:not(.fullscreen-mode) #editorView .gallery-add-actions button { flex: 1; }
+}
+</style>
 </head>
 <body>
   <div id="saveToast" class="save-toast" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -3085,9 +3114,9 @@ body:not(.fullscreen-mode) #editorView .gallery-add-actions { flex-wrap: wrap; }
 </div>
 <div class="image-gallery" aria-label="Miniaturi imagini">
           <div class="thumbnail-strip" id="thumbnailStrip"></div>
-          <div class="gallery-add-actions"><button type="button" id="save" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg><span>Salvează</span></button>
-            <button type="button" id="thumbnailAddBlankSheet" class="thumbnail-add-btn thumbnail-add-note-btn">+ Adaugă foaie</button>
-            <button type="button" id="thumbnailAddImage" class="thumbnail-add-btn">+ Adaugă imagine</button>
+          <div class="gallery-add-actions"><button type="button" id="save" hidden disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg><span>Salvează</span></button>
+            <button type="button" id="thumbnailAddBlankSheet" class="thumbnail-add-btn thumbnail-add-note-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M12 12v6M9 15h6"/></svg><span>Adaugă foaie</span></button>
+            <button type="button" id="thumbnailAddImage" class="thumbnail-add-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m3 17 5-5 4 4 4-6 5 7"/></svg><span>Adaugă imagine</span></button>
           </div>
         </div>
         
@@ -3436,7 +3465,7 @@ body:not(.fullscreen-mode) #editorView .gallery-add-actions { flex-wrap: wrap; }
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.25';
+      const APP_VERSION = '1.15.26';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
