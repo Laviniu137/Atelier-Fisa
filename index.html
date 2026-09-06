@@ -3124,6 +3124,8 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   body:not(.fullscreen-mode) #editorView .image-panel > .mode-switcher button.active { background: var(--ds-blue); border-color: var(--ds-blue); color: #fff; box-shadow: 0 4px 10px rgba(49,95,145,.20); }
   body:not(.fullscreen-mode) #editorView .image-panel > .mode-switcher button:hover:not(.active) { background: #dcdcd8; border-color: #c0c1bc; color: var(--ds-ink); }
   body:not(.fullscreen-mode) #editorView .header-actions { gap: 8px; }
+  body:not(.fullscreen-mode) #editorView .app { max-width: 1820px; margin-inline: auto; padding: 20px 28px 12px; }
+  body:not(.fullscreen-mode) #editorView .app > header { min-height: 78px; padding: 14px 16px; border-radius: var(--ds-radius-lg); }
   body:not(.fullscreen-mode) #editorView #backToProjects,
   body:not(.fullscreen-mode) #editorView #exportProject,
   body:not(.fullscreen-mode) #editorView #saveImage { min-height: 44px; border-radius: var(--ds-radius-md); }
@@ -3133,8 +3135,9 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   body:not(.fullscreen-mode) #editorView #backToProjects:hover:not(:disabled) { background: #dcdcd8; border-color: #c0c1bc; }
   body:not(.fullscreen-mode) #editorView #exportProject:hover:not(:disabled) { background: var(--ds-blue-dark); border-color: var(--ds-blue-dark); }
   body:not(.fullscreen-mode) #editorView #saveImage:hover:not(:disabled) { background: #dceaf5; border-color: #9fb9d1; }
-  body:not(.fullscreen-mode) #editorView .image-gallery { gap: 12px; border-color: var(--ds-line); }
-  body:not(.fullscreen-mode) #editorView .thumbnail-strip { gap: 10px; scrollbar-color: var(--ds-line-strong) transparent; }
+  body:not(.fullscreen-mode) #editorView .image-gallery { gap: 14px; padding: 10px 12px; border: 1px solid var(--ds-line); border-radius: var(--ds-radius-lg); background: #f6f8fa; box-shadow: var(--ds-shadow-sm); }
+  body:not(.fullscreen-mode) #editorView .thumbnail-strip { gap: 10px; padding: 4px 2px; scrollbar-color: var(--ds-line-strong) transparent; }
+  body:not(.fullscreen-mode) #editorView .gallery-add-actions { gap: 8px; padding-left: 14px; border-left: 1px solid var(--ds-line); }
   body:not(.fullscreen-mode) #editorView .thumbnail-add-btn,
   body:not(.fullscreen-mode) #editorView #thumbnailAddBlankSheet,
   body:not(.fullscreen-mode) #editorView #thumbnailAddImage { min-height: 46px; border: 1px solid var(--ds-line); border-radius: var(--ds-radius-md); background: var(--ds-surface-soft); color: var(--ds-blue-dark); box-shadow: var(--ds-shadow-sm); }
@@ -3190,6 +3193,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
     #projectManagerView .project-manager-content { padding: 20px 16px 0; }
     #projectManagerView .project-grid { gap: 14px; }
     body:not(.fullscreen-mode) #editorView .layout { gap: 14px; }
+    body:not(.fullscreen-mode) #editorView .app { padding-inline: 18px; }
   }
   @media (max-width: 600px) {
     #projectManagerView { padding: 12px; }
@@ -3199,10 +3203,13 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
     #projectManagerView .project-manager-actions button { min-height: 44px; padding-inline: 12px; }
     #projectManagerView .project-card { border-radius: 16px; }
     body:not(.fullscreen-mode) #editorView .app > header { border-radius: var(--ds-radius-md); }
+    body:not(.fullscreen-mode) #editorView .app { padding: 12px; }
     body:not(.fullscreen-mode) #editorView .image-panel,
     body:not(.fullscreen-mode) #editorView .notes { border-radius: var(--ds-radius-md); }
     body:not(.fullscreen-mode) #editorView .header-actions { gap: 6px; }
     body:not(.fullscreen-mode) #editorView .header-actions button { min-height: 42px; padding-inline: 10px; }
+    body:not(.fullscreen-mode) #editorView .image-gallery { padding: 10px; border-radius: var(--ds-radius-md); }
+    body:not(.fullscreen-mode) #editorView .gallery-add-actions { padding-left: 0; border-left: 0; }
   }
 </style>
 </head>
@@ -3893,7 +3900,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.40';
+      const APP_VERSION = '1.15.41';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
