@@ -2971,7 +2971,14 @@ body:not(.fullscreen-mode) #editorView .image-thumb { background: linear-gradien
 body:not(.fullscreen-mode) #editorView .image-thumb::before { background: #a9bfd3; }
 body:not(.fullscreen-mode) #editorView .image-thumb-title { background: #edf3f8; border-color: #d0dce7; color: #536a80; }
 body:not(.fullscreen-mode) #editorView #thumbnailAddBlankSheet,
-body:not(.fullscreen-mode) #editorView #thumbnailAddImage { background: #edf3f8; border-color: #b8cddd; color: #315f91; box-shadow: inset 0 1px 0 #ffffff, 0 2px 5px #315f9112; }
+body:not(.fullscreen-mode) #editorView #thumbnailAddImage { background: #e7e7e3; border-color: #d6d5ce; color: #315a82; box-shadow: inset 0 1px 0 #ffffff, 0 3px 8px #2e506b12; }
+body:not(.fullscreen-mode) #editorView #thumbnailAddBlankSheet:hover:not(:disabled),
+body:not(.fullscreen-mode) #editorView #thumbnailAddImage:hover:not(:disabled) { background: #dcdcd8; border-color: #c0c1bc; color: #274c70; }
+body:not(.fullscreen-mode) #editorView .image-thumb { border-color: #c5d5e4; border-radius: 15px; background: #edf3f8; box-shadow: 0 5px 14px #2e506b16, inset 0 1px 0 #ffffff; }
+body:not(.fullscreen-mode) #editorView .image-thumb img { border-radius: 9px; }
+body:not(.fullscreen-mode) #editorView .image-thumb:hover:not(.is-active) { border-color: #9fb9d1; box-shadow: 0 8px 16px #2e506b20, inset 0 1px 0 #ffffff; transform: translateY(-2px); }
+body:not(.fullscreen-mode) #editorView .image-thumb.is-active { border: 2px solid #4e79a3; background: #f7fbff; box-shadow: 0 0 0 3px #d1e1ef, 0 8px 18px #315f9126; transform: translateY(-2px); }
+body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; border-radius: 999px; }
 </style>
 </head>
 <body>
@@ -3661,7 +3668,7 @@ body:not(.fullscreen-mode) #editorView #thumbnailAddImage { background: #edf3f8;
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.38';
+      const APP_VERSION = '1.15.39';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
