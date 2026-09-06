@@ -2585,6 +2585,135 @@ body:not(.fullscreen-mode) #editorView #saveImage { background: #e0ebf7; border-
 body:not(.fullscreen-mode) #editorView #saveImage:hover:not(:disabled) { background: #cddff2; border-color: #8daac9; color: #24476b; }
 
 </style>
+<style id="atelier-editor-workspace">
+/* One workspace: project actions, tools, canvas, then pages. */
+body:has(#editorView:not([hidden])) { background: #f7f5f0; }
+body:not(.fullscreen-mode) #editorView .app { max-width: 1920px; padding: 16px 24px 8px; }
+body:not(.fullscreen-mode) #editorView .app > header { min-height: 76px; padding: 0 0 14px; gap: 20px; background: transparent; border: 0; border-bottom: 1px solid #e2ded6; border-radius: 0; box-shadow: none; backdrop-filter: none; }
+body:not(.fullscreen-mode) #editorView .editor-project-block { max-width: 32%; flex: 1 1 220px; gap: 5px; }
+body:not(.fullscreen-mode) #editorView .editor-project-name { color: #24374e; font-size: clamp(24px,2vw,32px); }
+body:not(.fullscreen-mode) #editorView .editor-project-label { color: #82715b; font-size: 10px; }
+body:not(.fullscreen-mode) #editorView .editor-project-meta { color: #6b7279; font-size: 11px; }
+body:not(.fullscreen-mode) #editorView .header-actions { flex: 0 1 auto; gap: 8px; align-items: center; }
+body:not(.fullscreen-mode) #editorView .toolbar { display: flex; gap: 8px; margin: 0; }
+body:not(.fullscreen-mode) #editorView .header-actions button,
+body:not(.fullscreen-mode) #editorView .toolbar button { width: auto; min-width: 44px; min-height: 44px; padding: 10px 13px; border-radius: 10px; font-size: 12px; gap: 8px; white-space: nowrap; }
+body:not(.fullscreen-mode) #editorView #backToProjects { background: #fffdf9; color: #485768; border-color: #d8d7d1; box-shadow: none; }
+body:not(.fullscreen-mode) #editorView #backToProjects:hover { background: #eeeae2; }
+body:not(.fullscreen-mode) #editorView #saveImage { background: #fffdf9; border-color: #d8d7d1; color: #485768; }
+body:not(.fullscreen-mode) #editorView .editor-context-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; padding: 10px 0; border-bottom: 1px solid #e2ded6; }
+body:not(.fullscreen-mode) #editorView .editor-context-top { display: flex; align-items: center; gap: 16px; min-width: 0; flex: 1 1 420px; }
+body:not(.fullscreen-mode) #editorView .mode-switcher { display: flex; flex: 0 0 auto; width: auto; margin: 0; padding: 3px; gap: 3px; border: 0; border-radius: 12px; background: #eae7df; }
+body:not(.fullscreen-mode) #editorView .mode-switcher button { min-width: 84px; min-height: 44px; padding: 9px 14px; border-radius: 9px; font-size: 13px; }
+body:not(.fullscreen-mode) #editorView .image-panel-heading { flex: 1; min-width: 0; gap: 12px; margin: 0; }
+body:not(.fullscreen-mode) #editorView .section-label { font-size: 11px; letter-spacing: .04em; }
+body:not(.fullscreen-mode) #editorView .image-panel-heading .section-label::after { display: none; }
+body:not(.fullscreen-mode) #editorView .image-title-text { max-width: 200px; }
+body:not(.fullscreen-mode) #editorView .image-title-edit-btn { min-width: 44px; min-height: 44px; padding: 8px; opacity: 1; }
+body:not(.fullscreen-mode) #editorView #removeActiveImage { min-width: 44px; min-height: 44px; padding: 8px 10px; border-radius: 10px; background: transparent; border-color: transparent; }
+body:not(.fullscreen-mode) #editorView #removeActiveImage span { display: none; }
+body:not(.fullscreen-mode) #editorView .editor-tools-dock { min-width: 0; flex: 1 1 760px; }
+body:not(.fullscreen-mode) #editorView .editor-tools-dock:has([hidden]) { flex-basis: auto; }
+body:not(.fullscreen-mode) #editorView #fullscreenDrawingToolbar[hidden] { display: none; }
+body:not(.fullscreen-mode) #editorView #fullscreenDrawingToolbar:not([hidden]) { display: flex; position: static; width: 100%; opacity: 1; transform: none; pointer-events: auto; }
+body:not(.fullscreen-mode) #editorView .fullscreen-drawing-toolbar-shell { width: 100%; max-width: none; min-height: 48px; padding: 0; border: 0; border-radius: 0; box-shadow: none; background: transparent; color: #425369; backdrop-filter: none; overflow: visible; }
+body:not(.fullscreen-mode) #editorView .drawing-toolbar-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+body:not(.fullscreen-mode) #editorView .drawing-tool-group { padding: 0 8px 0 0; gap: 6px; min-height: 44px; border: 0; border-right: 1px solid #ddd9d0; border-radius: 0; background: transparent; box-shadow: none; }
+body:not(.fullscreen-mode) #editorView .drawing-tool-group.edit-group { order: -1; }
+body:not(.fullscreen-mode) #editorView .drawing-tool-group.actions-group { border: 0; padding: 0; }
+body:not(.fullscreen-mode) #editorView .drawing-tool-group-row { gap: 4px; min-height: 44px; }
+body:not(.fullscreen-mode) #editorView .tool-label { display: none; }
+body:not(.fullscreen-mode) #editorView .drawing-tool-button { width: 44px; height: 44px; min-width: 44px; min-height: 44px; padding: 0; border-radius: 10px; background: transparent; color: #4b5b6c; border: 1px solid transparent; box-shadow: none; }
+body:not(.fullscreen-mode) #editorView .drawing-tool-button:hover:not(:disabled) { background: #e8e3d9; border-color: #d5c9b7; transform: none; }
+body:not(.fullscreen-mode) #editorView .drawing-tool-button.active { background: #315f91; border-color: #315f91; color: white; box-shadow: 0 2px 5px #315f9118; }
+body:not(.fullscreen-mode) #editorView .drawing-tool-button.active::after { display: none; }
+body:not(.fullscreen-mode) #editorView .drawing-tool-button.danger { color: #9b3540; background: #f9eeeb; }
+body:not(.fullscreen-mode) #editorView .drawing-tool-button:disabled { opacity: .4; }
+body:not(.fullscreen-mode) #editorView .fullscreen-toolbar-close-fallback { display: none; }
+body:not(.fullscreen-mode) #editorView .quick-colors { gap: 0; }
+body:not(.fullscreen-mode) #editorView .quick-color-button { width: 44px; height: 44px; min-width: 44px; min-height: 44px; padding: 9px; border: 9px solid transparent; border-radius: 50%; background: var(--swatch); background-clip: padding-box; box-shadow: none; transform: none; }
+body:not(.fullscreen-mode) #editorView .quick-color-button.is-selected { outline: 1px solid #687d92; outline-offset: -6px; }
+body:not(.fullscreen-mode) #editorView #fullscreenColorPicker { width: 44px; min-width: 44px; height: 44px; padding: 5px; background: #fffdf9; border: 1px solid #d7d2c9; border-radius: 10px; }
+body:not(.fullscreen-mode) #editorView #fullscreenBrushSize { width: 88px; min-height: 44px; accent-color: #315f91; }
+body:not(.fullscreen-mode) #editorView #fullscreenBrushSizeValue { color: #596575; background: transparent; border: 0; min-width: 36px; font-size: 11px; }
+body:not(.fullscreen-mode) #editorView .layout { display: grid; grid-template-columns: minmax(0,1fr); align-items: start; gap: 20px; margin-top: 14px; }
+body:not(.fullscreen-mode) #editorView .layout:has(.notes:not([hidden])) { grid-template-columns: minmax(0,1fr) 310px; }
+body:not(.fullscreen-mode) #editorView .image-panel { width: 100%; max-width: none; margin: 0; display: flex; flex-direction: column; gap: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+body:not(.fullscreen-mode) #editorView .editor-canvas-viewport { position: relative; min-width: 0; }
+body:not(.fullscreen-mode) #editorView .canvas-shell { display: block; position: relative; height: max(360px,calc(100dvh - 304px)); min-height: 0; width: 100%; padding: 0; border: 0; border-radius: 12px; background: #eae7e0; box-shadow: inset 0 0 0 1px #d9d4ca66; overflow: auto; touch-action: pan-x pan-y; }
+body:not(.fullscreen-mode) #editorView .editor-sheet-space { display: grid; place-items: center; min-width: 100%; min-height: 100%; }
+body:not(.fullscreen-mode) #editorView .image-stage { max-width: none; flex-shrink: 0; border-radius: 3px; box-shadow: 0 8px 22px #29374718,0 1px 3px #2937470c; }
+body:not(.fullscreen-mode) #editorView #photo { width: 100%; max-width: none; max-height: none; height: auto; }
+body:not(.fullscreen-mode) #editorView .empty { position: absolute; inset: 0; display: grid; place-content: center; padding: 40px; pointer-events: none; }
+body:not(.fullscreen-mode) #editorView .empty[hidden] { display: none; }
+body:not(.fullscreen-mode) #editorView .editor-view-controls { position: absolute; top: 10px; right: 10px; z-index: 10; display: flex; align-items: center; gap: 2px; padding: 3px; background: #fffdf9f5; border: 1px solid #ded9cf; border-radius: 12px; box-shadow: 0 3px 10px #29374710; }
+body:not(.fullscreen-mode) #editorView .editor-view-controls button { width: 44px; min-width: 44px; height: 44px; min-height: 44px; padding: 10px; border: 0; border-radius: 9px; background: transparent; color: #3b5370; box-shadow: none; }
+body:not(.fullscreen-mode) #editorView .editor-view-controls button:hover:not(:disabled) { background: #e6edf5; transform: none; }
+body:not(.fullscreen-mode) #editorView .editor-view-controls svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+body:not(.fullscreen-mode) #editorView #editorZoomLabel { min-width: 38px; text-align: center; font-size: 11px; color: #5c6874; }
+body:not(.fullscreen-mode) #editorView .fullscreen-inline { position: static; display: flex; width: auto; margin: 0; padding: 0; }
+body:not(.fullscreen-mode) #editorView .fullscreen-inline #fullscreenBtn { width: 44px; min-width: 44px; min-height: 44px; height: 44px; padding: 10px; border: 0; border-radius: 9px; background: #2c4664; color: #ffffff; box-shadow: none; }
+body:not(.fullscreen-mode) #editorView .fullscreen-inline #fullscreenBtn::before { display: none; }
+body:not(.fullscreen-mode) #editorView .image-gallery { display: flex; align-items: center; gap: 16px; margin: 0; padding: 10px 0; border-bottom: 1px solid #e2ded6; }
+body:not(.fullscreen-mode) #editorView .thumbnail-strip { gap: 8px; padding: 3px; min-width: 0; }
+body:not(.fullscreen-mode) #editorView .image-thumb-wrap { width: 64px; flex-basis: 64px; gap: 3px; }
+body:not(.fullscreen-mode) #editorView .image-thumb { width: 64px; height: 52px; min-width: 64px; min-height: 52px; flex-basis: 52px; padding: 4px; border-radius: 8px; }
+body:not(.fullscreen-mode) #editorView .image-thumb img { object-fit: contain; border-radius: 3px; }
+body:not(.fullscreen-mode) #editorView .image-thumb-title { max-width: 64px; font-size: 9px; }
+body:not(.fullscreen-mode) #editorView .gallery-add-actions { display: flex; gap: 8px; flex: 0 0 auto; }
+body:not(.fullscreen-mode) #editorView .thumbnail-add-btn { width: auto; min-width: 44px; min-height: 44px; height: 44px; padding: 10px 12px; border-radius: 10px; font-size: 12px; box-shadow: none; }
+body:not(.fullscreen-mode) #editorView .help { margin: 6px 0 0; font-size: 10px; line-height: 1.5; text-align: left; }
+body:not(.fullscreen-mode) #editorView .notes { width: auto; margin: 0; padding: 16px; border: 0; border-left: 1px solid #e0d9ce; border-radius: 0; background: #fffdf9; box-shadow: none; max-height: calc(100dvh - 212px); overflow: auto; }
+body:not(.fullscreen-mode) #editorView .notes-toolbar { gap: 8px; }
+body:not(.fullscreen-mode) #editorView .notes-toolbar button { min-height: 44px; padding: 9px 10px; border-radius: 10px; font-size: 12px; }
+body:not(.fullscreen-mode) #editorView #deleteSelectedNote { min-width: 44px; width: 44px; }
+body:not(.fullscreen-mode) #editorView #deleteSelectedNote span { display: none; }
+body:not(.fullscreen-mode) #editorView .note-input-toolbar button { min-height: 44px; font-size: 12px; padding: 8px; }
+body:not(.fullscreen-mode) #editorView .app-footer { margin-top: 6px; font-size: 10px; }
+body.fullscreen-mode .editor-canvas-viewport, body.fullscreen-mode .editor-sheet-space { display: contents; }
+body.fullscreen-mode .editor-view-controls { display: none; }
+body.fullscreen-mode .editor-context-bar { display: none; }
+body.fullscreen-mode .editor-sheet-space { width: auto !important; height: auto !important; }
+body:not(.fullscreen-mode) #editorView #imageStage[hidden] { display: none; }
+body:not(.fullscreen-mode) #editorView .empty { max-width: none; width: auto; text-align: center; }
+body:not(.fullscreen-mode) #editorView .color-picker-check { display: none; }
+body:not(.fullscreen-mode) #editorView #fullscreenBrushSize { appearance: none; -webkit-appearance: none; height: 44px; background: transparent; border: 0; box-shadow: none; padding: 0; }
+body:not(.fullscreen-mode) #editorView #fullscreenBrushSize::-webkit-slider-runnable-track { height: 4px; background: #b9c7d5; border-radius: 4px; }
+body:not(.fullscreen-mode) #editorView #fullscreenBrushSize::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 20px; height: 20px; margin-top: -8px; border: 2px solid #315f91; background: #fffdf9; border-radius: 50%; box-shadow: 0 2px 4px #24374e20; }
+body:not(.fullscreen-mode) #editorView #fullscreenBrushSize::-moz-range-track { height: 4px; background: #b9c7d5; }
+body:not(.fullscreen-mode) #editorView #fullscreenBrushSize::-moz-range-thumb { width: 18px; height: 18px; border: 2px solid #315f91; background: #fffdf9; border-radius: 50%; }
+@media (max-width: 1499px) { body:not(.fullscreen-mode) #editorView .editor-context-top { flex-basis: 100%; } body:not(.fullscreen-mode) #editorView .editor-tools-dock { flex-basis: 100%; } }
+@media (min-width: 1500px) { body:not(.fullscreen-mode) #editorView .editor-context-top { flex: 0 1 450px; } body:not(.fullscreen-mode) #editorView .canvas-shell { height: max(420px,calc(100dvh - 260px)); } }
+@media (max-width: 1000px) {
+  body:not(.fullscreen-mode) #editorView .app { padding: 12px 16px 8px; }
+  body:not(.fullscreen-mode) #editorView .app > header { flex-direction: row; flex-wrap: wrap; gap: 12px; }
+  body:not(.fullscreen-mode) #editorView .editor-project-block { max-width: 100%; }
+  body:not(.fullscreen-mode) #editorView .header-actions { flex-wrap: wrap; justify-content: flex-start; }
+  body:not(.fullscreen-mode) #editorView .layout:has(.notes:not([hidden])) { grid-template-columns: minmax(0,1fr); }
+  body:not(.fullscreen-mode) #editorView .notes { border-left: 0; border-top: 1px solid #e0d9ce; max-height: none; }
+  body:not(.fullscreen-mode) #editorView .canvas-shell { height: max(390px,calc(100dvh - 340px)); }
+  body:not(.fullscreen-mode) #editorView .drawing-toolbar-row { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 5px; }
+}
+@media (max-width: 600px) {
+  body:not(.fullscreen-mode) #editorView .app { padding: 12px; }
+  body:not(.fullscreen-mode) #editorView .app > header { flex-direction: column; align-items: stretch; }
+  body:not(.fullscreen-mode) #editorView .editor-project-block { flex-basis: auto; }
+  body:not(.fullscreen-mode) #editorView .header-actions { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+  body:not(.fullscreen-mode) #editorView .toolbar { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); }
+  body:not(.fullscreen-mode) #editorView .header-actions button { padding: 8px; font-size: 11px; white-space: normal; }
+  body:not(.fullscreen-mode) #editorView .editor-context-top { flex-wrap: wrap; gap: 6px; }
+  body:not(.fullscreen-mode) #editorView .image-panel-heading { min-width: 130px; }
+  body:not(.fullscreen-mode) #editorView .image-title-text { max-width: 115px; }
+  body:not(.fullscreen-mode) #editorView .mode-switcher button { min-width: 72px; padding: 8px 10px; }
+  body:not(.fullscreen-mode) #editorView .drawing-toolbar-row { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 5px; }
+  body:not(.fullscreen-mode) #editorView .canvas-shell { height: 52dvh; min-height: 320px; }
+  body:not(.fullscreen-mode) #editorView .image-gallery { flex-wrap: wrap; gap: 6px; }
+  body:not(.fullscreen-mode) #editorView .thumbnail-strip { flex-basis: 100%; }
+  body:not(.fullscreen-mode) #editorView .gallery-add-actions { width: 100%; }
+  body:not(.fullscreen-mode) #editorView .thumbnail-add-btn { flex: 1; }
+}
+
+</style>
 </head>
 <body>
   <div id="saveToast" class="save-toast" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -2810,58 +2939,24 @@ body:not(.fullscreen-mode) #editorView #saveImage:hover:not(:disabled) { backgro
       <div class="header-actions">
         <button type="button" id="backToProjects"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path><path d="M9 12h12"></path></svg><span>Proiectele mele</span></button>
         <button type="button" id="addImage"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="M7 8l5-5 5 5"></path><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"></path></svg><span>Adaugă imagine</span></button>
+        <div class="toolbar" aria-label="Acțiune principală">
+          <button type="button" id="save" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg><span>Salvează</span></button>
+          <button type="button" id="exportProject" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V9"></path><path d="m7 14 5-5 5 5"></path><path d="M5 4h14"></path></svg><span>Exportă proiect</span></button>
+          <button type="button" id="saveImage" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10" r="1.4"></circle><path d="m21 16-5.3-5.3a1 1 0 0 0-1.4 0L8 17"></path></svg><span>Salvează imaginea</span></button>
+        </div>
         <input class="sr-only" id="imageInput" type="file" accept="image/*" multiple>
       </div>
     </header>
 
-    <div class="layout">
-      <section class="image-panel" aria-labelledby="imageLabel">
-        <div class="image-panel-heading">
-          <span class="section-label" id="imageLabel">Imagine</span>
-          <button type="button" id="removeActiveImage" class="image-header-delete" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg><span>Șterge</span></button>
-        </div>
-        <button type="button" id="fullscreenPrevImageBtn" class="fullscreen-image-nav fullscreen-image-nav-prev" aria-label="Imaginea anterioară" title="Imaginea anterioară" hidden>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5-7 7 7 7"></path></svg>
-        </button>
-        <button type="button" id="fullscreenNextImageBtn" class="fullscreen-image-nav fullscreen-image-nav-next" aria-label="Imaginea următoare" title="Imaginea următoare" hidden>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 5 7 7-7 7"></path></svg>
-        </button>
-        <div class="fullscreen-image-title" id="fullscreenImageTitle" aria-hidden="true"></div>
-        <div class="canvas-shell" id="canvasShell">
-          <div class="empty" id="emptyState">Adaugă o fotografie pentru a putea desena pe ea.</div>
-          <div class="image-stage" id="imageStage" hidden>
-            <img id="photo" alt="Fotografia încărcată">
-            <canvas id="drawingCanvas" aria-label="Zonă de desen pe imagine"></canvas>
-            <div class="note-layer" id="noteLayer" hidden></div>
-          </div>
-        </div>
-        <div class="fullscreen-inline">
-          <button type="button" id="fullscreenBtn" disabled>Ecran complet</button>
-        </div>
-        <div class="image-gallery" aria-label="Miniaturi imagini">
-          <div class="thumbnail-strip" id="thumbnailStrip"></div>
-          <div class="gallery-add-actions">
-            <button type="button" id="thumbnailAddBlankSheet" class="thumbnail-add-btn thumbnail-add-note-btn">+ Adaugă foaie</button>
-            <button type="button" id="thumbnailAddImage" class="thumbnail-add-btn">+ Adaugă imagine</button>
-          </div>
-        </div>
-        <div class="mode-switcher" role="toolbar" aria-label="Mod de lucru">
+<div class="editor-context-bar" aria-label="Mod de lucru și instrumente">
+  <div class="editor-context-top"><div class="mode-switcher" role="toolbar" aria-label="Mod de lucru">
           <button type="button" id="drawModeBtn" class="active"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-1 10-10a2.2 2.2 0 0 0 0-3.1l-.1-.1a2.2 2.2 0 0 0-3.1 0L5 15.7 4 20z"></path><path d="m13.4 7.4 3.2 3.2"></path></svg><span>Desen</span></button>
           <button type="button" id="notesModeBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V10z"></path><path d="M14 3v7h7"></path><path d="M7 14h10M7 17h7"></path></svg><span>Note</span></button>
-        </div>
-        <button type="button" class="fullscreen-close-btn" id="fullscreenCloseButton" aria-label="Închide ecran complet" title="Închide ecran complet" hidden>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6 6 18"></path></svg>
-        </button>
-      <button type="button" class="fullscreen-toolbar-toggle" id="fullscreenToolbarToggle" aria-label="Afișează instrumentele de desen" title="Instrumente desen" hidden>
-          <svg class="toolbar-toggle-preview" viewBox="0 0 24 24" aria-hidden="true">
-            <path class="toolbar-toggle-preview-pencil" d="m4 20 4.2-1 10-10a2.2 2.2 0 0 0 0-3.1l-.1-.1a2.2 2.2 0 0 0-3.1 0L5 15.7 4 20z"></path>
-            <path class="toolbar-toggle-preview-pencil" d="m13.4 7.4 3.2 3.2"></path>
-            <path class="toolbar-toggle-preview-line" d="M5 19 19 5"></path>
-            <path class="toolbar-toggle-preview-dashed" d="M5 19 7.5 16.5M9.5 14.5 12 12M14 10 16.5 7.5M18 6 19 5"></path>
-            <path class="toolbar-toggle-preview-eraser" d="m19.2 15.4-8.2-8.2a2.2 2.2 0 0 0-3.1 0l-4.1 4.1a2.2 2.2 0 0 0 0 3.1l3.3 3.3a2.2 2.2 0 0 0 1.5.6H17M13 20h8"></path>
-          </svg>
-        </button>
-        <div class="fullscreen-drawing-toolbar" id="fullscreenDrawingToolbar" hidden>
+        </div><div class="image-panel-heading">
+          <span class="section-label" id="imageLabel">Imagine</span>
+          <button type="button" id="removeActiveImage" aria-label="Șterge imaginea" title="Șterge imaginea" class="image-header-delete" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg><span>Șterge</span></button>
+        </div></div>
+  <div id="editorToolsDock" class="editor-tools-dock"><div class="fullscreen-drawing-toolbar" id="fullscreenDrawingToolbar" hidden>
           <div class="fullscreen-drawing-toolbar-shell">
             <div class="drawing-toolbar-row">
               <div class="drawing-tool-group color-group">
@@ -2921,12 +3016,60 @@ body:not(.fullscreen-mode) #editorView #saveImage:hover:not(:disabled) { backgro
               </div>
             </div>
           </div>
+        </div></div>
+</div>
+    <div class="layout">
+      <section class="image-panel" aria-labelledby="imageLabel">
+        
+        <button type="button" id="fullscreenPrevImageBtn" class="fullscreen-image-nav fullscreen-image-nav-prev" aria-label="Imaginea anterioară" title="Imaginea anterioară" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5-7 7 7 7"></path></svg>
+        </button>
+        <button type="button" id="fullscreenNextImageBtn" class="fullscreen-image-nav fullscreen-image-nav-next" aria-label="Imaginea următoare" title="Imaginea următoare" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 5 7 7-7 7"></path></svg>
+        </button>
+        <div class="fullscreen-image-title" id="fullscreenImageTitle" aria-hidden="true"></div>
+        
+        
+        <div class="editor-canvas-viewport"><div class="canvas-shell" id="canvasShell">
+          <div class="empty" id="emptyState">Adaugă o fotografie pentru a putea desena pe ea.</div>
+          <div id="editorSheetSpace" class="editor-sheet-space"><div class="image-stage" id="imageStage" hidden>
+            <img id="photo" alt="Fotografia încărcată">
+            <canvas id="drawingCanvas" aria-label="Zonă de desen pe imagine"></canvas>
+            <div class="note-layer" id="noteLayer" hidden></div>
+          </div>
+        </div></div>
+  <div class="editor-view-controls" role="toolbar" aria-label="Vizualizare canvas">
+    <button type="button" id="editorZoomOut" aria-label="Micșorează" title="Micșorează"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5M7 10h6"/></svg></button>
+    <output id="editorZoomLabel" aria-live="polite">100%</output>
+    <button type="button" id="editorZoomIn" aria-label="Mărește" title="Mărește"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5M7 10h6M10 7v6"/></svg></button>
+    <button type="button" id="editorFit" aria-label="Încadrează foaia" title="Încadrează foaia"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="6" width="14" height="12" rx="1"/><path d="M2 8V3h5M17 3h5v5M22 16v5h-5M7 21H2v-5"/></svg></button>
+    <div class="fullscreen-inline">
+          <button type="button" id="fullscreenBtn" disabled aria-label="Ecran complet" title="Ecran complet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M3 16v5h5"/></svg></button>
         </div>
-        <div class="toolbar" aria-label="Acțiune principală">
-          <button type="button" id="save" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg><span>Salvează</span></button>
-          <button type="button" id="exportProject" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V9"></path><path d="m7 14 5-5 5 5"></path><path d="M5 4h14"></path></svg><span>Exportă proiect</span></button>
-          <button type="button" id="saveImage" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10" r="1.4"></circle><path d="m21 16-5.3-5.3a1 1 0 0 0-1.4 0L8 17"></path></svg><span>Salvează imaginea</span></button>
+  </div>
+</div>
+<div class="image-gallery" aria-label="Miniaturi imagini">
+          <div class="thumbnail-strip" id="thumbnailStrip"></div>
+          <div class="gallery-add-actions">
+            <button type="button" id="thumbnailAddBlankSheet" class="thumbnail-add-btn thumbnail-add-note-btn">+ Adaugă foaie</button>
+            <button type="button" id="thumbnailAddImage" class="thumbnail-add-btn">+ Adaugă imagine</button>
+          </div>
         </div>
+        
+        <button type="button" class="fullscreen-close-btn" id="fullscreenCloseButton" aria-label="Închide ecran complet" title="Închide ecran complet" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6 6 18"></path></svg>
+        </button>
+      <button type="button" class="fullscreen-toolbar-toggle" id="fullscreenToolbarToggle" aria-label="Afișează instrumentele de desen" title="Instrumente desen" hidden>
+          <svg class="toolbar-toggle-preview" viewBox="0 0 24 24" aria-hidden="true">
+            <path class="toolbar-toggle-preview-pencil" d="m4 20 4.2-1 10-10a2.2 2.2 0 0 0 0-3.1l-.1-.1a2.2 2.2 0 0 0-3.1 0L5 15.7 4 20z"></path>
+            <path class="toolbar-toggle-preview-pencil" d="m13.4 7.4 3.2 3.2"></path>
+            <path class="toolbar-toggle-preview-line" d="M5 19 19 5"></path>
+            <path class="toolbar-toggle-preview-dashed" d="M5 19 7.5 16.5M9.5 14.5 12 12M14 10 16.5 7.5M18 6 19 5"></path>
+            <path class="toolbar-toggle-preview-eraser" d="m19.2 15.4-8.2-8.2a2.2 2.2 0 0 0-3.1 0l-4.1 4.1a2.2 2.2 0 0 0 0 3.1l3.3 3.3a2.2 2.2 0 0 0 1.5.6H17M13 20h8"></path>
+          </svg>
+        </button>
+        
+        
         <p class="help">Selectează modul Desen pentru a utiliza Apple Pencil sau degetul pe imagine. În modul Note poți muta marcatorii și edita textul.</p>
       </section>
 
@@ -2934,7 +3077,7 @@ body:not(.fullscreen-mode) #editorView #saveImage:hover:not(:disabled) { backgro
         <label class="section-label notes-title" id="notesLabel">📝 Notițe interactive</label>
         <div class="notes-toolbar">
           <button type="button" id="addNote"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg><span>Adaugă notă</span></button>
-          <button type="button" id="deleteSelectedNote" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg><span>Șterge nota</span></button>
+          <button type="button" id="deleteSelectedNote" aria-label="Șterge nota" title="Șterge nota" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg><span>Șterge nota</span></button>
         </div>
         <div class="note-list" id="noteList" aria-live="polite"></div>
         <div class="note-form">
@@ -3185,6 +3328,9 @@ body:not(.fullscreen-mode) #editorView #saveImage:hover:not(:disabled) { backgro
       let isErasing = false;
       let redoStack = [];
       let zoomLevel = 1;
+      let editorViewZoom = 1;
+      let editorViewImage = null;
+      let editorViewFrame = null;
       let panOffset = { x: 0, y: 0 };
       let panning = false;
       let panStart = null;
@@ -3255,7 +3401,7 @@ body:not(.fullscreen-mode) #editorView #saveImage:hover:not(:disabled) { backgro
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.22';
+      const APP_VERSION = '1.15.23';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -5851,8 +5997,9 @@ body:not(.fullscreen-mode) #editorView #saveImage:hover:not(:disabled) { backgro
         pendingTransformFrame = window.requestAnimationFrame(() => {
           pendingTransformFrame = null;
           if (!sourceImage || !fullscreenMode) {
-            stage.style.transform = '';
-            stage.style.transformOrigin = '0 0';
+            stage.style.transform = fullscreenMode ? '' : `scale(${editorViewZoom})`;
+            stage.style.transformOrigin = fullscreenMode ? '0 0' : 'center center';
+            if (!fullscreenMode) queueEditorView();
           } else {
             stage.style.transform = `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`;
             stage.style.transformOrigin = '0 0';
@@ -5928,6 +6075,55 @@ body:not(.fullscreen-mode) #editorView #saveImage:hover:not(:disabled) { backgro
         notesPanel.hidden = activeTool !== 'notes' && interactiveNotes.length === 0;
       }
 
+      // Editor-only view state: no changes to stored image data or fullscreen gestures.
+      function queueEditorView() {
+        if (editorViewFrame !== null) return;
+        editorViewFrame = requestAnimationFrame(() => {
+          editorViewFrame = null;
+          if (fullscreenMode || editorView.hidden || !sourceImage || !photo.naturalWidth) return;
+          const shell = document.getElementById('canvasShell');
+          const space = document.getElementById('editorSheetSpace');
+          if (editorViewImage !== sourceImage) { editorViewImage = sourceImage; editorViewZoom = 1; }
+          const roomW = Math.max(120, shell.clientWidth - 48);
+          const roomH = Math.max(120, shell.clientHeight - 64);
+          const fit = Math.min(roomW / photo.naturalWidth, roomH / photo.naturalHeight);
+          const w = Math.round(photo.naturalWidth * fit);
+          const h = Math.round(photo.naturalHeight * fit);
+          const changed = stage.style.width !== `${w}px`;
+          stage.style.width = `${w}px`;
+          stage.style.transformOrigin = 'center center';
+          stage.style.transform = `scale(${editorViewZoom})`;
+          space.style.width = `${Math.max(shell.clientWidth, w * editorViewZoom + 48)}px`;
+          space.style.height = `${Math.max(shell.clientHeight, h * editorViewZoom + 64)}px`;
+          document.getElementById('editorZoomLabel').textContent = `${Math.round(editorViewZoom * 100)}%`;
+          document.getElementById('editorZoomOut').disabled = editorViewZoom <= 1;
+          document.getElementById('editorZoomIn').disabled = editorViewZoom >= 3;
+          if (changed) { configureCanvas(); renderNotes(); }
+        });
+      }
+
+      function changeEditorZoom(step) {
+        if (!sourceImage || fullscreenMode) return;
+        editorViewZoom = clamp(editorViewZoom + step, 1, 3);
+        queueEditorView();
+      }
+
+      function syncEditorWorkspace() {
+        const ready = Boolean(sourceImage);
+        drawModeButton.setAttribute('aria-pressed', String(activeTool === 'draw'));
+        notesModeButton.setAttribute('aria-pressed', String(activeTool === 'notes'));
+        if (!fullscreenMode) {
+          const dock = document.getElementById('editorToolsDock');
+          if (fullscreenDrawingToolbar.parentElement !== dock) dock.appendChild(fullscreenDrawingToolbar);
+          fullscreenDrawingToolbar.hidden = activeTool !== 'draw';
+          fullscreenDrawingToolbar.classList.remove('is-open');
+        }
+        for (const id of ['editorZoomIn', 'editorZoomOut', 'editorFit']) document.getElementById(id).disabled = !ready;
+        for (const el of [fullscreenColorPicker, fullscreenBrushSize, fullscreenPencilBtn, fullscreenLineBtn, fullscreenDashedLineBtn, fullscreenEraserBtn, fullscreenClearBtn]) el.disabled = !ready;
+        document.querySelectorAll('.quick-color-button').forEach(el => { el.disabled = !ready; });
+        queueEditorView();
+      }
+
       function setControls() {
         const ready = Boolean(sourceImage);
         if (undo) {
@@ -5943,6 +6139,7 @@ body:not(.fullscreen-mode) #editorView #saveImage:hover:not(:disabled) { backgro
         removeActiveImageButton.disabled = !ready;
         addNoteButton.disabled = !ready || activeTool !== 'notes';
         deleteSelectedNoteButton.disabled = !ready || !selectedNoteId || activeTool !== 'notes';
+        syncEditorWorkspace();
       }
 
       function getImageDisplayTitle(image, index) {
@@ -6625,10 +6822,10 @@ body:not(.fullscreen-mode) #editorView #saveImage:hover:not(:disabled) { backgro
           fullscreenColorPickerControl.classList.toggle('is-preset-color', matchesPresetColor);
         }
         if (fullscreenUndoBtn) {
-          fullscreenUndoBtn.disabled = strokes.length === 0;
+          fullscreenUndoBtn.disabled = !sourceImage || strokes.length === 0;
         }
         if (fullscreenRedoBtn) {
-          fullscreenRedoBtn.disabled = redoStack.length === 0;
+          fullscreenRedoBtn.disabled = !sourceImage || redoStack.length === 0;
         }
       }
 
@@ -7987,6 +8184,7 @@ body:not(.fullscreen-mode) #editorView #saveImage:hover:not(:disabled) { backgro
 
       function setFullscreenMode(enabled) {
         fullscreenMode = enabled;
+        if (enabled) imagePanel.appendChild(fullscreenDrawingToolbar);
         document.body.classList.toggle('fullscreen-mode', enabled);
         setFullscreenImageInteractionLock(enabled);
         fullscreenButton.hidden = enabled;
@@ -8842,6 +9040,11 @@ body:not(.fullscreen-mode) #editorView #saveImage:hover:not(:disabled) { backgro
         event.preventDefault();
         imageInput.click();
       });
+      document.getElementById('editorZoomIn').addEventListener('click', () => changeEditorZoom(0.25));
+      document.getElementById('editorZoomOut').addEventListener('click', () => changeEditorZoom(-0.25));
+      document.getElementById('editorFit').addEventListener('click', () => { editorViewZoom = 1; queueEditorView(); });
+      photo.addEventListener('load', queueEditorView);
+      if ('ResizeObserver' in window) new ResizeObserver(queueEditorView).observe(document.getElementById('canvasShell'));
       fullscreenButton.addEventListener('click', () => setFullscreenMode(true));
       fullscreenCloseButton.addEventListener('click', () => setFullscreenMode(false));
       fullscreenPrevImageBtn?.addEventListener('click', () => switchFullscreenImage(-1));
@@ -9542,3 +9745,4 @@ body:not(.fullscreen-mode) #editorView #saveImage:hover:not(:disabled) { backgro
 </script>
 </body>
 </html>
+
