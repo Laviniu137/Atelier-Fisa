@@ -2809,6 +2809,14 @@ body:not(.fullscreen-mode) #editorView .editor-canvas-delete #removeActiveImage:
   border-color: #bd666b;
   color: #8f202c;
 }
+body:not(.fullscreen-mode) #editorView #deleteSelectedNote {
+  width: auto;
+  min-width: 132px;
+  height: 44px;
+  padding: 10px 14px;
+  gap: 8px;
+}
+body:not(.fullscreen-mode) #editorView #deleteSelectedNote span { display: inline; }
 </style>
 </head>
 <body>
@@ -3498,7 +3506,7 @@ body:not(.fullscreen-mode) #editorView .editor-canvas-delete #removeActiveImage:
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.27';
+      const APP_VERSION = '1.15.28';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
