@@ -2345,6 +2345,156 @@
     }
     @media (prefers-reduced-motion: reduce) { #projectManagerView .project-status-filter { transition: none; } }
   </style>
+<style id="atelier-role-palette">
+/* Color roles only. Geometry, typography, canvas ink and application behavior are unchanged. */
+:root {
+  --ui-blue: #315f91;
+  --ui-blue-dark: #254b74;
+  --ui-navy: #1f2b3a;
+  --ui-ink: #28333e;
+  --ui-muted: #687078;
+  --ui-line: #ded8cf;
+  --ui-bg: #eef1f4;
+  --ui-surface: #fffdf9;
+  --ui-soft: #f3f0eb;
+  --ui-taupe: #716557;
+  --ui-taupe-line: #c5b9a9;
+  --ui-success: #42634e;
+  --ui-success-bg: #edf3ee;
+  --ui-success-line: #bccfbe;
+  --ui-progress: #96533a;
+  --ui-progress-bg: #f8eee8;
+  --ui-progress-line: #dec2b3;
+  accent-color: var(--ui-blue);
+}
+body, body:has(#projectManagerView:not([hidden])) { background: var(--ui-bg); }
+button { background: var(--ui-surface); color: var(--ui-ink); border-color: var(--ui-line); }
+button:hover:not(:disabled) { border-color: var(--ui-taupe-line); }
+button:disabled { color: #858b90; background: #ebecea; border-color: #d9dcd9; }
+
+/* Projects and general notes: ivory surfaces against the cool workspace. */
+#projectManagerView { --studio-ink: var(--ui-ink); --studio-muted: var(--ui-muted); --studio-line: var(--ui-line); color: var(--ui-ink); }
+#projectManagerView .workspace-sidebar { background: var(--ui-navy); border-color: #334050; }
+#projectManagerView .workspace-logo strong { color: #fff9ef; }
+#projectManagerView .workspace-logo small, #projectManagerView .workspace-nav button { color: #c7cdd3; }
+#projectManagerView .workspace-nav button:hover { background: #2c3949; }
+#projectManagerView .workspace-nav button[aria-current="page"] { background: #eee7dc; border-color: #eee7dc; color: var(--ui-navy); }
+#projectManagerView .workspace-sidebar-footer { background: #263343; border-color: #48515b; color: #e2d9cb; }
+#projectManagerView .workspace-sidebar-footer::before { color: #c5baa9; }
+.studio-header-label, #projectManagerView .project-manager-subtitle, #projectManagerView .project-card-date,
+#projectManagerView .project-stat, #projectManagerView .project-manager-version,
+#projectManagerView .workspace-note-card label, #projectManagerView #workspaceNotesStatus { color: var(--ui-muted); }
+#projectManagerView .project-manager-page-title, #projectManagerView .project-card-open { color: var(--ui-ink); }
+#projectManagerView .project-card, #projectManagerView .workspace-note-card { background: var(--ui-surface); border-color: var(--ui-line); }
+#projectManagerView .project-card:hover { border-color: var(--ui-taupe-line); }
+#projectManagerView .project-card-thumb-wrap { background: #e8e6e1; border-color: var(--ui-line); }
+#projectManagerView .project-card-stats, #projectManagerView .project-stat + .project-stat { border-color: var(--ui-line); }
+#projectManagerView .project-card-menu summary { background: var(--ui-soft); color: var(--ui-taupe); border-color: var(--ui-line); }
+.project-card-menu-items { background: var(--ui-surface); border-color: var(--ui-line); }
+.project-card-menu-items button:not(.is-danger) { background: transparent; color: var(--ui-ink); }
+.project-card-menu-items button:not(.is-danger):hover:not(:disabled) { background: var(--ui-soft); border-color: var(--ui-line); }
+.project-card-menu-separator { background: var(--ui-line); }
+.project-empty { background: var(--ui-surface); color: var(--ui-taupe); border-color: var(--ui-taupe-line); }
+#projectManagerView .workspace-note-card input, #projectManagerView .workspace-note-card textarea { background: #ffffff; color: var(--ui-ink); border-color: var(--ui-line); }
+#projectManagerView #pmImportProject { background: var(--ui-surface); border-color: var(--ui-taupe-line); color: var(--ui-taupe); }
+#projectManagerView #pmImportProject:hover:not(:disabled) { background: var(--ui-soft); border-color: #a99c8b; }
+#projectManagerView #pmCloudAccount, .cloud-account-status { background: var(--ui-soft); color: #58616a; border-color: var(--ui-line); }
+#projectManagerView #pmCloudAccount:hover:not(:disabled) { background: #ebe6de; border-color: var(--ui-taupe-line); }
+
+/* State colors repeat consistently in filters and project badges. */
+#projectManagerView .project-status-filters { background: #e7e7e3; border-color: #d6d5ce; }
+#projectManagerView .project-status-filter { background: transparent; border-color: transparent; color: #5d6267; }
+#projectManagerView .project-status-filter:hover:not([aria-pressed="true"]) { background: var(--ui-surface); border-color: var(--ui-line); color: var(--ui-ink); }
+#projectManagerView .project-status-filter[aria-pressed="true"],
+#projectManagerView .project-status-filter[aria-pressed="true"]:hover { background: var(--ui-blue); border-color: var(--ui-blue); color: #ffffff; }
+.project-status.is-to-measure, #projectManagerView .project-status.is-to-measure,
+#projectManagerView .project-status-filter[data-project-status-filter="to-measure"][aria-pressed="true"] { background: #f1ebe2; color: var(--ui-taupe); border-color: var(--ui-taupe-line); }
+.project-status.is-in-progress, #projectManagerView .project-status.is-in-progress,
+#projectManagerView .project-status-filter[data-project-status-filter="in-progress"][aria-pressed="true"] { background: var(--ui-progress-bg); color: var(--ui-progress); border-color: var(--ui-progress-line); }
+.project-status.is-finalized, #projectManagerView .project-status.is-finalized,
+#projectManagerView .project-status-filter[data-project-status-filter="finalized"][aria-pressed="true"] { background: var(--ui-success-bg); color: var(--ui-success); border-color: var(--ui-success-line); }
+#projectManagerView .project-status-filter[data-project-status-filter="to-measure"]::before { background: var(--ui-taupe); }
+#projectManagerView .project-status-filter[data-project-status-filter="in-progress"]::before { background: var(--ui-progress); }
+#projectManagerView .project-status-filter[data-project-status-filter="finalized"]::before { background: var(--ui-success); }
+
+/* Blue is reserved for primary actions, focus and important selections. */
+#projectManagerView #pmNewProject, #projectManagerView #workspaceAddNote,
+#addImage, #save, #saveImage, #addNote, .pencil-editor-save,
+#confirmProjectSave, #confirmExportImage, #confirmExportProject, #cloudLogin, #cloudSyncNow,
+#cloudLogin[hidden] + #cloudSyncNow, .fullscreen-inline #fullscreenBtn {
+  background: var(--ui-blue); border-color: var(--ui-blue); color: #ffffff;
+}
+#projectManagerView #pmNewProject:hover:not(:disabled), #projectManagerView #workspaceAddNote:hover:not(:disabled),
+#addImage:hover:not(:disabled), #save:hover:not(:disabled), #saveImage:hover:not(:disabled), #addNote:hover:not(:disabled),
+.pencil-editor-save:hover:not(:disabled), #confirmProjectSave:hover:not(:disabled), #confirmExportImage:hover:not(:disabled),
+#confirmExportProject:hover:not(:disabled), #cloudLogin:hover:not(:disabled), #cloudSyncNow:hover:not(:disabled),
+#cloudLogin[hidden] + #cloudSyncNow:hover:not(:disabled), .fullscreen-inline #fullscreenBtn:hover:not(:disabled) {
+  background: var(--ui-blue-dark); border-color: var(--ui-blue-dark); color: #ffffff;
+}
+
+/* Editor, inputs and tabs share the same neutral surface hierarchy. */
+.app > header { background: var(--ui-surface); }
+.brand-block::before { background: var(--ui-taupe-line); }
+.canvas-shell { background: #e6e7e5; border-color: #d4d4cd; }
+.empty, .help, .image-thumb-title, .note-list-empty-subtitle,
+.handwriting-preview-header, .handwriting-preview-empty { color: var(--ui-muted); }
+.help::before { background: var(--ui-taupe); color: var(--ui-taupe); }
+.thumbnail-add-btn, .thumbnail-add-note-btn { background: var(--ui-soft); border-color: var(--ui-taupe-line); color: var(--ui-taupe); }
+.thumbnail-add-btn:hover:not(:disabled), .thumbnail-add-note-btn:hover:not(:disabled) { background: #ebe5dc; border-color: #ac9c88; }
+.image-thumb { background: var(--ui-soft); border-color: var(--ui-line); }
+.image-thumb.is-active { background: var(--ui-surface); border-color: var(--ui-blue); }
+.image-thumb:hover:not(.is-active) { border-color: var(--ui-taupe-line); }
+.thumbnail-strip::-webkit-scrollbar-thumb { background: var(--ui-taupe-line); }
+.mode-switcher { background: #e7e7e3; border-color: #d6d5ce; }
+.mode-switcher button { background: transparent; border-color: transparent; color: var(--ui-muted); }
+.mode-switcher button.active, .note-input-toolbar button.active { background: var(--ui-surface); color: var(--ui-ink); border-color: var(--ui-taupe-line); }
+.mode-switcher button:hover:not(.active) { background: var(--ui-soft); color: var(--ui-ink); }
+.note-list-item, .note-list-item.note-list-empty { background: var(--ui-soft); border-color: var(--ui-line); }
+.note-list-item.selected { background: #f1ebe2; border-color: var(--ui-taupe-line); }
+.note-list-index { background: #e8e0d4; color: #655848; border-color: var(--ui-taupe-line); }
+.note-list-name, .note-list-item.selected .note-list-name, .note-list-empty-title, .note-editor-empty { color: var(--ui-ink); }
+.note-list-empty-icon { background: #e9e3d9; border-color: var(--ui-line); color: var(--ui-taupe); }
+.note-form input, .note-form textarea, #noteContent, .image-title-input, .save-dialog input { background: #ffffff; border-color: var(--ui-line); color: var(--ui-ink); }
+#noteContent::placeholder { color: #777d82; }
+.handwriting-panel, .handwriting-preview { background: var(--ui-soft); border-color: var(--ui-line); }
+.note-marker { background: var(--ui-blue); }
+.note-marker.selected { background: var(--ui-blue-dark); }
+
+/* Dialogs stay ivory; option surfaces and secondary controls stay warm neutral. */
+.save-dialog, .danger-dialog, .autosave-recovery-dialog, .unsaved-dialog, .export-dialog, .sheet-type-dialog, .pencil-editor-dialog {
+  background: var(--ui-surface); color: var(--ui-ink); border-color: var(--ui-line);
+}
+.save-dialog label, .save-dialog p, .danger-dialog p, .danger-dialog li,
+.autosave-recovery-dialog p, .unsaved-dialog p, .export-section legend, .sheet-type-dialog > p,
+.sheet-type-choice span, .pencil-editor-size-value { color: var(--ui-muted); }
+.export-section, .export-option, .sheet-type-choice { background: var(--ui-soft); border-color: var(--ui-line); color: var(--ui-ink); }
+.export-option:has(input:checked), .sheet-type-choice:hover { background: #edf2f7; border-color: #91aac3; }
+.sheet-type-choice strong { color: var(--ui-ink); }
+.pencil-editor-toolbar { background: #ede8e0; border-color: var(--ui-line); color: var(--ui-ink); }
+.pencil-editor-tool, .pencil-editor-cancel { background: var(--ui-surface); border-color: var(--ui-taupe-line); color: var(--ui-taupe); }
+.pencil-editor-tool.active { background: var(--ui-blue); border-color: var(--ui-blue); color: #ffffff; }
+.pencil-editor-divider { background: var(--ui-taupe-line); }
+.pencil-editor-canvas-wrap { background: #e6e7e5; }
+.save-toast { background: var(--ui-navy); border-color: #56616f; color: #fffdf9; }
+
+/* Fullscreen uses calm navy surfaces; drawing swatches retain their actual colors. */
+body.fullscreen-mode, body.fullscreen-mode .fullscreen-overlay,
+body.fullscreen-mode .image-panel.fullscreen-panel,
+body.fullscreen-mode .image-panel.fullscreen-panel .canvas-shell { background: #141e2b; }
+body.fullscreen-mode .fullscreen-close-btn, body.fullscreen-mode .fullscreen-image-nav,
+body.fullscreen-mode .fullscreen-toolbar-toggle { background: #2b3746; border-color: #5c6571; color: #fffaf1; }
+body.fullscreen-mode .fullscreen-close-btn:hover, body.fullscreen-mode .fullscreen-image-nav:hover:not(:disabled) { background: #3a4859; border-color: #a1a7ae; }
+body.fullscreen-mode .image-panel.fullscreen-panel .fullscreen-image-title { background: #253140; border-color: #535d69; color: #eee8df; }
+body.fullscreen-mode .fullscreen-drawing-toolbar-shell { background: #253140; border-color: #535d69; }
+body.fullscreen-mode .drawing-tool-group { background: #2d3948; border-color: #4c5764; }
+body.fullscreen-mode .drawing-tool-button { background: #384555; border-color: #626b77; color: #fffaf1; }
+body.fullscreen-mode .drawing-tool-button:hover:not(:disabled), body.fullscreen-mode .edit-group .drawing-tool-button:hover:not(:disabled) { background: #435366; border-color: #a2acb8; }
+body.fullscreen-mode .drawing-tool-button.active, body.fullscreen-mode .edit-group .drawing-tool-button.active { background: var(--ui-blue); border-color: #a7bfd8; }
+body.fullscreen-mode .drawing-tool-button.danger { background: #51373e; border-color: #b57c84; color: #ffe7ea; }
+body.fullscreen-mode .drawing-tool-button.danger:hover:not(:disabled) { background: #654149; border-color: #d9a4ac; }
+.tool-label { color: #c8cdd3; }
+.tool-label-active { color: #f1e8da; }
+</style>
 </head>
 <body>
   <div id="saveToast" class="save-toast" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -3015,7 +3165,7 @@
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.19';
+      const APP_VERSION = '1.15.20';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
