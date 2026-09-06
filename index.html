@@ -2776,6 +2776,15 @@ body:not(.fullscreen-mode) #editorView .help::before { display: none; }
  body:not(.fullscreen-mode) #editorView .gallery-add-actions button { flex: 1; }
 }
 </style>
+<style id="atelier-canvas-actions">
+body:not(.fullscreen-mode) #editorView .editor-view-controls { padding: 0; background: transparent; border: 0; box-shadow: 0 3px 8px #24374e12; border-radius: 10px; }
+body:not(.fullscreen-mode) #editorView .editor-view-controls #fullscreenBtn { width: 46px; height: 46px; min-height: 46px; border-radius: 10px; }
+body:not(.fullscreen-mode) #editorView .editor-canvas-delete { position: absolute; right: 12px; bottom: 12px; z-index: 10; }
+body:not(.fullscreen-mode) #editorView .editor-canvas-delete #removeActiveImage { display: grid; place-items: center; width: 44px; height: 44px; min-height: 44px; padding: 12px; border: 1px solid #dcd7ce; border-radius: 10px; background: #fffdf9f5; color: #8c6260; box-shadow: 0 2px 6px #2937470a; }
+body:not(.fullscreen-mode) #editorView .editor-canvas-delete #removeActiveImage:hover:not(:disabled) { color: #9b3540; border-color: #d8b1ae; background: #fff3f1; transform: none; }
+body:not(.fullscreen-mode) #editorView .editor-canvas-delete svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+body.fullscreen-mode .editor-canvas-delete { display: none; }
+</style>
 </head>
 <body>
   <div id="saveToast" class="save-toast" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -3088,7 +3097,7 @@ body:not(.fullscreen-mode) #editorView .help::before { display: none; }
         
         <div class="image-panel-heading">
           <span class="sheet-title-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg></span><span class="section-label" id="imageLabel">Imagine</span>
-          <button type="button" id="removeActiveImage" aria-label="Șterge imaginea" title="Șterge imaginea" class="image-header-delete" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg><span>Șterge</span></button>
+          
         </div>
 <div class="mode-switcher" role="toolbar" aria-label="Mod de lucru">
           <button type="button" id="drawModeBtn" class="active"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-1 10-10a2.2 2.2 0 0 0 0-3.1l-.1-.1a2.2 2.2 0 0 0-3.1 0L5 15.7 4 20z"></path><path d="m13.4 7.4 3.2 3.2"></path></svg><span>Desen</span></button>
@@ -3102,11 +3111,12 @@ body:not(.fullscreen-mode) #editorView .help::before { display: none; }
             <div class="note-layer" id="noteLayer" hidden></div>
           </div>
         </div></div>
-  <div class="editor-view-controls" role="toolbar" aria-label="Vizualizare canvas">
-    <button type="button" id="editorZoomOut" aria-label="Micșorează" title="Micșorează"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5M7 10h6"/></svg></button>
-    <output id="editorZoomLabel" aria-live="polite">100%</output>
-    <button type="button" id="editorZoomIn" aria-label="Mărește" title="Mărește"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5M7 10h6M10 7v6"/></svg></button>
-    <button type="button" id="editorFit" aria-label="Încadrează foaia" title="Încadrează foaia"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="6" width="14" height="12" rx="1"/><path d="M2 8V3h5M17 3h5v5M22 16v5h-5M7 21H2v-5"/></svg></button>
+  <div class="editor-canvas-delete"><button type="button" id="removeActiveImage" aria-label="Șterge imaginea" title="Șterge imaginea" class="image-header-delete" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg><span>Șterge</span></button></div>
+<div class="editor-view-controls" role="toolbar" aria-label="Vizualizare canvas">
+    
+    
+    
+    
     <div class="fullscreen-inline">
           <button type="button" id="fullscreenBtn" disabled aria-label="Ecran complet" title="Ecran complet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M3 16v5h5"/></svg></button>
         </div>
@@ -3392,8 +3402,6 @@ body:not(.fullscreen-mode) #editorView .help::before { display: none; }
       let isErasing = false;
       let redoStack = [];
       let zoomLevel = 1;
-      let editorViewZoom = 1;
-      let editorViewImage = null;
       let editorViewFrame = null;
       let panOffset = { x: 0, y: 0 };
       let panning = false;
@@ -3465,7 +3473,7 @@ body:not(.fullscreen-mode) #editorView .help::before { display: none; }
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.26';
+      const APP_VERSION = '1.15.27';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -6061,7 +6069,7 @@ body:not(.fullscreen-mode) #editorView .help::before { display: none; }
         pendingTransformFrame = window.requestAnimationFrame(() => {
           pendingTransformFrame = null;
           if (!sourceImage || !fullscreenMode) {
-            stage.style.transform = fullscreenMode ? '' : `scale(${editorViewZoom})`;
+            stage.style.transform = '';
             stage.style.transformOrigin = fullscreenMode ? '0 0' : 'center center';
             if (!fullscreenMode) queueEditorView();
           } else {
@@ -6147,7 +6155,6 @@ body:not(.fullscreen-mode) #editorView .help::before { display: none; }
           if (fullscreenMode || editorView.hidden || !sourceImage || !photo.naturalWidth) return;
           const shell = document.getElementById('canvasShell');
           const space = document.getElementById('editorSheetSpace');
-          if (editorViewImage !== sourceImage) { editorViewImage = sourceImage; editorViewZoom = 1; }
           const roomW = Math.max(120, shell.clientWidth - 48);
           const roomH = Math.max(120, shell.clientHeight - 64);
           const fit = Math.min(roomW / photo.naturalWidth, roomH / photo.naturalHeight);
@@ -6156,21 +6163,13 @@ body:not(.fullscreen-mode) #editorView .help::before { display: none; }
           const changed = stage.style.width !== `${w}px`;
           stage.style.width = `${w}px`;
           stage.style.transformOrigin = 'center center';
-          stage.style.transform = `scale(${editorViewZoom})`;
-          space.style.width = `${Math.max(shell.clientWidth, w * editorViewZoom + 48)}px`;
-          space.style.height = `${Math.max(shell.clientHeight, h * editorViewZoom + 64)}px`;
-          document.getElementById('editorZoomLabel').textContent = `${Math.round(editorViewZoom * 100)}%`;
-          document.getElementById('editorZoomOut').disabled = editorViewZoom <= 1;
-          document.getElementById('editorZoomIn').disabled = editorViewZoom >= 3;
+          stage.style.transform = '';
+          space.style.width = `${Math.max(shell.clientWidth, w + 48)}px`;
+          space.style.height = `${Math.max(shell.clientHeight, h + 64)}px`;
           if (changed) { configureCanvas(); renderNotes(); }
         });
       }
 
-      function changeEditorZoom(step) {
-        if (!sourceImage || fullscreenMode) return;
-        editorViewZoom = clamp(editorViewZoom + step, 1, 3);
-        queueEditorView();
-      }
 
       function syncEditorWorkspace() {
         const ready = Boolean(sourceImage);
@@ -6182,7 +6181,6 @@ body:not(.fullscreen-mode) #editorView .help::before { display: none; }
           fullscreenDrawingToolbar.hidden = true;
           fullscreenDrawingToolbar.classList.remove('is-open');
         }
-        for (const id of ['editorZoomIn', 'editorZoomOut', 'editorFit']) document.getElementById(id).disabled = !ready;
         for (const el of [fullscreenColorPicker, fullscreenBrushSize, fullscreenPencilBtn, fullscreenLineBtn, fullscreenDashedLineBtn, fullscreenEraserBtn, fullscreenClearBtn]) el.disabled = !ready;
         document.querySelectorAll('.quick-color-button').forEach(el => { el.disabled = !ready; });
         queueEditorView();
@@ -9104,9 +9102,6 @@ body:not(.fullscreen-mode) #editorView .help::before { display: none; }
         event.preventDefault();
         imageInput.click();
       });
-      document.getElementById('editorZoomIn').addEventListener('click', () => changeEditorZoom(0.25));
-      document.getElementById('editorZoomOut').addEventListener('click', () => changeEditorZoom(-0.25));
-      document.getElementById('editorFit').addEventListener('click', () => { editorViewZoom = 1; queueEditorView(); });
       photo.addEventListener('load', queueEditorView);
       if ('ResizeObserver' in window) new ResizeObserver(queueEditorView).observe(document.getElementById('canvasShell'));
       fullscreenButton.addEventListener('click', () => setFullscreenMode(true));
