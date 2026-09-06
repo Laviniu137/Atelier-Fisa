@@ -2845,6 +2845,16 @@ body:not(.fullscreen-mode) #editorView #drawModeBtn.active {
   box-shadow: 0 2px 6px #315f9126, inset 0 1px 0 #ffffff;
 }
 body:not(.fullscreen-mode) #editorView #drawModeBtn.active:hover { background: #cfe2f7; border-color: #7199c3; }
+body:not(.fullscreen-mode) #editorView #drawModeBtn:not(.active) {
+  background: #eaf2fb;
+  border-color: #d2e0ef;
+  color: #46627e;
+}
+body:not(.fullscreen-mode) #editorView #drawModeBtn:not(.active):hover {
+  background: #dceaf8;
+  border-color: #b8cde2;
+  color: #315776;
+}
 </style>
 </head>
 <body>
@@ -3534,7 +3544,7 @@ body:not(.fullscreen-mode) #editorView #drawModeBtn.active:hover { background: #
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.30';
+      const APP_VERSION = '1.15.31';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
