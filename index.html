@@ -2859,6 +2859,14 @@ body:has(#editorView:not([hidden])) { background: #edf2f7; }
 body:not(.fullscreen-mode) #editorView .app { background: transparent; }
 body:not(.fullscreen-mode) #editorView .image-panel { background: transparent; }
 body:not(.fullscreen-mode) #editorView .notes { background: #f9fbfd; border-left-color: #d7e1eb; }
+body:not(.fullscreen-mode) #editorView .canvas-shell {
+  background: #dfe8f1;
+  box-shadow: inset 0 0 0 1px #c7d5e3, inset 0 1px 0 #f8fbff;
+}
+body:not(.fullscreen-mode) #editorView .image-stage {
+  border: 5px solid #f9fbfd;
+  box-shadow: 0 12px 28px #24374e2b, 0 2px 5px #24374e18;
+}
 body:not(.fullscreen-mode) #editorView .thumbnail-strip { gap: 14px; padding: 6px 4px; }
 body:not(.fullscreen-mode) #editorView .image-thumb-wrap { width: 88px; flex-basis: 88px; gap: 8px; }
 body:not(.fullscreen-mode) #editorView .image-thumb {
@@ -3599,7 +3607,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-wrap:has(.is-active) .image-
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.33';
+      const APP_VERSION = '1.15.34';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
