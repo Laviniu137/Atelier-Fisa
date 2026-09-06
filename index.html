@@ -3116,9 +3116,11 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   body:not(.fullscreen-mode) #editorView .layout { gap: 20px; }
   body:not(.fullscreen-mode) #editorView .image-panel,
   body:not(.fullscreen-mode) #editorView .notes { border-color: var(--ds-line); border-radius: var(--ds-radius-lg); background: var(--ds-surface); box-shadow: var(--ds-shadow-md); }
+  body:not(.fullscreen-mode) #editorView .image-panel { gap: 10px; padding: 12px 14px 10px; }
   body:not(.fullscreen-mode) #editorView .canvas-shell { border-color: var(--ds-line); border-radius: var(--ds-radius-lg); background: var(--ds-surface-soft); box-shadow: inset 0 1px 2px rgba(31,49,69,.08); }
+  body:not(.fullscreen-mode) #editorView .canvas-shell { height: clamp(480px, 62vh, 760px); min-height: 0; }
   body:not(.fullscreen-mode) #editorView .image-stage { border-color: var(--ds-line-strong); border-radius: var(--ds-radius-md); box-shadow: 0 12px 24px rgba(31,49,69,.16); }
-  body:not(.fullscreen-mode) #editorView .image-panel > .mode-switcher { margin: 8px 0 12px; gap: 4px; padding: 5px; border-color: var(--ds-line); border-radius: var(--ds-radius-md); background: var(--ds-surface-soft); box-shadow: inset 0 1px 2px rgba(31,49,69,.06); }
+  body:not(.fullscreen-mode) #editorView .image-panel > .mode-switcher { margin: 0; gap: 4px; padding: 5px; border-color: var(--ds-line); border-radius: var(--ds-radius-md); background: var(--ds-surface-soft); box-shadow: inset 0 1px 2px rgba(31,49,69,.06); }
   body:not(.fullscreen-mode) #editorView .image-panel > .mode-switcher button { min-height: 42px; border-radius: 10px; }
   body:not(.fullscreen-mode) #editorView .image-panel > .mode-switcher button:not(.active) { background: transparent; border-color: transparent; color: var(--ds-muted); }
   body:not(.fullscreen-mode) #editorView .image-panel > .mode-switcher button.active { background: var(--ds-blue); border-color: var(--ds-blue); color: #fff; box-shadow: 0 4px 10px rgba(49,95,145,.20); }
@@ -3133,7 +3135,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   body:not(.fullscreen-mode) #editorView .image-title-text { color: var(--ds-navy); font-size: 1.02rem; font-weight: 750; }
   body:not(.fullscreen-mode) #editorView .image-title-edit-btn { width: 38px; height: 38px; padding: 0; border: 1px solid var(--ds-line); border-radius: 12px; background: var(--ds-surface); color: var(--ds-muted); opacity: 1; box-shadow: none; }
   body:not(.fullscreen-mode) #editorView .image-title-edit-btn:hover { border-color: var(--ds-blue-line); background: var(--ds-surface-blue); color: var(--ds-blue-dark); }
-  body:not(.fullscreen-mode) #editorView .image-panel-heading { min-height: 42px; margin: 0 0 10px; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+  body:not(.fullscreen-mode) #editorView .image-panel-heading { min-height: 42px; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
   body:not(.fullscreen-mode) #editorView .image-panel-heading #imageLabel { width: fit-content; max-width: 100%; padding: 4px 6px 4px 10px; border: 1px solid var(--ds-line); border-radius: 13px; background: #f6f8fa; box-shadow: var(--ds-shadow-sm); }
   body:not(.fullscreen-mode) #editorView .image-panel-heading #imageLabel::after { display: none; }
   body:not(.fullscreen-mode) #editorView .image-panel-heading #imageLabel { flex: 0 1 auto; width: fit-content; }
@@ -3235,6 +3237,8 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
     body:not(.fullscreen-mode) #editorView .app { padding: 12px; }
     body:not(.fullscreen-mode) #editorView .image-panel,
     body:not(.fullscreen-mode) #editorView .notes { border-radius: var(--ds-radius-md); }
+    body:not(.fullscreen-mode) #editorView .image-panel { gap: 8px; padding: 10px; }
+    body:not(.fullscreen-mode) #editorView .canvas-shell { height: 58dvh; min-height: 320px; }
     body:not(.fullscreen-mode) #editorView .header-actions { gap: 6px; }
     body:not(.fullscreen-mode) #editorView .header-actions button { min-height: 42px; padding-inline: 10px; }
     body:not(.fullscreen-mode) #editorView .image-gallery { padding: 10px; border-radius: var(--ds-radius-md); }
@@ -3929,7 +3933,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.46';
+      const APP_VERSION = '1.15.47';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
