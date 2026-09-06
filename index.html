@@ -2714,6 +2714,16 @@ body:not(.fullscreen-mode) #editorView #fullscreenBrushSize::-moz-range-thumb { 
 }
 
 </style>
+<style id="atelier-simple-modes">
+body:not(.fullscreen-mode) #editorView .editor-tools-dock { display: none; }
+body:not(.fullscreen-mode) #editorView .editor-context-bar { padding: 5px 0; border-bottom: 0; }
+body:not(.fullscreen-mode) #editorView .editor-context-top { flex: 1 1 100%; }
+body:not(.fullscreen-mode) #editorView .layout { margin-top: 4px; }
+body:not(.fullscreen-mode) #editorView .image-panel > .mode-switcher { width: 100%; flex: 0 0 auto; margin: 0 0 12px; padding: 4px; gap: 4px; background: #ece9e3; border: 1px solid #dfdad1; border-radius: 12px; box-sizing: border-box; }
+body:not(.fullscreen-mode) #editorView .image-panel > .mode-switcher button { flex: 1 1 0; min-width: 0; min-height: 44px; border-radius: 9px; color: #716b61; background: transparent; border-color: transparent; box-shadow: none; }
+body:not(.fullscreen-mode) #editorView .image-panel > .mode-switcher button.active { background: #fffdf9; color: #294d73; border-color: #e2ded6; box-shadow: 0 2px 5px #25374b0a; }
+body:not(.fullscreen-mode) #editorView .image-panel > .mode-switcher button:hover:not(.active) { background: #e3dfd6; color: #3f5269; }
+</style>
 </head>
 <body>
   <div id="saveToast" class="save-toast" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -2949,10 +2959,7 @@ body:not(.fullscreen-mode) #editorView #fullscreenBrushSize::-moz-range-thumb { 
     </header>
 
 <div class="editor-context-bar" aria-label="Mod de lucru și instrumente">
-  <div class="editor-context-top"><div class="mode-switcher" role="toolbar" aria-label="Mod de lucru">
-          <button type="button" id="drawModeBtn" class="active"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-1 10-10a2.2 2.2 0 0 0 0-3.1l-.1-.1a2.2 2.2 0 0 0-3.1 0L5 15.7 4 20z"></path><path d="m13.4 7.4 3.2 3.2"></path></svg><span>Desen</span></button>
-          <button type="button" id="notesModeBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V10z"></path><path d="M14 3v7h7"></path><path d="M7 14h10M7 17h7"></path></svg><span>Note</span></button>
-        </div><div class="image-panel-heading">
+  <div class="editor-context-top"><div class="image-panel-heading">
           <span class="section-label" id="imageLabel">Imagine</span>
           <button type="button" id="removeActiveImage" aria-label="Șterge imaginea" title="Șterge imaginea" class="image-header-delete" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg><span>Șterge</span></button>
         </div></div>
@@ -3030,7 +3037,11 @@ body:not(.fullscreen-mode) #editorView #fullscreenBrushSize::-moz-range-thumb { 
         <div class="fullscreen-image-title" id="fullscreenImageTitle" aria-hidden="true"></div>
         
         
-        <div class="editor-canvas-viewport"><div class="canvas-shell" id="canvasShell">
+        <div class="mode-switcher" role="toolbar" aria-label="Mod de lucru">
+          <button type="button" id="drawModeBtn" class="active"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-1 10-10a2.2 2.2 0 0 0 0-3.1l-.1-.1a2.2 2.2 0 0 0-3.1 0L5 15.7 4 20z"></path><path d="m13.4 7.4 3.2 3.2"></path></svg><span>Desen</span></button>
+          <button type="button" id="notesModeBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V10z"></path><path d="M14 3v7h7"></path><path d="M7 14h10M7 17h7"></path></svg><span>Note</span></button>
+        </div>
+<div class="editor-canvas-viewport"><div class="canvas-shell" id="canvasShell">
           <div class="empty" id="emptyState">Adaugă o fotografie pentru a putea desena pe ea.</div>
           <div id="editorSheetSpace" class="editor-sheet-space"><div class="image-stage" id="imageStage" hidden>
             <img id="photo" alt="Fotografia încărcată">
@@ -3401,7 +3412,7 @@ body:not(.fullscreen-mode) #editorView #fullscreenBrushSize::-moz-range-thumb { 
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.23';
+      const APP_VERSION = '1.15.24';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -6115,7 +6126,7 @@ body:not(.fullscreen-mode) #editorView #fullscreenBrushSize::-moz-range-thumb { 
         if (!fullscreenMode) {
           const dock = document.getElementById('editorToolsDock');
           if (fullscreenDrawingToolbar.parentElement !== dock) dock.appendChild(fullscreenDrawingToolbar);
-          fullscreenDrawingToolbar.hidden = activeTool !== 'draw';
+          fullscreenDrawingToolbar.hidden = true;
           fullscreenDrawingToolbar.classList.remove('is-open');
         }
         for (const id of ['editorZoomIn', 'editorZoomOut', 'editorFit']) document.getElementById(id).disabled = !ready;
