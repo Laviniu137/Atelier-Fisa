@@ -2817,6 +2817,27 @@ body:not(.fullscreen-mode) #editorView #deleteSelectedNote {
   gap: 8px;
 }
 body:not(.fullscreen-mode) #editorView #deleteSelectedNote span { display: inline; }
+body:not(.fullscreen-mode) #editorView #backToProjects {
+  background: #f3efe7;
+  border-color: #d8cfc1;
+  color: #43536a;
+  box-shadow: inset 0 1px 0 #ffffff, 0 2px 5px #4e463a12;
+}
+body:not(.fullscreen-mode) #editorView #exportProject {
+  background: #ead8b8;
+  border-color: #cbb184;
+  color: #5a452e;
+  box-shadow: inset 0 1px 0 #fff7e8, 0 2px 5px #7d60351a;
+}
+body:not(.fullscreen-mode) #editorView #saveImage {
+  background: #e4eef8;
+  border-color: #aec4dc;
+  color: #315d86;
+  box-shadow: inset 0 1px 0 #ffffff, 0 2px 5px #315f9114;
+}
+body:not(.fullscreen-mode) #editorView #backToProjects:hover:not(:disabled) { background: #e9e3d8; border-color: #bfb3a1; }
+body:not(.fullscreen-mode) #editorView #exportProject:hover:not(:disabled) { background: #dfc79d; border-color: #b59668; }
+body:not(.fullscreen-mode) #editorView #saveImage:hover:not(:disabled) { background: #d5e5f5; border-color: #8daac9; }
 </style>
 </head>
 <body>
@@ -3506,7 +3527,7 @@ body:not(.fullscreen-mode) #editorView #deleteSelectedNote span { display: inlin
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.28';
+      const APP_VERSION = '1.15.29';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
