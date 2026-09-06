@@ -2855,6 +2855,57 @@ body:not(.fullscreen-mode) #editorView #drawModeBtn:not(.active):hover {
   border-color: #b8cde2;
   color: #315776;
 }
+body:not(.fullscreen-mode) #editorView .thumbnail-strip { gap: 14px; padding: 6px 4px; }
+body:not(.fullscreen-mode) #editorView .image-thumb-wrap { width: 88px; flex-basis: 88px; gap: 8px; }
+body:not(.fullscreen-mode) #editorView .image-thumb {
+  width: 88px;
+  min-width: 88px;
+  height: 66px;
+  min-height: 66px;
+  padding: 5px;
+  border: 1px solid #d8d4cc;
+  border-radius: 13px;
+  background: linear-gradient(145deg, #fffdfa, #f1eee8);
+  box-shadow: 0 3px 8px #433d3312, inset 0 1px 0 #ffffff;
+  transform: none;
+}
+body:not(.fullscreen-mode) #editorView .image-thumb::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: #d8c6a8;
+  border-radius: 13px 13px 0 0;
+  content: '';
+}
+body:not(.fullscreen-mode) #editorView .image-thumb:hover:not(.is-active) {
+  border-color: #b7c7d7;
+  box-shadow: 0 6px 12px #315f9118, inset 0 1px 0 #ffffff;
+  transform: translateY(-2px);
+}
+body:not(.fullscreen-mode) #editorView .image-thumb.is-active {
+  border: 2px solid #4e79a3;
+  background: linear-gradient(145deg, #f5faff, #e3edf7);
+  box-shadow: 0 4px 12px #315f9126, 0 0 0 3px #d3e3f2;
+  transform: translateY(-2px);
+}
+body:not(.fullscreen-mode) #editorView .image-thumb.is-active::before { background: #4e79a3; }
+body:not(.fullscreen-mode) #editorView .image-thumb.is-active::after { display: none; }
+body:not(.fullscreen-mode) #editorView .image-thumb-title {
+  max-width: 88px;
+  padding: 3px 8px;
+  border: 1px solid #e1ddd5;
+  border-radius: 999px;
+  background: #f5f1ea;
+  color: #6d6b67;
+  font-size: 10px;
+  line-height: 1.25;
+}
+body:not(.fullscreen-mode) #editorView .image-thumb-wrap:has(.is-active) .image-thumb-title {
+  border-color: #c3d5e8;
+  background: #eaf3fb;
+  color: #315b82;
+  font-weight: 600;
+}
 </style>
 </head>
 <body>
@@ -3544,7 +3595,7 @@ body:not(.fullscreen-mode) #editorView #drawModeBtn:not(.active):hover {
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.15.31';
+      const APP_VERSION = '1.15.32';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
