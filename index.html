@@ -1915,6 +1915,10 @@
     body.fullscreen-mode .edit-group .drawing-tool-button[data-tool-label].active::after {
       visibility: visible;
     }
+    body.fullscreen-mode .edit-group #fullscreenUndoBtn::after,
+    body.fullscreen-mode .edit-group #fullscreenRedoBtn::after {
+      visibility: visible;
+    }
     body.fullscreen-mode #fullscreenEraserBtn::before {
       content: '';
       position: absolute;
@@ -3602,10 +3606,10 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
                   <button type="button" id="fullscreenEraserBtn" class="drawing-tool-button" data-tool-label="Radieră" aria-label="Radieră" title="Radieră">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.2 15.4 11 7.2a2.2 2.2 0 0 0-3.1 0L3.8 11.3a2.2 2.2 0 0 0 0 3.1l3.3 3.3a2.2 2.2 0 0 0 1.5.6H17"></path><path d="M13 20h8"></path></svg>
                   </button>
-                  <button type="button" id="fullscreenUndoBtn" class="drawing-tool-button" aria-label="Anulează ultima linie" title="Undo">
+                  <button type="button" id="fullscreenUndoBtn" class="drawing-tool-button" data-tool-label="Undo" aria-label="Anulează ultima linie" title="Undo">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10a6 6 0 0 1 6 6v1"></path></svg>
                   </button>
-                  <button type="button" id="fullscreenRedoBtn" class="drawing-tool-button" aria-label="Refă ultima linie" title="Redo">
+                  <button type="button" id="fullscreenRedoBtn" class="drawing-tool-button" data-tool-label="Redo" aria-label="Refă ultima linie" title="Redo">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5"></path><path d="M20 9H10a6 6 0 0 0-6 6v1"></path></svg>
                   </button>
                 </div>
@@ -4034,7 +4038,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.16.27';
+      const APP_VERSION = '1.16.30';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -7530,9 +7534,9 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
           stroke.dimension = {
             value: '',
             t: .5,
-            offset: -.045,
+            offset: -.018,
             x: clamp((firstPoint.x + lastPoint.x) / 2, 0, 1),
-            y: clamp((firstPoint.y + lastPoint.y) / 2 - .045, 0, 1)
+            y: clamp((firstPoint.y + lastPoint.y) / 2 - .018, 0, 1)
           };
         }
         return stroke.dimension;
@@ -7832,6 +7836,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         if (lineHit) {
           selectedDimensionStrokeIndex = lineHit.index;
           dimensionEditingIndex = null;
+          if (dimensionModeEnabled) ensureLineDimension(lineHit.stroke);
           renderDimensions();
           syncBrushControls();
           event.preventDefault();
@@ -8931,13 +8936,13 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
               : clamp(((imageX - ax) * dx + (imageY - ay) * dy) / (length * length), 0, 1);
             const storedOffset = Number(dimension.offset);
             const normalizedOffset = Number.isFinite(storedOffset)
-              ? clamp(Math.abs(storedOffset + .08) < .0005 ? -.045 : storedOffset, -.16, .16)
+              ? clamp(Math.abs(storedOffset + .08) < .0005 ? -.018 : storedOffset, -.055, .055)
               : null;
             const minDimension = Math.min(frame.photoRect.width, frame.photoRect.height);
             const fallbackOffset = ((imageX - (ax + t * dx)) * (-dy) + (imageY - (ay + t * dy)) * dx) / length;
             const offsetPx = normalizedOffset !== null
               ? normalizedOffset * minDimension
-              : clamp(fallbackOffset / Math.max(1, minDimension), -.16, .16) * minDimension;
+              : clamp(fallbackOffset / Math.max(1, minDimension), -.055, .055) * minDimension;
             imageX = ax + t * dx + (-dy / length) * offsetPx;
             imageY = ay + t * dy + (dx / length) * offsetPx;
           }
@@ -9002,7 +9007,6 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
               dimension.value = input.value;
               if (dimension.value.trim()) {
                 dimensionEditingIndex = null;
-                dimensionModeEnabled = false;
                 renderDimensions();
                 syncBrushControls();
               }
@@ -9095,7 +9099,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         const offsetPx = ((px - projectedX) * (-dy) + (py - projectedY) * dx) / length;
         const minDimension = Math.min(frame.photoRect.width, frame.photoRect.height);
         dimensionDragState.dimension.t = t;
-        dimensionDragState.dimension.offset = clamp(offsetPx / Math.max(1, minDimension), -.16, .16);
+        dimensionDragState.dimension.offset = clamp(offsetPx / Math.max(1, minDimension), -.055, .055);
         dimensionDragState.dimension.x = clamp((projectedX - (dy / length) * offsetPx) / frame.photoRect.width, 0, 1);
         dimensionDragState.dimension.y = clamp((projectedY + (dx / length) * offsetPx) / frame.photoRect.height, 0, 1);
         positionDimensionElement(dimensionDragState.label, dimensionDragState.dimension, frame, dimensionDragState.stroke);
