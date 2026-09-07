@@ -2981,7 +2981,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb.is-active { border: 2px soli
 body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; border-radius: 999px; }
 </style>
 <style id="atelier-design-system-v2">
-  :root { --ds-bg: #f0f2f4; --ds-surface: #fbfcfe; --ds-surface-soft: #e7e7e3; --ds-surface-blue: #eaf2f9; --ds-navy: #1f3145; --ds-blue: #315f91; --ds-blue-dark: #264b73; --ds-blue-line: #b9cde0; --ds-ink: #27394c; --ds-muted: #526579; --ds-line: #d6dfe8; --ds-line-strong: #b7c7d6; --ds-danger: #b83a45; --ds-danger-bg: #fff1f2; --ds-danger-line: #efc1c7; --ds-success: #43705a; --ds-success-bg: #edf6f0; --ds-warn: #8b6a26; --ds-warn-bg: #faf4e6; --ds-radius-sm: 10px; --ds-radius-md: 14px; --ds-radius-lg: 18px; --ds-shadow-sm: 0 2px 8px rgba(31, 49, 69, .08); --ds-shadow-md: 0 10px 24px rgba(31, 49, 69, .10); --ds-surface-subtle: #f6f8fa;
+  :root { --ds-bg: #f0f2f4; --ds-surface: #fbfcfe; --ds-surface-soft: #e7e7e3; --ds-surface-blue: #eaf2f9; --ds-navy: #1f3145; --ds-blue: #315f91; --ds-blue-dark: #264b73; --ds-blue-line: #b9cde0; --ds-ink: #27394c; --ds-muted: #526579; --ds-line: #d6dfe8; --ds-line-strong: #b7c7d6; --ds-danger: #b83a45; --ds-danger-bg: #fff1f2; --ds-danger-line: #efc1c7; --ds-success: #43705a; --ds-success-bg: #edf6f0; --ds-warn: #8b6a26; --ds-warn-bg: #faf4e6; --ds-radius-sm: 10px; --ds-radius-md: 14px; --ds-radius-lg: 18px; --ds-shadow-sm: 0 2px 8px rgba(31, 49, 69, .08); --ds-shadow-md: 0 10px 24px rgba(31, 49, 69, .10); --ds-surface-subtle: #f6f8fa; --ds-neutral-hover: #dcdcd8; --ds-selected: #dfeaf5; --ds-danger-hover: #982f39; --ds-danger-hover-bg: #ffe5e8; --ds-disabled-bg: #f1f4f7; --ds-space-1: 4px; --ds-space-2: 8px; --ds-space-3: 12px; --ds-space-4: 16px; --ds-space-6: 24px; --ds-space-8: 32px; --ds-control-height: 44px; --ds-surface-subtle: #f6f8fa;
     --ds-neutral-hover: #dcdcd8;
     --ds-selected: #dfeaf5;
     --ds-danger-hover: #982f39;
@@ -3026,7 +3026,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   #projectManagerView .project-manager-subtitle { color: var(--ds-muted); }
   #projectManagerView .project-manager-divider { background: var(--ds-line); }
   #projectManagerView .project-status-filters { gap: 4px; margin-top: 16px; padding: 5px; border: 1px solid var(--ds-line); border-radius: var(--ds-radius-md); background: var(--ds-surface-soft); }
-  #projectManagerView .project-status-filter { min-height: 38px; padding: 9px 13px; border-color: transparent; border-radius: 10px; background: transparent; color: var(--ds-muted); }
+  #projectManagerView .project-status-filter { padding: 9px 13px; border-color: transparent; border-radius: 10px; background: transparent; color: var(--ds-muted); }
   #projectManagerView .project-status-filter:hover:not([aria-pressed="true"]) { background: var(--ds-neutral-hover); border-color: var(--ds-line-strong); color: var(--ds-ink); }
   #projectManagerView .project-status-filter[aria-pressed="true"],
   #projectManagerView .project-status-filter[data-project-status-filter="to-measure"][aria-pressed="true"],
@@ -3079,7 +3079,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   body:not(.fullscreen-mode) #editorView .image-panel-heading { }
   body:not(.fullscreen-mode) #editorView .image-panel-heading .section-label { margin: 0; color: var(--ds-navy); font-size: .75rem; letter-spacing: .08em; }
   body:not(.fullscreen-mode) #editorView .image-panel-heading .section-label::after { background: var(--ds-line); }
-  body:not(.fullscreen-mode) #editorView .sheet-title-icon { height: 40px; border: 1px solid var(--ds-blue-line); border-radius: 12px; background: var(--ds-surface-blue); color: var(--ds-blue); box-shadow: inset 0 1px 0 #fff; }
+  body:not(.fullscreen-mode) #editorView .sheet-title-icon { border: 1px solid var(--ds-blue-line); border-radius: 12px; background: var(--ds-surface-blue); color: var(--ds-blue); box-shadow: inset 0 1px 0 #fff; }
   body:not(.fullscreen-mode) #editorView .image-title-text { color: var(--ds-navy); font-size: 1.02rem; font-weight: 750; }
   body:not(.fullscreen-mode) #editorView .image-title-edit-btn { width: 38px; height: 38px; padding: 0; border: 1px solid var(--ds-line); border-radius: 12px; background: var(--ds-surface); color: var(--ds-muted); opacity: 1; box-shadow: none; }
   body:not(.fullscreen-mode) #editorView .image-title-edit-btn:hover { border-color: var(--ds-blue-line); background: var(--ds-surface-blue); color: var(--ds-blue-dark); }
@@ -3089,9 +3089,9 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   body:not(.fullscreen-mode) #editorView .image-panel-heading #imageLabel { flex: 0 1 auto; width: fit-content; }
   body:not(.fullscreen-mode) #editorView .sheet-title-icon,
   body:not(.fullscreen-mode) #editorView .image-panel-heading #imageLabel { min-height: 44px; height: 44px; border-radius: 13px; }
-  body:not(.fullscreen-mode) #editorView .sheet-title-icon { width: 44px; flex: 0 0 44px; }
+  body:not(.fullscreen-mode) #editorView .sheet-title-icon { flex: 0 0 44px; }
   body:not(.fullscreen-mode) #editorView .image-panel-heading #imageLabel { padding: 4px 6px 4px 12px; }
-  body:not(.fullscreen-mode) #editorView .image-panel-heading #imageLabel .image-title-edit-btn { width: 34px; min-width: 34px; height: 34px; min-height: 34px; border-radius: 10px; }
+  body:not(.fullscreen-mode) #editorView .image-panel-heading #imageLabel .image-title-edit-btn { border-radius: 10px; }
   body:not(.fullscreen-mode) #editorView #backToProjects,
   body:not(.fullscreen-mode) #editorView #exportProject,
   body:not(.fullscreen-mode) #editorView #saveImage { min-height: 44px; border-radius: var(--ds-radius-md); }
@@ -3140,14 +3140,14 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   body:not(.fullscreen-mode) #editorView #deleteSelectedNote:hover:not(:disabled) { background: var(--ds-danger-hover-bg); border-color: #e49da6; }
   body:not(.fullscreen-mode) #editorView .note-list-item,
   body:not(.fullscreen-mode) #editorView .note-list-item.note-list-empty { border-color: var(--ds-line); border-radius: var(--ds-radius-md); background: var(--ds-surface-subtle); color: var(--ds-ink); }
-  body:not(.fullscreen-mode) #editorView .note-list-item.selected { border-color: var(--ds-blue-line); background: var(--ds-surface-blue); }
+  body:not(.fullscreen-mode) #editorView .note-list-item.selected { }
   body:not(.fullscreen-mode) #editorView .note-list-empty-icon { border-color: var(--ds-line); background: #e1ebf4; color: var(--ds-blue); }
   body:not(.fullscreen-mode) #editorView .note-form input,
   body:not(.fullscreen-mode) #editorView .note-form textarea,
   body:not(.fullscreen-mode) #editorView #noteContent,
   body:not(.fullscreen-mode) #editorView .image-title-input { background: var(--ds-surface); border-color: var(--ds-line); color: var(--ds-ink); }
   body:not(.fullscreen-mode) #editorView .note-input-toolbar { gap: 4px; padding: 4px; border-color: var(--ds-line); border-radius: var(--ds-radius-sm); background: var(--ds-surface-soft); }
-  body:not(.fullscreen-mode) #editorView .note-input-toolbar button { min-height: 38px; border-radius: 9px; }
+  body:not(.fullscreen-mode) #editorView .note-input-toolbar button { border-radius: 9px; }
   body:not(.fullscreen-mode) #editorView .note-input-toolbar button.active { background: var(--ds-blue); border-color: var(--ds-blue); color: #fff; }
   body:not(.fullscreen-mode) #editorView .note-input-toolbar button:hover:not(.active) { background: var(--ds-neutral-hover); color: var(--ds-ink); }
   body:not(.fullscreen-mode) #editorView .fullscreen-inline #fullscreenBtn { background: var(--ds-navy); border-color: var(--ds-navy); color: #fff; box-shadow: 0 7px 16px rgba(31,49,69,.18); }
@@ -3275,102 +3275,50 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
 
   /* A selected note reads as a compact premium card instead of a loose input. */
   body:not(.fullscreen-mode) #editorView .note-list { gap: 10px; margin-bottom: 14px; }
-  body:not(.fullscreen-mode) #editorView .note-list-item {
-    box-sizing: border-box;
-    padding: 10px;
-    border-radius: var(--ds-radius-md);
-    background: var(--ds-surface-soft);
-    border-color: var(--ds-line);
-    box-shadow: var(--ds-shadow-sm);
-    transition: border-color .18s ease, background .18s ease, box-shadow .18s ease, transform .18s ease;
-  }
-  body:not(.fullscreen-mode) #editorView .note-list-item:hover:not(.note-list-empty) {
-    border-color: var(--ds-line-strong);
-    box-shadow: var(--ds-shadow-md);
-    transform: translateY(-1px);
-  }
-  body:not(.fullscreen-mode) #editorView .note-list-item.selected {
-    border-color: var(--ds-blue-line);
-    background: linear-gradient(135deg, #edf5fc 0%, #e5eff8 100%);
-    box-shadow: 0 5px 14px rgba(49, 95, 145, .12), inset 0 1px 0 #fff;
-  }
+  body:not(.fullscreen-mode) #editorView .note-list-item { box-sizing: border-box; padding: 10px; border-radius: var(--ds-radius-md); background: var(--ds-surface-soft); border-color: var(--ds-line); box-shadow: var(--ds-shadow-sm); transition: border-color .18s ease, background .18s ease, box-shadow .18s ease, transform .18s ease; }
+  body:not(.fullscreen-mode) #editorView .note-list-item:hover:not(.note-list-empty) { border-color: var(--ds-line-strong); box-shadow: var(--ds-shadow-md); transform: translateY(-1px); }
+  body:not(.fullscreen-mode) #editorView .note-list-item.selected { border-color: var(--ds-blue-line); background: linear-gradient(135deg, #edf5fc 0%, #e5eff8 100%); box-shadow: 0 5px 14px rgba(49, 95, 145, .12), inset 0 1px 0 #fff; }
   body:not(.fullscreen-mode) #editorView .note-list-title-row { gap: 10px; min-height: 38px; }
-  body:not(.fullscreen-mode) #editorView .note-list-index {
-    display: grid;
-    place-items: center;
-    flex: 0 0 30px;
-    min-width: 30px;
-    height: 30px;
-    border: 1px solid #bfd4e7;
-    border-radius: 9px;
-    background: #dcebf8;
-    color: var(--ds-blue-dark);
-    font-size: .78rem;
-    line-height: 1;
-    text-align: center;
-  }
-  body:not(.fullscreen-mode) #editorView .note-list-name {
-    min-width: 0;
-    flex: 1 1 auto;
-    min-height: 38px;
-    padding: 7px 10px;
-    border: 1px solid transparent;
-    border-radius: 10px;
-    color: var(--ds-ink);
-    font-size: .96rem;
-    line-height: 1.25;
-  }
-  body:not(.fullscreen-mode) #editorView .note-list-item.selected .note-list-name {
-    border-color: #c4d8e9;
-    background: var(--ds-surface);
-    color: var(--ds-navy);
-    box-shadow: inset 0 1px 2px rgba(31, 49, 69, .04), 0 1px 2px rgba(31, 49, 69, .04);
-  }
-  body:not(.fullscreen-mode) #editorView .note-list-name:focus {
-    border-color: var(--ds-blue);
-    box-shadow: 0 0 0 3px rgba(49, 95, 145, .14);
-  }
-  body:not(.fullscreen-mode) #editorView .image-thumb-drawing {
-    position: absolute;
-    z-index: 2;
-    inset: 4px;
-    width: calc(100% - 8px);
-    height: calc(100% - 8px);
-    display: block;
-    pointer-events: none;
-    border-radius: 6px;
-  }
+  body:not(.fullscreen-mode) #editorView .note-list-index { display: grid; place-items: center; flex: 0 0 30px; min-width: 30px; height: 30px; border: 1px solid #bfd4e7; border-radius: 9px; background: #dcebf8; color: var(--ds-blue-dark); font-size: .78rem; line-height: 1; text-align: center; }
+  body:not(.fullscreen-mode) #editorView .note-list-name { min-width: 0; flex: 1 1 auto; min-height: 38px; padding: 7px 10px; border: 1px solid transparent; border-radius: 10px; color: var(--ds-ink); font-size: .96rem; line-height: 1.25; }
+  body:not(.fullscreen-mode) #editorView .note-list-item.selected .note-list-name { border-color: #c4d8e9; background: var(--ds-surface); color: var(--ds-navy); box-shadow: inset 0 1px 2px rgba(31, 49, 69, .04), 0 1px 2px rgba(31, 49, 69, .04); }
+  body:not(.fullscreen-mode) #editorView .note-list-name:focus { border-color: var(--ds-blue); box-shadow: 0 0 0 3px rgba(49, 95, 145, .14); }
+  body:not(.fullscreen-mode) #editorView .image-thumb-drawing { position: absolute; z-index: 2; inset: 4px; width: calc(100% - 8px); height: calc(100% - 8px); display: block; pointer-events: none; border-radius: 6px; }
   body:not(.fullscreen-mode) #editorView .editor-canvas-viewport { position: relative; }
-  body:not(.fullscreen-mode) #editorView .fullscreen-image-nav:not([hidden]) {
-    position: absolute;
-    top: 50%;
-    z-index: 12;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 42px;
-    height: 54px;
-    min-width: 42px;
-    min-height: 54px;
-    padding: 0;
-    transform: translateY(-50%);
-    border: 1px solid var(--ds-blue-line);
-    border-radius: 14px;
-    background: rgba(247, 250, 253, .94);
-    color: var(--ds-blue-dark);
-    box-shadow: 0 8px 18px rgba(31, 49, 69, .16), inset 0 1px 0 #fff;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-  }
+  body:not(.fullscreen-mode) #editorView .fullscreen-image-nav:not([hidden]) { position: absolute; top: 50%; z-index: 12; display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 54px; min-width: 42px; min-height: 54px; padding: 0; transform: translateY(-50%); border: 1px solid var(--ds-blue-line); border-radius: 14px; background: rgba(247, 250, 253, .94); color: var(--ds-blue-dark); box-shadow: 0 8px 18px rgba(31, 49, 69, .16), inset 0 1px 0 #fff; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
   body:not(.fullscreen-mode) #editorView .fullscreen-image-nav-prev { left: 12px; }
   body:not(.fullscreen-mode) #editorView .fullscreen-image-nav-next { right: 12px; }
-  body:not(.fullscreen-mode) #editorView .fullscreen-image-nav:hover:not(:disabled) {
-    border-color: var(--ds-blue);
-    background: var(--ds-surface-blue);
-    color: var(--ds-blue);
-    box-shadow: 0 10px 22px rgba(49, 95, 145, .2), inset 0 1px 0 #fff;
-  }
+  body:not(.fullscreen-mode) #editorView .fullscreen-image-nav:hover:not(:disabled) { border-color: var(--ds-blue); background: var(--ds-surface-blue); color: var(--ds-blue); box-shadow: 0 10px 22px rgba(49, 95, 145, .2), inset 0 1px 0 #fff; }
   body:not(.fullscreen-mode) #editorView .fullscreen-image-nav svg { width: 22px; height: 22px; stroke-width: 2.5; }
+  .dimension-layer { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+  .dimension-label { position: absolute; display: flex; align-items: center; min-width: 78px; min-height: 36px; padding: 3px; transform: translate(-50%, -50%); border: 1px solid #91afd0; border-radius: 10px; background: rgba(248, 252, 255, .96); box-shadow: 0 5px 14px rgba(31, 49, 69, .18), inset 0 1px 0 #fff; pointer-events: auto; cursor: grab; touch-action: none; }
+  .dimension-label.is-dragging { cursor: grabbing; box-shadow: 0 8px 18px rgba(31, 49, 69, .24); }
+  .dimension-label input { width: 100%; min-width: 0; min-height: 28px; padding: 4px 8px; border: 0; border-radius: 7px; outline: 0; background: transparent; color: #294c6d; font: 700 13px/1.2 "Segoe UI", sans-serif; text-align: center; }
+  .dimension-label input:focus { background: #fff; box-shadow: 0 0 0 2px rgba(49, 95, 145, .18); }
+  body:not(.fullscreen-mode) #editorView .dimension-label { z-index: 4; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+
+  /* Shared interaction and layout rules; drawing colors and canvas stay independent. */
+  :is(button, input, textarea, select, summary):focus-visible { outline: 2px solid var(--ds-blue) !important; outline-offset: 3px; }
+  :is(.save-dialog,.danger-dialog,.export-dialog,.autosave-recovery-dialog,.unsaved-dialog) { padding: var(--ds-space-6); max-height: calc(100dvh - 32px); overflow-y: auto; }
+  :is(.save-dialog,.danger-dialog,.export-dialog,.autosave-recovery-dialog,.unsaved-dialog) h2 { font-size: 20px; line-height: 1.3; margin: 0 0 var(--ds-space-4); }
+  :is(.save-dialog-actions,.danger-dialog-actions,.export-dialog-actions) { gap: var(--ds-space-2); margin-top: var(--ds-space-6); }
+  :is(.save-dialog-actions,.danger-dialog-actions,.export-dialog-actions) button { min-height: var(--ds-control-height); border-radius: var(--ds-radius-md); }
+  .save-dialog-actions #confirmProjectSave, .export-dialog-actions :is(#confirmExportImage,#confirmExportProject) { background: var(--ds-blue); color: white; border-color: var(--ds-blue); }
+  .save-dialog-actions #confirmProjectSave:hover:not(:disabled), .export-dialog-actions :is(#confirmExportImage,#confirmExportProject):hover:not(:disabled) { background: var(--ds-blue-dark); border-color: var(--ds-blue-dark); }
+  #projectManagerView #workspaceAddNote, #cloudLogin, #cloudSyncNow, .pencil-editor-save { min-height: var(--ds-control-height); background: var(--ds-blue); color: white; border-color: var(--ds-blue); border-radius: var(--ds-radius-md); }
+  #projectManagerView #workspaceAddNote:hover:not(:disabled), #cloudLogin:hover:not(:disabled), #cloudSyncNow:hover:not(:disabled) { background: var(--ds-blue-dark); }
+  #projectManagerView .project-grid, #workspaceNotesList { gap: var(--ds-space-4); }
+  #projectManagerView .workspace-note-card { padding: var(--ds-space-6); }
+  #projectManagerView .workspace-note-card :is(input,textarea) { font: inherit; padding: var(--ds-space-3); border-radius: var(--ds-radius-sm); }
+  #projectManagerView .workspace-note-card textarea { margin-bottom: 0; }
+  body:not(.fullscreen-mode) #editorView .note-input-toolbar button { min-height: var(--ds-control-height); }
+  body:not(.fullscreen-mode) #editorView .image-panel-heading #imageLabel .image-title-edit-btn { width: 40px; min-width: 40px; height: 40px; min-height: 40px; flex-basis: 40px; }
+  body:not(.fullscreen-mode) #editorView .image-panel-heading #imageLabel { min-height: 48px; height: auto; }
+  body:not(.fullscreen-mode) #editorView .sheet-title-icon { height: 48px; width: 48px; flex-basis: 48px; }
+  #projectManagerView .project-card-menu summary { min-height: 44px; min-width: 44px; display: grid; place-items: center; }
+  #projectManagerView .project-card-menu-items button { min-height: 44px; }
+  #projectManagerView .project-card-name { overflow-wrap: anywhere; }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 </style>
 </head>
@@ -3638,6 +3586,9 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
                   <button type="button" id="fullscreenDashedLineBtn" class="drawing-tool-button" data-tool-label="Punctată" aria-label="Linie punctată" title="Linie punctată" aria-pressed="false">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 7.5 16.5"></path><path d="m9.5 14.5 2.5-2.5"></path><path d="m14 10 2.5-2.5"></path><path d="M18 6 19 5"></path></svg>
                   </button>
+                  <button type="button" id="fullscreenDimensionBtn" class="drawing-tool-button" data-tool-label="Dimensiune" aria-label="Activează dimensiunea pentru linii" title="Dimensiune linie" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20 20 4"></path><path d="m7 17-2-2M10 14 8 12M13 11l-2-2M16 8l-2-2M19 5l-2-2"></path></svg>
+                  </button>
                   <button type="button" id="fullscreenEraserBtn" class="drawing-tool-button" data-tool-label="Radieră" aria-label="Radieră" title="Radieră">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.2 15.4 11 7.2a2.2 2.2 0 0 0-3.1 0L3.8 11.3a2.2 2.2 0 0 0 0 3.1l3.3 3.3a2.2 2.2 0 0 0 1.5.6H17"></path><path d="M13 20h8"></path></svg>
                   </button>
@@ -3695,9 +3646,10 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
 <div class="canvas-shell" id="canvasShell">
           <div class="empty" id="emptyState">Adaugă o fotografie pentru a putea desena pe ea.</div>
           <div id="editorSheetSpace" class="editor-sheet-space"><div class="image-stage" id="imageStage" hidden>
-            <img id="photo" alt="Fotografia încărcată">
-            <canvas id="drawingCanvas" aria-label="Zonă de desen pe imagine"></canvas>
-            <div class="note-layer" id="noteLayer" hidden></div>
+             <img id="photo" alt="Fotografia încărcată">
+             <canvas id="drawingCanvas" aria-label="Zonă de desen pe imagine"></canvas>
+             <div class="dimension-layer" id="dimensionLayer" hidden></div>
+             <div class="note-layer" id="noteLayer" hidden></div>
           </div>
         </div></div>
   <div class="editor-canvas-delete"><button type="button" id="removeActiveImage" aria-label="Șterge imaginea" title="Șterge imaginea" class="image-header-delete" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg><span>Șterge</span></button></div>
@@ -3880,6 +3832,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       const canvas = document.getElementById('drawingCanvas');
       const stage = document.getElementById('imageStage');
       const noteLayer = document.getElementById('noteLayer');
+      const dimensionLayer = document.getElementById('dimensionLayer');
       const emptyState = document.getElementById('emptyState');
       const undo = document.getElementById('undo');
       const clear = document.getElementById('clear');
@@ -3902,6 +3855,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       const fullscreenPencilBtn = document.getElementById('fullscreenPencilBtn');
       const fullscreenLineBtn = document.getElementById('fullscreenLineBtn');
       const fullscreenDashedLineBtn = document.getElementById('fullscreenDashedLineBtn');
+      const fullscreenDimensionBtn = document.getElementById('fullscreenDimensionBtn');
       const fullscreenEraserBtn = document.getElementById('fullscreenEraserBtn');
       const fullscreenUndoBtn = document.getElementById('fullscreenUndoBtn');
       const fullscreenRedoBtn = document.getElementById('fullscreenRedoBtn');
@@ -3982,6 +3936,8 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       let previousFullscreenTool = 'draw';
       let selectedNoteMode = 'text';
       let activeDrawMode = 'freehand';
+      let dimensionModeEnabled = false;
+      let dimensionDragState = null;
       let lineDashed = false;
       let lineDraftStartPoint = null;
       let lineDraftCurrentPoint = null;
@@ -4065,7 +4021,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.16.14';
+      const APP_VERSION = '1.16.15';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -6675,6 +6631,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
             });
             lastMarkerScreenScale = markerScale;
           }
+          positionDimensionLabels();
         });
       }
 
@@ -6773,7 +6730,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
           fullscreenDrawingToolbar.hidden = true;
           fullscreenDrawingToolbar.classList.remove('is-open');
         }
-        for (const el of [fullscreenColorPicker, fullscreenBrushSize, fullscreenPencilBtn, fullscreenLineBtn, fullscreenDashedLineBtn, fullscreenEraserBtn, fullscreenClearBtn]) el.disabled = !ready;
+        for (const el of [fullscreenColorPicker, fullscreenBrushSize, fullscreenPencilBtn, fullscreenLineBtn, fullscreenDashedLineBtn, fullscreenDimensionBtn, fullscreenEraserBtn, fullscreenClearBtn]) el.disabled = !ready;
         document.querySelectorAll('.quick-color-button').forEach(el => { el.disabled = !ready; });
         queueEditorView();
       }
@@ -6980,19 +6937,30 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
           return false;
         }
 
-        strokes.push({
+        const lineStroke = {
           points: activeStroke.points.map((point) => ({ ...point })),
           color: activeStroke.color,
           size: activeStroke.size,
           eraser: Boolean(activeStroke.eraser),
           dashed: Boolean(activeStroke.dashed),
           type: 'line'
-        });
+        };
+        if (dimensionModeEnabled && !lineStroke.eraser) {
+          const firstPoint = lineStroke.points[0];
+          const lastPoint = lineStroke.points[lineStroke.points.length - 1];
+          lineStroke.dimension = {
+            value: '',
+            x: clamp((firstPoint.x + lastPoint.x) / 2, 0, 1),
+            y: clamp((firstPoint.y + lastPoint.y) / 2 - .08, 0, 1)
+          };
+        }
+        strokes.push(lineStroke);
         redoStack = [];
         lineDraftStartPoint = null;
         lineDraftCurrentPoint = null;
         activeStroke = null;
         redraw();
+        renderDimensions();
         updateActiveThumbnailDrawing();
         setControls();
         syncBrushControls();
@@ -7057,7 +7025,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       function setActiveDrawMode(mode, options = {}) {
         const shouldErase = Boolean(options.erasing);
         if (mode === 'line') {
-          if (activeDrawMode === 'line' && lineDraftStartPoint) {
+          if (event.key === 'Escape' && activeDrawMode === 'line' && lineDraftStartPoint) {
             finalizeLineDraft();
             syncBrushControls();
             return;
@@ -7472,6 +7440,12 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
             fullscreenDashedLineBtn.classList.toggle('active', lineActive && lineDashed);
             fullscreenDashedLineBtn.setAttribute('aria-pressed', lineActive && lineDashed ? 'true' : 'false');
           }
+        }
+        if (fullscreenDimensionBtn) {
+          const dimensionAvailable = Boolean(sourceImage) && activeDrawMode === 'line' && !isErasing;
+          fullscreenDimensionBtn.disabled = !dimensionAvailable;
+          fullscreenDimensionBtn.classList.toggle('active', dimensionAvailable && dimensionModeEnabled);
+          fullscreenDimensionBtn.setAttribute('aria-pressed', dimensionAvailable && dimensionModeEnabled ? 'true' : 'false');
         }
         if (fullscreenEraserBtn) {
           const eraserActive = isErasing;
@@ -7947,6 +7921,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         activeStroke = null;
         pendingStrokePoints = [];
         redraw();
+        renderDimensions();
         updateActiveThumbnailDrawing();
         setControls();
         syncBrushControls();
@@ -8580,6 +8555,8 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
           textModeButton.classList.add('active');
           textModeButton.setAttribute('aria-pressed', 'true');
           pencilModeButton.setAttribute('aria-pressed', 'false');
+          textModeButton.setAttribute('aria-pressed', 'true');
+          pencilModeButton.setAttribute('aria-pressed', 'false');
           pencilModeButton.classList.remove('active');
           noteContentTextarea.hidden = true;
           handwritingPanel.hidden = true;
@@ -8594,6 +8571,8 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         selectedNoteMode = mode === 'pencil' ? 'pencil' : 'text';
         textModeButton.classList.toggle('active', selectedNoteMode === 'text');
         pencilModeButton.classList.toggle('active', selectedNoteMode === 'pencil');
+        textModeButton.setAttribute('aria-pressed', String(selectedNoteMode === 'text'));
+        pencilModeButton.setAttribute('aria-pressed', String(selectedNoteMode === 'pencil'));
         textModeButton.setAttribute('aria-pressed', String(selectedNoteMode === 'text'));
         pencilModeButton.setAttribute('aria-pressed', String(selectedNoteMode === 'pencil'));
 
@@ -8691,6 +8670,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
 
       function renderNotes() {
         updateNotesPanelVisibility();
+        renderDimensions();
         noteLayer.innerHTML = '';
         noteLayer.hidden = !interactiveNotes.length;
         const frame = getActiveImageFrame();
@@ -8859,6 +8839,104 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         scheduleSave();
       }
 
+      function positionDimensionElement(element, dimension, frame = getActiveImageFrame()) {
+        if (!element || !dimension || !frame) return;
+        const leftPx = frame.imageOffsetX + clamp(Number(dimension.x) || 0, 0, 1) * frame.photoRect.width;
+        const topPx = frame.imageOffsetY + clamp(Number(dimension.y) || 0, 0, 1) * frame.photoRect.height;
+        element.style.left = `${(leftPx / frame.stageRect.width) * 100}%`;
+        element.style.top = `${(topPx / frame.stageRect.height) * 100}%`;
+      }
+
+      function renderDimensions() {
+        if (!dimensionLayer) return;
+        dimensionLayer.innerHTML = '';
+        const dimensions = strokes
+          .map((stroke, index) => ({ stroke, index, dimension: stroke?.dimension }))
+          .filter((entry) => entry.dimension && typeof entry.dimension === 'object');
+        dimensionLayer.hidden = !dimensions.length;
+        const frame = getActiveImageFrame();
+        dimensions.forEach(({ stroke, index, dimension }) => {
+          const label = document.createElement('div');
+          label.className = 'dimension-label';
+          label.dataset.strokeIndex = String(index);
+          label.title = 'Tragează pentru a muta dimensiunea';
+          positionDimensionElement(label, dimension, frame);
+
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.inputMode = 'decimal';
+          input.value = typeof dimension.value === 'string' ? dimension.value : '';
+          input.placeholder = 'Dimensiune';
+          input.setAttribute('aria-label', 'Dimensiunea liniei');
+          input.autocomplete = 'off';
+          input.spellcheck = false;
+          input.addEventListener('pointerdown', (event) => event.stopPropagation());
+          input.addEventListener('click', (event) => event.stopPropagation());
+          input.addEventListener('input', () => {
+            dimension.value = input.value;
+            scheduleSave();
+          });
+          input.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              input.blur();
+            }
+          });
+          label.appendChild(input);
+          label.addEventListener('pointerdown', (event) => {
+            if (event.target === input || (event.button !== undefined && event.button !== 0)) return;
+            event.preventDefault();
+            event.stopPropagation();
+            dimensionDragState = {
+              pointerId: event.pointerId,
+              label,
+              dimension,
+              frame: getActiveImageFrame()
+            };
+            label.classList.add('is-dragging');
+            label.setPointerCapture(event.pointerId);
+            window.addEventListener('pointermove', updateDimensionDrag, { passive: false });
+            window.addEventListener('pointerup', stopDimensionDrag, { once: true, passive: false });
+            window.addEventListener('pointercancel', stopDimensionDrag, { once: true, passive: false });
+          });
+          dimensionLayer.appendChild(label);
+        });
+      }
+
+      function positionDimensionLabels(frame = getActiveImageFrame()) {
+        if (!dimensionLayer || !frame) return;
+        dimensionLayer.querySelectorAll('.dimension-label').forEach((label) => {
+          const index = Number(label.dataset.strokeIndex);
+          const dimension = Number.isInteger(index) ? strokes[index]?.dimension : null;
+          if (dimension) positionDimensionElement(label, dimension, frame);
+        });
+      }
+
+      function updateDimensionDrag(event) {
+        if (!dimensionDragState || event.pointerId !== dimensionDragState.pointerId) return;
+        event.preventDefault();
+        const point = clientPointToImageCoordinates(event.clientX, event.clientY, dimensionDragState.frame || getActiveImageFrame());
+        if (!point) return;
+        dimensionDragState.dimension.x = point.x;
+        dimensionDragState.dimension.y = point.y;
+        positionDimensionElement(dimensionDragState.label, dimensionDragState.dimension, dimensionDragState.frame || getActiveImageFrame());
+      }
+
+      function stopDimensionDrag(event) {
+        if (!dimensionDragState || (event.pointerId !== undefined && event.pointerId !== dimensionDragState.pointerId)) return;
+        if (event) event.preventDefault();
+        const label = dimensionDragState.label;
+        if (label) {
+          label.classList.remove('is-dragging');
+          releasePointerCapture(label, dimensionDragState.pointerId);
+        }
+        dimensionDragState = null;
+        window.removeEventListener('pointermove', updateDimensionDrag);
+        window.removeEventListener('pointerup', stopDimensionDrag);
+        window.removeEventListener('pointercancel', stopDimensionDrag);
+        scheduleSave();
+      }
+
       function releasePointerCapture(target, pointerId) {
         if (!target || pointerId === null || pointerId === undefined) return;
         try {
@@ -8906,6 +8984,11 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         window.removeEventListener('pointermove', handleNoteDrag);
         window.removeEventListener('pointerup', stopNoteDrag);
         window.removeEventListener('pointercancel', stopNoteDrag);
+        releasePointerCapture(dimensionDragState?.label, dimensionDragState?.pointerId);
+        dimensionDragState = null;
+        window.removeEventListener('pointermove', updateDimensionDrag);
+        window.removeEventListener('pointerup', stopDimensionDrag);
+        window.removeEventListener('pointercancel', stopDimensionDrag);
         redraw();
         renderHandwritingCanvas();
         updateImageTransform();
@@ -9181,6 +9264,8 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         noteList.innerHTML = '';
         noteLayer.innerHTML = '';
         noteLayer.hidden = true;
+        dimensionLayer.innerHTML = '';
+        dimensionLayer.hidden = true;
         emptyState.hidden = false;
         stage.hidden = true;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -9271,6 +9356,8 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         selectedNoteId = null;
         redoStack = [];
         noteLayer.innerHTML = '';
+        dimensionLayer.innerHTML = '';
+        dimensionLayer.hidden = true;
         noteList.innerHTML = '';
         emptyState.hidden = false;
         stage.hidden = true;
@@ -9532,6 +9619,8 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         draggingNoteId = null;
         noteLayer.innerHTML = '';
         noteLayer.hidden = true;
+        dimensionLayer.innerHTML = '';
+        dimensionLayer.hidden = true;
         noteList.innerHTML = '';
         noteContentTextarea.value = '';
         handwritingPreview.hidden = true;
@@ -9556,6 +9645,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         redoStack = [];
         strokes = [];
         redraw();
+        renderDimensions();
         updateActiveThumbnailDrawing();
         setControls();
         syncBrushControls();
@@ -9586,6 +9676,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         const lastStroke = strokes.pop();
         redoStack.push(lastStroke);
         redraw();
+        renderDimensions();
         updateActiveThumbnailDrawing();
         setControls();
         syncBrushControls();
@@ -9597,6 +9688,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         const lastRedo = redoStack.pop();
         strokes.push(lastRedo);
         redraw();
+        renderDimensions();
         updateActiveThumbnailDrawing();
         setControls();
         syncBrushControls();
@@ -9870,6 +9962,17 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
           setActiveDrawMode('line', { erasing: false });
           lineDashed = true;
           if (activeStroke && activeStroke.type === 'line') activeStroke.dashed = true;
+          applyCurrentBrushSettings();
+          syncBrushControls();
+          scheduleSave();
+        });
+      }
+      if (fullscreenDimensionBtn) {
+        fullscreenDimensionBtn.addEventListener('click', () => {
+          if (activeDrawMode !== 'line' || isErasing) {
+            setActiveDrawMode('line', { erasing: false });
+          }
+          dimensionModeEnabled = !dimensionModeEnabled;
           applyCurrentBrushSettings();
           syncBrushControls();
           scheduleSave();
