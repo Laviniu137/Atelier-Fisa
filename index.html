@@ -3340,6 +3340,37 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
     pointer-events: none;
     border-radius: 6px;
   }
+  body:not(.fullscreen-mode) #editorView .editor-canvas-viewport { position: relative; }
+  body:not(.fullscreen-mode) #editorView .fullscreen-image-nav:not([hidden]) {
+    position: absolute;
+    top: 50%;
+    z-index: 12;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 54px;
+    min-width: 42px;
+    min-height: 54px;
+    padding: 0;
+    transform: translateY(-50%);
+    border: 1px solid var(--ds-blue-line);
+    border-radius: 14px;
+    background: rgba(247, 250, 253, .94);
+    color: var(--ds-blue-dark);
+    box-shadow: 0 8px 18px rgba(31, 49, 69, .16), inset 0 1px 0 #fff;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  body:not(.fullscreen-mode) #editorView .fullscreen-image-nav-prev { left: 12px; }
+  body:not(.fullscreen-mode) #editorView .fullscreen-image-nav-next { right: 12px; }
+  body:not(.fullscreen-mode) #editorView .fullscreen-image-nav:hover:not(:disabled) {
+    border-color: var(--ds-blue);
+    background: var(--ds-surface-blue);
+    color: var(--ds-blue);
+    box-shadow: 0 10px 22px rgba(49, 95, 145, .2), inset 0 1px 0 #fff;
+  }
+  body:not(.fullscreen-mode) #editorView .fullscreen-image-nav svg { width: 22px; height: 22px; stroke-width: 2.5; }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 </style>
 </head>
@@ -3643,12 +3674,6 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
     <div class="layout">
       <section class="image-panel" aria-labelledby="imageLabel">
         
-        <button type="button" id="fullscreenPrevImageBtn" class="fullscreen-image-nav fullscreen-image-nav-prev" aria-label="Imaginea anterioară" title="Imaginea anterioară" hidden>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5-7 7 7 7"></path></svg>
-        </button>
-        <button type="button" id="fullscreenNextImageBtn" class="fullscreen-image-nav fullscreen-image-nav-next" aria-label="Imaginea următoare" title="Imaginea următoare" hidden>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 5 7 7-7 7"></path></svg>
-        </button>
         <div class="fullscreen-image-title" id="fullscreenImageTitle" aria-hidden="true"></div>
         
         
@@ -3660,7 +3685,14 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
           <button type="button" id="drawModeBtn" class="active"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-1 10-10a2.2 2.2 0 0 0 0-3.1l-.1-.1a2.2 2.2 0 0 0-3.1 0L5 15.7 4 20z"></path><path d="m13.4 7.4 3.2 3.2"></path></svg><span>Desen</span></button>
           <button type="button" id="notesModeBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V10z"></path><path d="M14 3v7h7"></path><path d="M7 14h10M7 17h7"></path></svg><span>Note</span></button>
         </div>
-<div class="editor-canvas-viewport"><div class="canvas-shell" id="canvasShell">
+<div class="editor-canvas-viewport">
+          <button type="button" id="fullscreenPrevImageBtn" class="fullscreen-image-nav fullscreen-image-nav-prev" aria-label="Imaginea anterioară" title="Imaginea anterioară" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5-7 7 7 7"></path></svg>
+          </button>
+          <button type="button" id="fullscreenNextImageBtn" class="fullscreen-image-nav fullscreen-image-nav-next" aria-label="Imaginea următoare" title="Imaginea următoare" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 5 7 7-7 7"></path></svg>
+          </button>
+<div class="canvas-shell" id="canvasShell">
           <div class="empty" id="emptyState">Adaugă o fotografie pentru a putea desena pe ea.</div>
           <div id="editorSheetSpace" class="editor-sheet-space"><div class="image-stage" id="imageStage" hidden>
             <img id="photo" alt="Fotografia încărcată">
@@ -3701,7 +3733,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         </button>
         
         
-        <p class="help">Selectează modul Desen pentru a utiliza Apple Pencil sau degetul pe imagine. În modul Note poți muta marcatorii și edita textul.</p>
+        <p class="help">Selectează modul Desen pentru a utiliza Apple Pencil sau degetul pe imagine. În modul Note poți muta marcatorii, edita textul și glisa stânga/dreapta pentru a schimba imaginile.</p>
       </section>
 
       <section class="notes" id="notesPanel" aria-labelledby="notesLabel" hidden>
@@ -3977,6 +4009,8 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       let activeTouches = new Map();
       let fullscreenSwipe = null;
       let fullscreenImageSwitchInProgress = false;
+      let editorImageSwipe = null;
+      let editorImageSwitchInProgress = false;
       let pinchStartDistance = 0;
       let pinchStartZoom = 1;
       let pinchCenter = null;
@@ -4031,7 +4065,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.16.12';
+      const APP_VERSION = '1.16.14';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -6850,9 +6884,9 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
             ? imageTitle + ' • ' + (activeImageIndex + 1) + '/' + projectImages.length
             : imageTitle;
         }
-        const showFullscreenNavigation = fullscreenMode && projectImages.length > 1;
-        if (fullscreenPrevImageBtn) fullscreenPrevImageBtn.hidden = !showFullscreenNavigation;
-        if (fullscreenNextImageBtn) fullscreenNextImageBtn.hidden = !showFullscreenNavigation;
+        const showImageNavigation = projectImages.length > 1;
+        if (fullscreenPrevImageBtn) fullscreenPrevImageBtn.hidden = !showImageNavigation;
+        if (fullscreenNextImageBtn) fullscreenNextImageBtn.hidden = !showImageNavigation;
       }
 
       function drawThumbnailStrokes(previewCanvas, image, imageIndex) {
@@ -7715,6 +7749,52 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         const swipe = fullscreenSwipe;
         fullscreenSwipe = null;
         completeFullscreenSwipe(swipe, touch.clientX, touch.clientY);
+      }
+
+      function beginEditorImageSwipe(event) {
+        if (event.pointerType !== 'touch' || fullscreenMode || !sourceImage || projectImages.length < 2) return;
+        if (event.isPrimary === false || isDrawing || activeStroke || pendingNotePlacementId || editorImageSwitchInProgress) return;
+        editorImageSwipe = {
+          pointerId: event.pointerId,
+          startX: event.clientX,
+          startY: event.clientY,
+          currentX: event.clientX,
+          currentY: event.clientY
+        };
+      }
+
+      function updateEditorImageSwipe(event) {
+        if (!editorImageSwipe || event.pointerId !== editorImageSwipe.pointerId) return;
+        editorImageSwipe.currentX = event.clientX;
+        editorImageSwipe.currentY = event.clientY;
+        const deltaX = event.clientX - editorImageSwipe.startX;
+        const deltaY = event.clientY - editorImageSwipe.startY;
+        if (Math.abs(deltaX) > 8 && Math.abs(deltaX) > Math.abs(deltaY)) event.preventDefault();
+      }
+
+      function switchEditorImage(direction) {
+        if (fullscreenMode || !sourceImage || editorImageSwitchInProgress || projectImages.length < 2) return;
+        const nextIndex = (activeImageIndex + direction + projectImages.length) % projectImages.length;
+        editorImageSwitchInProgress = true;
+        Promise.resolve().then(async () => {
+          try {
+            clearLineToolPreview();
+            await activateImageAt(nextIndex, { persist: true });
+          } finally {
+            editorImageSwitchInProgress = false;
+          }
+        });
+      }
+
+      function finishEditorImageSwipe(event) {
+        if (!editorImageSwipe || event.pointerId !== editorImageSwipe.pointerId) return;
+        const swipe = editorImageSwipe;
+        editorImageSwipe = null;
+        const deltaX = event.clientX - swipe.startX;
+        const deltaY = event.clientY - swipe.startY;
+        const isHorizontalSwipe = Math.abs(deltaX) >= 42 && Math.abs(deltaX) > Math.abs(deltaY) * 1.1;
+        if (!isHorizontalSwipe || editorImageSwitchInProgress || projectImages.length < 2) return;
+        switchEditorImage(deltaX < 0 ? 1 : -1);
       }
 
       function beginDrawing(event) {
@@ -8804,6 +8884,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         panStart = null;
         panOrigin = null;
         activeTouches.clear();
+        editorImageSwipe = null;
         pinchStartDistance = 0;
         pinchStartZoom = zoomLevel;
         pinchCenter = null;
@@ -9733,8 +9814,8 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       if ('ResizeObserver' in window) new ResizeObserver(queueEditorView).observe(document.getElementById('canvasShell'));
       fullscreenButton.addEventListener('click', () => setFullscreenMode(true));
       fullscreenCloseButton.addEventListener('click', () => setFullscreenMode(false));
-      fullscreenPrevImageBtn?.addEventListener('click', () => switchFullscreenImage(-1));
-      fullscreenNextImageBtn?.addEventListener('click', () => switchFullscreenImage(1));
+      fullscreenPrevImageBtn?.addEventListener('click', () => fullscreenMode ? switchFullscreenImage(-1) : switchEditorImage(-1));
+      fullscreenNextImageBtn?.addEventListener('click', () => fullscreenMode ? switchFullscreenImage(1) : switchEditorImage(1));
       fullscreenCloseToolbarBtn.addEventListener('click', () => setFullscreenMode(false));
       fullscreenToolbarToggle.addEventListener('pointerdown', handleFloatingToolbarPointerDown, { passive: false });
       fullscreenToolbarToggle.addEventListener('pointermove', handleFloatingToolbarPointerMove, { passive: false });
@@ -10326,6 +10407,10 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       canvas.addEventListener('pointermove', continueDrawing, { passive: false });
       canvas.addEventListener('pointerup', finishDrawing, { passive: false });
       canvas.addEventListener('pointercancel', finishDrawing, { passive: false });
+      canvas.addEventListener('pointerdown', beginEditorImageSwipe, { capture: true, passive: false });
+      window.addEventListener('pointermove', updateEditorImageSwipe, { passive: false });
+      window.addEventListener('pointerup', finishEditorImageSwipe, { passive: false });
+      window.addEventListener('pointercancel', finishEditorImageSwipe, { passive: false });
       canvas.addEventListener('gesturestart', (event) => event.preventDefault(), { passive: false });
       document.addEventListener('pointerdown', () => { firebaseManagerLastInteractionAt = Date.now(); }, { capture: true, passive: true });
       document.addEventListener('keydown', () => { firebaseManagerLastInteractionAt = Date.now(); }, { capture: true });
