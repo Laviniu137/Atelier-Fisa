@@ -3330,6 +3330,16 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
     border-color: var(--ds-blue);
     box-shadow: 0 0 0 3px rgba(49, 95, 145, .14);
   }
+  body:not(.fullscreen-mode) #editorView .image-thumb-drawing {
+    position: absolute;
+    z-index: 2;
+    inset: 4px;
+    width: calc(100% - 8px);
+    height: calc(100% - 8px);
+    display: block;
+    pointer-events: none;
+    border-radius: 6px;
+  }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 </style>
 </head>
@@ -4021,7 +4031,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.16.11';
+      const APP_VERSION = '1.16.12';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -6845,6 +6855,30 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         if (fullscreenNextImageBtn) fullscreenNextImageBtn.hidden = !showFullscreenNavigation;
       }
 
+      function drawThumbnailStrokes(previewCanvas, image, imageIndex) {
+        if (!previewCanvas) return;
+        const previewWidth = 240;
+        const previewHeight = 160;
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+        previewCanvas.width = Math.round(previewWidth * pixelRatio);
+        previewCanvas.height = Math.round(previewHeight * pixelRatio);
+        const previewContext = previewCanvas.getContext('2d');
+        if (!previewContext) return;
+        previewContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+        previewContext.clearRect(0, 0, previewWidth, previewHeight);
+        const imageStrokes = imageIndex === activeImageIndex ? strokes : image?.strokes;
+        if (!Array.isArray(imageStrokes) || !imageStrokes.length) return;
+        const sourceWidth = getCanvasDrawSize().width || previewWidth;
+        const widthScale = Math.max(.8, previewWidth / Math.max(1, sourceWidth));
+        imageStrokes.forEach((stroke) => drawStrokeOnContext(previewContext, stroke, previewWidth, previewHeight, widthScale));
+      }
+
+      function updateActiveThumbnailDrawing() {
+        const previewCanvas = thumbnailStrip?.querySelector(`.image-thumb[data-image-index="${activeImageIndex}"] .image-thumb-drawing`);
+        if (!previewCanvas) return;
+        drawThumbnailStrokes(previewCanvas, projectImages[activeImageIndex], activeImageIndex);
+      }
+
       function renderImageThumbnails() {
         if (!thumbnailStrip) return;
         sanitizeProjectImagesCollection();
@@ -6860,10 +6894,11 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
           const wrap = document.createElement('div');
           wrap.className = 'image-thumb-wrap';
 
-          const button = document.createElement('button');
-          button.type = 'button';
-          button.className = `image-thumb${index === activeImageIndex ? ' is-active' : ''}`;
-          button.title = displayTitle;
+           const button = document.createElement('button');
+           button.type = 'button';
+           button.className = `image-thumb${index === activeImageIndex ? ' is-active' : ''}`;
+           button.dataset.imageIndex = String(index);
+           button.title = displayTitle;
           button.setAttribute('aria-label', displayTitle);
           button.addEventListener('click', () => {
             if (index === activeImageIndex) return;
@@ -6875,10 +6910,16 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
           preview.src = image.dataUrl || '';
           if (!image.dataUrl) {
             preview.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22 viewBox=%220 0 80 80%22%3E%3Crect width=%2280%22 height=%2280%22 fill=%22%23efe7dc%22/%3E%3Cpath d=%22M20 50l12-12 10 10 18-22 12 20v14H20z%22 fill=%22%23d3c5b5%22/%3E%3C/svg%3E';
-          }
-          button.appendChild(preview);
+           }
+           button.appendChild(preview);
 
-          const caption = document.createElement('div');
+           const drawingPreview = document.createElement('canvas');
+           drawingPreview.className = 'image-thumb-drawing';
+           drawingPreview.setAttribute('aria-hidden', 'true');
+           button.appendChild(drawingPreview);
+           drawThumbnailStrokes(drawingPreview, image, index);
+
+           const caption = document.createElement('div');
           caption.className = 'image-thumb-caption';
 
           const captionText = document.createElement('span');
@@ -6918,6 +6959,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         lineDraftCurrentPoint = null;
         activeStroke = null;
         redraw();
+        updateActiveThumbnailDrawing();
         setControls();
         syncBrushControls();
         scheduleSave();
@@ -7825,6 +7867,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         activeStroke = null;
         pendingStrokePoints = [];
         redraw();
+        updateActiveThumbnailDrawing();
         setControls();
         syncBrushControls();
         scheduleSave();
@@ -9418,6 +9461,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         renderNoteList();
         syncSelectedNoteForm();
         redraw();
+        updateActiveThumbnailDrawing();
         setControls();
         syncBrushControls();
         scheduleSave();
@@ -9431,6 +9475,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         redoStack = [];
         strokes = [];
         redraw();
+        updateActiveThumbnailDrawing();
         setControls();
         syncBrushControls();
         scheduleSave();
@@ -9460,6 +9505,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         const lastStroke = strokes.pop();
         redoStack.push(lastStroke);
         redraw();
+        updateActiveThumbnailDrawing();
         setControls();
         syncBrushControls();
         scheduleSave();
@@ -9470,6 +9516,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         const lastRedo = redoStack.pop();
         strokes.push(lastRedo);
         redraw();
+        updateActiveThumbnailDrawing();
         setControls();
         syncBrushControls();
         scheduleSave();
