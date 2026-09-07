@@ -3217,6 +3217,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   .ui-action svg { width: 18px; height: 18px; flex-shrink: 0; }
   #projectManagerView .project-status-filter { min-height: var(--ds-control-height); }
   #projectManagerView .workspace-notes-heading { margin-bottom: var(--ds-space-6); gap: var(--ds-space-4); }
+  .note-marker.is-dragging { transition: none !important; will-change: left, top; cursor: grabbing; }
 
   /* Shared interaction and layout rules; drawing colors and canvas stay independent. */
   :is(button, input, textarea, select, summary):focus-visible { outline: 2px solid var(--ds-blue) !important; outline-offset: 3px; }
@@ -3843,6 +3844,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       let draggingNoteMarker = null;
       let pendingDraggedPointer = null;
       let noteDragAnimationFrame = null;
+      let draggingNoteFrame = null;
     let pendingNotePlacementId = null;
       let activeTool = 'draw';
       let previousFullscreenTool = 'draw';
@@ -3929,7 +3931,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.16.9';
+      const APP_VERSION = '1.16.10';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -8444,7 +8446,10 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         const topPx = frame.imageOffsetY + clamp(note.y, 0, 1) * frame.photoRect.height;
         marker.style.left = `${(leftPx / frame.stageRect.width) * 100}%`;
         marker.style.top = `${(topPx / frame.stageRect.height) * 100}%`;
-        marker.style.setProperty('--note-marker-screen-scale', String(1 / Math.max(zoomLevel, 1)));
+        const markerScale = String(1 / Math.max(zoomLevel, 1));
+        if (marker.style.getPropertyValue('--note-marker-screen-scale') !== markerScale) {
+          marker.style.setProperty('--note-marker-screen-scale', markerScale);
+        }
       }
 
       function findNoteMarkerById(noteId) {
@@ -8457,7 +8462,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         if (!draggingNoteId || !pendingDraggedPointer) return;
         const note = interactiveNotes.find((item) => item.id === draggingNoteId);
         if (!note) return;
-        const frame = getActiveImageFrame();
+        const frame = draggingNoteFrame || getActiveImageFrame();
         const point = clientPointToImageCoordinates(pendingDraggedPointer.clientX, pendingDraggedPointer.clientY, frame);
         if (!point) return;
         note.x = point.x;
@@ -8496,13 +8501,23 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
             if (pendingNotePlacementId === note.id) {
               pendingNotePlacementId = null;
             }
-            selectNote(note.id);
+            if (selectedNoteId !== note.id) {
+              selectedNoteId = note.id;
+              noteLayer.querySelectorAll('.note-marker').forEach((item) => {
+                item.classList.toggle('selected', item.dataset.noteId === selectedNoteId);
+              });
+              renderNoteList();
+              syncSelectedNoteForm();
+              setControls();
+            }
             draggingNoteId = note.id;
             draggingNotePointerId = event.pointerId;
             isDraggingNote = true;
-            draggingNoteMarker = findNoteMarkerById(note.id);
+            draggingNoteMarker = marker;
+            draggingNoteFrame = getActiveImageFrame();
             pendingDraggedPointer = null;
             if (draggingNoteMarker) {
+              draggingNoteMarker.classList.add('is-dragging');
               draggingNoteMarker.setPointerCapture(event.pointerId);
             }
             queueNoteDragPosition(event.clientX, event.clientY);
@@ -8600,7 +8615,9 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       function handleNoteDrag(event) {
         if (!draggingNoteId || event.pointerId !== draggingNotePointerId) return;
         event.preventDefault();
-        queueNoteDragPosition(event.clientX, event.clientY);
+        const events = typeof event.getCoalescedEvents === 'function' ? event.getCoalescedEvents() : null;
+        const latestEvent = events && events.length ? events[events.length - 1] : event;
+        queueNoteDragPosition(latestEvent.clientX, latestEvent.clientY);
       }
 
       function stopNoteDrag(event) {
@@ -8616,10 +8633,12 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
           noteDragAnimationFrame = null;
         }
         applyPendingNoteDragPosition();
+        if (draggingNoteMarker) draggingNoteMarker.classList.remove('is-dragging');
         releasePointerCapture(draggingNoteMarker, draggingNotePointerId);
         draggingNoteId = null;
         draggingNotePointerId = null;
         draggingNoteMarker = null;
+        draggingNoteFrame = null;
         pendingDraggedPointer = null;
         isDraggingNote = false;
         window.removeEventListener('pointermove', handleNoteDrag);
@@ -8657,10 +8676,12 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         pinchCenter = null;
         releasePointerCapture(canvas, activeDrawingPointerId);
         releasePointerCapture(noteCanvas, activeWritingPointerId);
+        if (draggingNoteMarker) draggingNoteMarker.classList.remove('is-dragging');
         releasePointerCapture(draggingNoteMarker, draggingNotePointerId);
         draggingNoteId = null;
         draggingNotePointerId = null;
         draggingNoteMarker = null;
+        draggingNoteFrame = null;
         pendingDraggedPointer = null;
         activeDrawingPointerId = null;
         activeWritingPointerId = null;
