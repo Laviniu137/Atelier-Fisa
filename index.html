@@ -3240,6 +3240,96 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   #projectManagerView .project-card-menu summary { min-height: 44px; min-width: 44px; display: grid; place-items: center; }
   #projectManagerView .project-card-menu-items button { min-height: 44px; }
   #projectManagerView .project-card-name { overflow-wrap: anywhere; }
+
+  /* Tablet editor: keep the image and notes in view together so the notes panel
+     does not get pushed below a tall canvas on portrait tablets. */
+  @media (min-width: 701px) and (max-width: 1100px) {
+    body:not(.fullscreen-mode) #editorView .app {
+      min-height: 100dvh;
+      box-sizing: border-box;
+      padding: 12px clamp(14px, 2.4vw, 24px) 10px;
+    }
+    body:not(.fullscreen-mode) #editorView .layout:has(.notes:not([hidden])) {
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 34vw);
+      align-items: start;
+      gap: 14px;
+    }
+    body:not(.fullscreen-mode) #editorView .notes {
+      align-self: start;
+      position: sticky;
+      top: 12px;
+      max-height: calc(100dvh - 190px);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: 14px;
+    }
+    body:not(.fullscreen-mode) #editorView .canvas-shell {
+      height: min(54dvh, 560px);
+      min-height: 300px;
+      max-height: 680px;
+    }
+    body:not(.fullscreen-mode) #editorView .image-gallery { flex-wrap: nowrap; }
+    body:not(.fullscreen-mode) #editorView .thumbnail-strip { flex: 1 1 auto; width: auto; max-width: none; }
+    body:not(.fullscreen-mode) #editorView .gallery-add-actions { margin-left: auto; }
+  }
+
+  /* A selected note reads as a compact premium card instead of a loose input. */
+  body:not(.fullscreen-mode) #editorView .note-list { gap: 10px; margin-bottom: 14px; }
+  body:not(.fullscreen-mode) #editorView .note-list-item {
+    box-sizing: border-box;
+    padding: 10px;
+    border-radius: var(--ds-radius-md);
+    background: var(--ds-surface-soft);
+    border-color: var(--ds-line);
+    box-shadow: var(--ds-shadow-sm);
+    transition: border-color .18s ease, background .18s ease, box-shadow .18s ease, transform .18s ease;
+  }
+  body:not(.fullscreen-mode) #editorView .note-list-item:hover:not(.note-list-empty) {
+    border-color: var(--ds-line-strong);
+    box-shadow: var(--ds-shadow-md);
+    transform: translateY(-1px);
+  }
+  body:not(.fullscreen-mode) #editorView .note-list-item.selected {
+    border-color: var(--ds-blue-line);
+    background: linear-gradient(135deg, #edf5fc 0%, #e5eff8 100%);
+    box-shadow: 0 5px 14px rgba(49, 95, 145, .12), inset 0 1px 0 #fff;
+  }
+  body:not(.fullscreen-mode) #editorView .note-list-title-row { gap: 10px; min-height: 38px; }
+  body:not(.fullscreen-mode) #editorView .note-list-index {
+    display: grid;
+    place-items: center;
+    flex: 0 0 30px;
+    min-width: 30px;
+    height: 30px;
+    border: 1px solid #bfd4e7;
+    border-radius: 9px;
+    background: #dcebf8;
+    color: var(--ds-blue-dark);
+    font-size: .78rem;
+    line-height: 1;
+    text-align: center;
+  }
+  body:not(.fullscreen-mode) #editorView .note-list-name {
+    min-width: 0;
+    flex: 1 1 auto;
+    min-height: 38px;
+    padding: 7px 10px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    color: var(--ds-ink);
+    font-size: .96rem;
+    line-height: 1.25;
+  }
+  body:not(.fullscreen-mode) #editorView .note-list-item.selected .note-list-name {
+    border-color: #c4d8e9;
+    background: var(--ds-surface);
+    color: var(--ds-navy);
+    box-shadow: inset 0 1px 2px rgba(31, 49, 69, .04), 0 1px 2px rgba(31, 49, 69, .04);
+  }
+  body:not(.fullscreen-mode) #editorView .note-list-name:focus {
+    border-color: var(--ds-blue);
+    box-shadow: 0 0 0 3px rgba(49, 95, 145, .14);
+  }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 </style>
 </head>
@@ -3931,7 +4021,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.16.10';
+      const APP_VERSION = '1.16.11';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';

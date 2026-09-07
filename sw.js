@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fisa-atelier-v151';
+const CACHE_NAME = 'fisa-atelier-v152';
 const APP_FILES = [
   './',
   './index.html',
@@ -28,36 +28,24 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
-
   const url = new URL(event.request.url);
-  const isSameOrigin = url.origin === self.location.origin;
-
-  if (!isSameOrigin) {
-    return;
-  }
+  if (url.origin !== self.location.origin) return;
 
   if (event.request.mode === 'navigate') {
     event.respondWith((async () => {
       const cache = await caches.open(CACHE_NAME);
-      // Online, pagina principală vine întotdeauna din rețea: astfel actualizările
-      // nu mai rămân blocate într-o versiune veche din cache.
       try {
         const response = await fetch(event.request);
-        if (response.ok) {
-          cache.put('./index.html', response.clone());
-        }
+        if (response.ok) cache.put('./index.html', response.clone());
         return response;
       } catch {
         const cachedShell = await cache.match('./index.html');
-        if (cachedShell) return cachedShell;
-        return new Response('<h1>Offline</h1>', {
+        return cachedShell || new Response('<h1>Offline</h1>', {
           headers: { 'Content-Type': 'text/html; charset=utf-8' },
           status: 503
         });
@@ -70,21 +58,13 @@ self.addEventListener('fetch', (event) => {
     const cache = await caches.open(CACHE_NAME);
     const cached = await cache.match(event.request);
     const networkFetch = fetch(event.request).then((response) => {
-      if (response.ok) {
-        cache.put(event.request, response.clone());
-      }
+      if (response.ok) cache.put(event.request, response.clone());
       return response;
     });
-
     if (cached) {
       event.waitUntil(networkFetch.catch(() => {}));
       return cached;
     }
-
-    try {
-      return await networkFetch;
-    } catch {
-      return Response.error();
-    }
+    try { return await networkFetch; } catch { return Response.error(); }
   })());
 });
