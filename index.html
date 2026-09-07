@@ -3301,9 +3301,9 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   .dimension-label.is-committed .dimension-value:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
   body.fullscreen-mode .edit-group { min-width: 0; overflow: hidden; }
   body.fullscreen-mode .edit-group .drawing-tool-group-row { min-width: 0; max-width: 100%; gap: 3px; }
-  body.fullscreen-mode .edit-group .drawing-tool-button { width: 32px; min-width: 32px; }
-  body.fullscreen-mode .edit-group .drawing-tool-button[data-tool-label] { width: 48px; min-width: 48px; }
-  body.fullscreen-mode .edit-group .drawing-tool-button[data-tool-label] svg { left: 14px; width: 19px; height: 19px; }
+  body.fullscreen-mode .edit-group .drawing-tool-button { width: 44px; min-width: 44px; }
+  body.fullscreen-mode .edit-group .drawing-tool-button[data-tool-label] { width: 46px; min-width: 46px; }
+  body.fullscreen-mode .edit-group .drawing-tool-button[data-tool-label] svg { left: 13px; width: 19px; height: 19px; }
   body:not(.fullscreen-mode) #editorView .dimension-label { z-index: 4; }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 
@@ -3948,6 +3948,8 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       let dimensionModeEnabled = false;
       let dimensionDragState = null;
       let dimensionEditingIndex = null;
+      let selectedDimensionStrokeIndex = null;
+      let rebuildingDimensionInput = false;
       let lineDashed = false;
       let lineDraftStartPoint = null;
       let lineDraftCurrentPoint = null;
@@ -4031,7 +4033,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.16.19';
+      const APP_VERSION = '1.16.23';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -6955,18 +6957,9 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
           dashed: Boolean(activeStroke.dashed),
           type: 'line'
         };
-        if (dimensionModeEnabled && !lineStroke.eraser) {
-          const firstPoint = lineStroke.points[0];
-          const lastPoint = lineStroke.points[lineStroke.points.length - 1];
-          lineStroke.dimension = {
-            value: '',
-            t: .5,
-            offset: -.045,
-            x: clamp((firstPoint.x + lastPoint.x) / 2, 0, 1),
-            y: clamp((firstPoint.y + lastPoint.y) / 2 - .045, 0, 1)
-          };
-        }
+        if (dimensionModeEnabled && !lineStroke.eraser) ensureLineDimension(lineStroke);
         strokes.push(lineStroke);
+        selectedDimensionStrokeIndex = lineStroke.dimension ? strokes.length - 1 : null;
         redoStack = [];
         lineDraftStartPoint = null;
         lineDraftCurrentPoint = null;
@@ -7001,6 +6994,8 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
 
         if (nextTool !== 'draw' || normalizedDrawMode !== 'line') {
           clearLineToolPreview();
+          selectedDimensionStrokeIndex = null;
+          renderDimensions();
         }
 
         activeTool = nextTool;
@@ -7037,11 +7032,6 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       function setActiveDrawMode(mode, options = {}) {
         const shouldErase = Boolean(options.erasing);
         if (mode === 'line') {
-          if (event.key === 'Escape' && activeDrawMode === 'line' && lineDraftStartPoint) {
-            finalizeLineDraft();
-            syncBrushControls();
-            return;
-          }
           applyDrawingToolState({ tool: 'draw', drawMode: 'line', erasing: false });
           return;
         }
@@ -7526,6 +7516,53 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         };
       }
 
+      function ensureLineDimension(stroke) {
+        if (!stroke || stroke.type !== 'line' || stroke.eraser || !Array.isArray(stroke.points) || stroke.points.length < 2) return null;
+        if (!stroke.dimension || typeof stroke.dimension !== 'object') {
+          const firstPoint = stroke.points[0];
+          const lastPoint = stroke.points[stroke.points.length - 1];
+          stroke.dimension = {
+            value: '',
+            t: .5,
+            offset: -.045,
+            x: clamp((firstPoint.x + lastPoint.x) / 2, 0, 1),
+            y: clamp((firstPoint.y + lastPoint.y) / 2 - .045, 0, 1)
+          };
+        }
+        return stroke.dimension;
+      }
+
+      function findLineStrokeAtEvent(event) {
+        if (activeTool !== 'draw' || isErasing) return null;
+        const point = pointFromEvent(event);
+        const rect = canvas.getBoundingClientRect();
+        if (!point || !rect.width || !rect.height) return null;
+        const px = point.x * rect.width;
+        const py = point.y * rect.height;
+        let nearest = null;
+        let nearestDistance = Infinity;
+        strokes.forEach((stroke, index) => {
+          if (!stroke || stroke.type !== 'line' || stroke.eraser || !Array.isArray(stroke.points) || stroke.points.length < 2) return;
+          if (!dimensionModeEnabled && !stroke.dimension) return;
+          const first = stroke.points[0];
+          const last = stroke.points[stroke.points.length - 1];
+          const ax = first.x * rect.width;
+          const ay = first.y * rect.height;
+          const dx = (last.x - first.x) * rect.width;
+          const dy = (last.y - first.y) * rect.height;
+          const lengthSquared = dx * dx + dy * dy;
+          if (!lengthSquared) return;
+          const t = clamp(((px - ax) * dx + (py - ay) * dy) / lengthSquared, 0, 1);
+          const distance = Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+          const tolerance = Math.max(18, (Number(stroke.size) || 3) * 3.5);
+          if (distance <= tolerance && distance < nearestDistance) {
+            nearest = { stroke, index };
+            nearestDistance = distance;
+          }
+        });
+        return nearest;
+      }
+
       function appendPointToActiveStroke(point) {
         if (!activeStroke || !point) return false;
         const points = activeStroke.points;
@@ -7786,6 +7823,20 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       function beginDrawing(event) {
         if (placePendingNoteAtEvent(event)) return;
         if (!sourceImage || activeTool !== 'draw' || event.altKey) return;
+        const lineHit = findLineStrokeAtEvent(event);
+        if (lineHit) {
+          selectedDimensionStrokeIndex = lineHit.index;
+          dimensionEditingIndex = null;
+          ensureLineDimension(lineHit.stroke);
+          renderDimensions();
+          event.preventDefault();
+          return;
+        }
+        if (selectedDimensionStrokeIndex !== null) {
+          selectedDimensionStrokeIndex = null;
+          dimensionEditingIndex = null;
+          renderDimensions();
+        }
         // Un singur contact activ. Palma, a doua atingere sau un eveniment duplicat
         // nu mai pot porni o a doua linie peste cea desenată cu Apple Pencil.
         if (event.isPrimary === false || activeDrawingPointerId !== null || isDrawing) {
@@ -8874,11 +8925,13 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
               : clamp(((imageX - ax) * dx + (imageY - ay) * dy) / (length * length), 0, 1);
             const storedOffset = Number(dimension.offset);
             const normalizedOffset = Number.isFinite(storedOffset)
-              ? (Math.abs(storedOffset + .08) < .0005 ? -.045 : storedOffset)
+              ? clamp(Math.abs(storedOffset + .08) < .0005 ? -.045 : storedOffset, -.16, .16)
               : null;
+            const minDimension = Math.min(frame.photoRect.width, frame.photoRect.height);
+            const fallbackOffset = ((imageX - (ax + t * dx)) * (-dy) + (imageY - (ay + t * dy)) * dx) / length;
             const offsetPx = normalizedOffset !== null
-              ? normalizedOffset * Math.min(frame.photoRect.width, frame.photoRect.height)
-              : ((imageX - (ax + t * dx)) * (-dy) + (imageY - (ay + t * dy)) * dx) / length;
+              ? normalizedOffset * minDimension
+              : clamp(fallbackOffset / Math.max(1, minDimension), -.16, .16) * minDimension;
             imageX = ax + t * dx + (-dy / length) * offsetPx;
             imageY = ay + t * dy + (dx / length) * offsetPx;
           }
@@ -8891,10 +8944,14 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
 
       function renderDimensions() {
         if (!dimensionLayer) return;
+        const focusedInput = document.activeElement?.closest?.('.dimension-label input');
+        const focusedIndex = focusedInput ? Number(focusedInput.closest('.dimension-label')?.dataset.strokeIndex) : null;
+        if (Number.isInteger(focusedIndex)) dimensionEditingIndex = focusedIndex;
+        rebuildingDimensionInput = true;
         dimensionLayer.innerHTML = '';
         const dimensions = strokes
           .map((stroke, index) => ({ stroke, index, dimension: stroke?.dimension }))
-          .filter((entry) => entry.stroke?.type === 'line' && entry.dimension && typeof entry.dimension === 'object');
+          .filter((entry) => entry.index === selectedDimensionStrokeIndex && entry.stroke?.type === 'line' && entry.dimension && typeof entry.dimension === 'object');
         dimensionLayer.hidden = !dimensions.length;
         const frame = getActiveImageFrame();
         dimensions.forEach(({ stroke, index, dimension }) => {
@@ -8923,11 +8980,15 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
             input.addEventListener('touchstart', (event) => event.stopPropagation(), { passive: true });
             input.addEventListener('touchend', (event) => event.stopPropagation(), { passive: true });
             input.addEventListener('click', (event) => event.stopPropagation());
+            input.addEventListener('focus', () => {
+              dimensionEditingIndex = index;
+            });
             input.addEventListener('input', () => {
               dimension.value = input.value;
               scheduleSave();
             });
             const commitDimensionValue = () => {
+              if (rebuildingDimensionInput) return;
               dimension.value = input.value;
               if (dimension.value.trim()) {
                 dimensionEditingIndex = null;
@@ -8980,6 +9041,13 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
           });
           dimensionLayer.appendChild(label);
         });
+        rebuildingDimensionInput = false;
+        if (Number.isInteger(focusedIndex)) {
+          requestAnimationFrame(() => {
+            const editor = dimensionLayer.querySelector(`.dimension-label[data-stroke-index="${focusedIndex}"] input`);
+            editor?.focus({ preventScroll: true });
+          });
+        }
       }
 
       function positionDimensionLabels(frame = getActiveImageFrame()) {
@@ -9015,7 +9083,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         const offsetPx = ((px - projectedX) * (-dy) + (py - projectedY) * dx) / length;
         const minDimension = Math.min(frame.photoRect.width, frame.photoRect.height);
         dimensionDragState.dimension.t = t;
-        dimensionDragState.dimension.offset = clamp(offsetPx / Math.max(1, minDimension), -.45, .45);
+        dimensionDragState.dimension.offset = clamp(offsetPx / Math.max(1, minDimension), -.16, .16);
         dimensionDragState.dimension.x = clamp((projectedX - (dy / length) * offsetPx) / frame.photoRect.width, 0, 1);
         dimensionDragState.dimension.y = clamp((projectedY + (dx / length) * offsetPx) / frame.photoRect.height, 0, 1);
         positionDimensionElement(dimensionDragState.label, dimensionDragState.dimension, frame, dimensionDragState.stroke);
@@ -9342,6 +9410,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         selectedNoteMode = 'text';
         redoStack = [];
         dimensionEditingIndex = null;
+        selectedDimensionStrokeIndex = null;
         brushColor = '#000000';
         lastPenSize = 3;
         lastEraserSize = 8;
@@ -9456,6 +9525,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         selectedNoteId = null;
         redoStack = [];
         dimensionEditingIndex = null;
+        selectedDimensionStrokeIndex = null;
         noteLayer.innerHTML = '';
         dimensionLayer.innerHTML = '';
         dimensionLayer.hidden = true;
@@ -9719,6 +9789,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         selectedNoteId = null;
         draggingNoteId = null;
         dimensionEditingIndex = null;
+        selectedDimensionStrokeIndex = null;
         noteLayer.innerHTML = '';
         noteLayer.hidden = true;
         dimensionLayer.innerHTML = '';
@@ -9747,6 +9818,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         redoStack = [];
         strokes = [];
         dimensionEditingIndex = null;
+        selectedDimensionStrokeIndex = null;
         redraw();
         renderDimensions();
         updateActiveThumbnailDrawing();
@@ -9779,6 +9851,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         const lastStroke = strokes.pop();
         redoStack.push(lastStroke);
         dimensionEditingIndex = null;
+        selectedDimensionStrokeIndex = null;
         redraw();
         renderDimensions();
         updateActiveThumbnailDrawing();
@@ -9792,6 +9865,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         const lastRedo = redoStack.pop();
         strokes.push(lastRedo);
         dimensionEditingIndex = null;
+        selectedDimensionStrokeIndex = null;
         redraw();
         renderDimensions();
         updateActiveThumbnailDrawing();
@@ -10078,6 +10152,8 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
             setActiveDrawMode('line', { erasing: false });
           }
           dimensionModeEnabled = !dimensionModeEnabled;
+          if (!dimensionModeEnabled) selectedDimensionStrokeIndex = null;
+          renderDimensions();
           applyCurrentBrushSettings();
           syncBrushControls();
           scheduleSave();
