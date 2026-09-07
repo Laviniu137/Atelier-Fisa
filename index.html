@@ -3293,8 +3293,16 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   .dimension-layer { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
   .dimension-label { position: absolute; display: flex; align-items: center; min-width: 78px; min-height: 36px; padding: 3px; transform: translate(-50%, -50%); border: 1px solid #91afd0; border-radius: 10px; background: rgba(248, 252, 255, .96); box-shadow: 0 5px 14px rgba(31, 49, 69, .18), inset 0 1px 0 #fff; pointer-events: auto; cursor: grab; touch-action: none; }
   .dimension-label.is-dragging { cursor: grabbing; box-shadow: 0 8px 18px rgba(31, 49, 69, .24); }
+  .dimension-label.is-committed { min-width: 0; min-height: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
   .dimension-label input { width: 100%; min-width: 0; min-height: 28px; padding: 4px 8px; border: 0; border-radius: 7px; outline: 0; background: transparent; color: #294c6d; font: 700 13px/1.2 "Segoe UI", sans-serif; text-align: center; }
   .dimension-label input:focus { background: #fff; box-shadow: 0 0 0 2px rgba(49, 95, 145, .18); }
+  .dimension-value { display: inline-block; padding: 2px 4px; color: var(--dimension-color, #294c6d); font: 750 14px/1.15 "Segoe UI", sans-serif; white-space: nowrap; text-shadow: 0 1px 2px rgba(255,255,255,.85); cursor: grab; }
+  .dimension-label.is-committed .dimension-value:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  body.fullscreen-mode .edit-group { min-width: 0; overflow: hidden; }
+  body.fullscreen-mode .edit-group .drawing-tool-group-row { min-width: 0; max-width: 100%; gap: 3px; }
+  body.fullscreen-mode .edit-group .drawing-tool-button { width: 32px; min-width: 32px; }
+  body.fullscreen-mode .edit-group .drawing-tool-button[data-tool-label] { width: 48px; min-width: 48px; }
+  body.fullscreen-mode .edit-group .drawing-tool-button[data-tool-label] svg { left: 14px; width: 19px; height: 19px; }
   body:not(.fullscreen-mode) #editorView .dimension-label { z-index: 4; }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 
@@ -3938,6 +3946,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       let activeDrawMode = 'freehand';
       let dimensionModeEnabled = false;
       let dimensionDragState = null;
+      let dimensionEditingIndex = null;
       let lineDashed = false;
       let lineDraftStartPoint = null;
       let lineDraftCurrentPoint = null;
@@ -4021,7 +4030,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.16.15';
+      const APP_VERSION = '1.16.17';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -6950,6 +6959,8 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
           const lastPoint = lineStroke.points[lineStroke.points.length - 1];
           lineStroke.dimension = {
             value: '',
+            t: .5,
+            offset: -.08,
             x: clamp((firstPoint.x + lastPoint.x) / 2, 0, 1),
             y: clamp((firstPoint.y + lastPoint.y) / 2 - .08, 0, 1)
           };
@@ -8839,10 +8850,35 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         scheduleSave();
       }
 
-      function positionDimensionElement(element, dimension, frame = getActiveImageFrame()) {
+      function positionDimensionElement(element, dimension, frame = getActiveImageFrame(), stroke = null) {
         if (!element || !dimension || !frame) return;
-        const leftPx = frame.imageOffsetX + clamp(Number(dimension.x) || 0, 0, 1) * frame.photoRect.width;
-        const topPx = frame.imageOffsetY + clamp(Number(dimension.y) || 0, 0, 1) * frame.photoRect.height;
+        const lineStroke = stroke || null;
+        const points = lineStroke && Array.isArray(lineStroke.points) ? lineStroke.points : null;
+        const first = points?.[0];
+        const last = points?.[points.length - 1];
+        let imageX = clamp(Number(dimension.x) || 0, 0, 1) * frame.photoRect.width;
+        let imageY = clamp(Number(dimension.y) || 0, 0, 1) * frame.photoRect.height;
+        if (first && last && points.length >= 2) {
+          const ax = clamp(Number(first.x) || 0, 0, 1) * frame.photoRect.width;
+          const ay = clamp(Number(first.y) || 0, 0, 1) * frame.photoRect.height;
+          const bx = clamp(Number(last.x) || 0, 0, 1) * frame.photoRect.width;
+          const by = clamp(Number(last.y) || 0, 0, 1) * frame.photoRect.height;
+          const dx = bx - ax;
+          const dy = by - ay;
+          const length = Math.hypot(dx, dy);
+          if (length > 0.5) {
+            const t = Number.isFinite(Number(dimension.t))
+              ? clamp(Number(dimension.t), 0, 1)
+              : clamp(((imageX - ax) * dx + (imageY - ay) * dy) / (length * length), 0, 1);
+            const offsetPx = Number.isFinite(Number(dimension.offset))
+              ? Number(dimension.offset) * Math.min(frame.photoRect.width, frame.photoRect.height)
+              : ((imageX - (ax + t * dx)) * (-dy) + (imageY - (ay + t * dy)) * dx) / length;
+            imageX = ax + t * dx + (-dy / length) * offsetPx;
+            imageY = ay + t * dy + (dx / length) * offsetPx;
+          }
+        }
+        const leftPx = frame.imageOffsetX + imageX;
+        const topPx = frame.imageOffsetY + imageY;
         element.style.left = `${(leftPx / frame.stageRect.width) * 100}%`;
         element.style.top = `${(topPx / frame.stageRect.height) * 100}%`;
       }
@@ -8852,46 +8888,78 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         dimensionLayer.innerHTML = '';
         const dimensions = strokes
           .map((stroke, index) => ({ stroke, index, dimension: stroke?.dimension }))
-          .filter((entry) => entry.dimension && typeof entry.dimension === 'object');
+          .filter((entry) => entry.stroke?.type === 'line' && entry.dimension && typeof entry.dimension === 'object');
         dimensionLayer.hidden = !dimensions.length;
         const frame = getActiveImageFrame();
         dimensions.forEach(({ stroke, index, dimension }) => {
           const label = document.createElement('div');
-          label.className = 'dimension-label';
+          const value = typeof dimension.value === 'string' ? dimension.value.trim() : '';
+          const isEditing = !value || dimensionEditingIndex === index;
+          label.className = `dimension-label${isEditing ? '' : ' is-committed'}`;
           label.dataset.strokeIndex = String(index);
-          label.title = 'Tragează pentru a muta dimensiunea';
-          positionDimensionElement(label, dimension, frame);
+          label.style.setProperty('--dimension-color', typeof stroke.color === 'string' ? stroke.color : '#294c6d');
+          label.title = isEditing ? 'Introdu dimensiunea, apoi apasă Enter' : 'Tragează de-a lungul liniei; dublu-click pentru editare';
+          positionDimensionElement(label, dimension, frame, stroke);
 
-          const input = document.createElement('input');
-          input.type = 'text';
-          input.inputMode = 'decimal';
-          input.value = typeof dimension.value === 'string' ? dimension.value : '';
-          input.placeholder = 'Dimensiune';
-          input.setAttribute('aria-label', 'Dimensiunea liniei');
-          input.autocomplete = 'off';
-          input.spellcheck = false;
-          input.addEventListener('pointerdown', (event) => event.stopPropagation());
-          input.addEventListener('click', (event) => event.stopPropagation());
-          input.addEventListener('input', () => {
-            dimension.value = input.value;
-            scheduleSave();
-          });
-          input.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
+          if (isEditing) {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.inputMode = 'decimal';
+            input.style.color = typeof stroke.color === 'string' ? stroke.color : '#294c6d';
+            input.value = typeof dimension.value === 'string' ? dimension.value : '';
+            input.placeholder = 'Dimensiune';
+            input.setAttribute('aria-label', 'Dimensiunea liniei');
+            input.autocomplete = 'off';
+            input.spellcheck = false;
+            input.addEventListener('pointerdown', (event) => event.stopPropagation());
+            input.addEventListener('click', (event) => event.stopPropagation());
+            input.addEventListener('input', () => {
+              dimension.value = input.value;
+              scheduleSave();
+            });
+            const commitDimensionValue = () => {
+              dimension.value = input.value;
+              if (dimension.value.trim()) {
+                dimensionEditingIndex = null;
+                renderDimensions();
+              }
+              scheduleSave();
+            };
+            input.addEventListener('blur', commitDimensionValue);
+            input.addEventListener('keydown', (event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                input.blur();
+              }
+            });
+            label.appendChild(input);
+          } else {
+            const valueElement = document.createElement('span');
+            valueElement.className = 'dimension-value';
+            valueElement.textContent = value;
+            valueElement.setAttribute('aria-label', `Dimensiune: ${value}`);
+            valueElement.addEventListener('dblclick', (event) => {
               event.preventDefault();
-              input.blur();
-            }
-          });
-          label.appendChild(input);
+              event.stopPropagation();
+              dimensionEditingIndex = index;
+              renderDimensions();
+              const editor = dimensionLayer.querySelector(`.dimension-label[data-stroke-index="${index}"] input`);
+              editor?.focus();
+              editor?.select();
+            });
+            label.appendChild(valueElement);
+          }
           label.addEventListener('pointerdown', (event) => {
-            if (event.target === input || (event.button !== undefined && event.button !== 0)) return;
+            if (event.target?.tagName === 'INPUT' || event.detail > 1 || (event.button !== undefined && event.button !== 0)) return;
             event.preventDefault();
             event.stopPropagation();
+            const dragFrame = getActiveImageFrame();
             dimensionDragState = {
               pointerId: event.pointerId,
               label,
               dimension,
-              frame: getActiveImageFrame()
+              stroke,
+              frame: dragFrame
             };
             label.classList.add('is-dragging');
             label.setPointerCapture(event.pointerId);
@@ -8908,18 +8976,38 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         dimensionLayer.querySelectorAll('.dimension-label').forEach((label) => {
           const index = Number(label.dataset.strokeIndex);
           const dimension = Number.isInteger(index) ? strokes[index]?.dimension : null;
-          if (dimension) positionDimensionElement(label, dimension, frame);
+          if (dimension) positionDimensionElement(label, dimension, frame, strokes[index]);
         });
       }
 
       function updateDimensionDrag(event) {
         if (!dimensionDragState || event.pointerId !== dimensionDragState.pointerId) return;
         event.preventDefault();
-        const point = clientPointToImageCoordinates(event.clientX, event.clientY, dimensionDragState.frame || getActiveImageFrame());
-        if (!point) return;
-        dimensionDragState.dimension.x = point.x;
-        dimensionDragState.dimension.y = point.y;
-        positionDimensionElement(dimensionDragState.label, dimensionDragState.dimension, dimensionDragState.frame || getActiveImageFrame());
+        const frame = dimensionDragState.frame || getActiveImageFrame();
+        const point = clientPointToImageCoordinates(event.clientX, event.clientY, frame);
+        const points = dimensionDragState.stroke?.points;
+        if (!point || !Array.isArray(points) || points.length < 2 || !frame) return;
+        const first = points[0];
+        const last = points[points.length - 1];
+        const ax = first.x * frame.photoRect.width;
+        const ay = first.y * frame.photoRect.height;
+        const dx = (last.x - first.x) * frame.photoRect.width;
+        const dy = (last.y - first.y) * frame.photoRect.height;
+        const lengthSquared = dx * dx + dy * dy;
+        const length = Math.sqrt(lengthSquared);
+        if (!length) return;
+        const px = point.x * frame.photoRect.width;
+        const py = point.y * frame.photoRect.height;
+        const t = clamp(((px - ax) * dx + (py - ay) * dy) / lengthSquared, 0, 1);
+        const projectedX = ax + t * dx;
+        const projectedY = ay + t * dy;
+        const offsetPx = ((px - projectedX) * (-dy) + (py - projectedY) * dx) / length;
+        const minDimension = Math.min(frame.photoRect.width, frame.photoRect.height);
+        dimensionDragState.dimension.t = t;
+        dimensionDragState.dimension.offset = clamp(offsetPx / Math.max(1, minDimension), -.45, .45);
+        dimensionDragState.dimension.x = clamp((projectedX - (dy / length) * offsetPx) / frame.photoRect.width, 0, 1);
+        dimensionDragState.dimension.y = clamp((projectedY + (dx / length) * offsetPx) / frame.photoRect.height, 0, 1);
+        positionDimensionElement(dimensionDragState.label, dimensionDragState.dimension, frame, dimensionDragState.stroke);
       }
 
       function stopDimensionDrag(event) {
@@ -9242,6 +9330,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         activeTool = 'draw';
         selectedNoteMode = 'text';
         redoStack = [];
+        dimensionEditingIndex = null;
         brushColor = '#000000';
         lastPenSize = 3;
         lastEraserSize = 8;
@@ -9355,6 +9444,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         interactiveNotes = [];
         selectedNoteId = null;
         redoStack = [];
+        dimensionEditingIndex = null;
         noteLayer.innerHTML = '';
         dimensionLayer.innerHTML = '';
         dimensionLayer.hidden = true;
@@ -9617,6 +9707,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         interactiveNotes = [];
         selectedNoteId = null;
         draggingNoteId = null;
+        dimensionEditingIndex = null;
         noteLayer.innerHTML = '';
         noteLayer.hidden = true;
         dimensionLayer.innerHTML = '';
@@ -9644,6 +9735,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         activeStroke = null;
         redoStack = [];
         strokes = [];
+        dimensionEditingIndex = null;
         redraw();
         renderDimensions();
         updateActiveThumbnailDrawing();
@@ -9675,6 +9767,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         if (!strokes.length) return;
         const lastStroke = strokes.pop();
         redoStack.push(lastStroke);
+        dimensionEditingIndex = null;
         redraw();
         renderDimensions();
         updateActiveThumbnailDrawing();
@@ -9687,6 +9780,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         if (!redoStack.length) return;
         const lastRedo = redoStack.pop();
         strokes.push(lastRedo);
+        dimensionEditingIndex = null;
         redraw();
         renderDimensions();
         updateActiveThumbnailDrawing();
