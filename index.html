@@ -3291,12 +3291,13 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   body:not(.fullscreen-mode) #editorView .fullscreen-image-nav:hover:not(:disabled) { border-color: var(--ds-blue); background: var(--ds-surface-blue); color: var(--ds-blue); box-shadow: 0 10px 22px rgba(49, 95, 145, .2), inset 0 1px 0 #fff; }
   body:not(.fullscreen-mode) #editorView .fullscreen-image-nav svg { width: 22px; height: 22px; stroke-width: 2.5; }
   .dimension-layer { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
-  .dimension-label { position: absolute; display: flex; align-items: center; min-width: 78px; min-height: 36px; padding: 3px; transform: translate(-50%, -50%); border: 1px solid #91afd0; border-radius: 10px; background: rgba(248, 252, 255, .96); box-shadow: 0 5px 14px rgba(31, 49, 69, .18), inset 0 1px 0 #fff; pointer-events: auto; cursor: grab; touch-action: none; }
+  .dimension-label { position: absolute; display: flex; align-items: center; width: 136px; min-width: 136px; min-height: 42px; padding: 4px; transform: translate(-50%, -50%); border: 1px solid rgba(86, 137, 181, .68); border-radius: 13px; background: linear-gradient(145deg, rgba(255, 255, 255, .99), rgba(229, 240, 250, .97)); box-shadow: 0 9px 20px rgba(31, 49, 69, .2), 0 0 0 3px rgba(255, 255, 255, .4), inset 0 1px 0 #fff; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); pointer-events: auto; cursor: grab; touch-action: none; }
   .dimension-label.is-dragging { cursor: grabbing; box-shadow: 0 8px 18px rgba(31, 49, 69, .24); }
-  .dimension-label.is-committed { min-width: 0; min-height: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
-  .dimension-label input { width: 100%; min-width: 0; min-height: 28px; padding: 4px 8px; border: 0; border-radius: 7px; outline: 0; background: transparent; color: #294c6d; font: 700 13px/1.2 "Segoe UI", sans-serif; text-align: center; }
-  .dimension-label input:focus { background: #fff; box-shadow: 0 0 0 2px rgba(49, 95, 145, .18); }
-  .dimension-value { display: inline-block; padding: 2px 4px; color: var(--dimension-color, #294c6d); font: 750 14px/1.15 "Segoe UI", sans-serif; white-space: nowrap; text-shadow: 0 1px 2px rgba(255,255,255,.85); cursor: grab; }
+  .dimension-label.is-committed { width: max-content; min-width: 0; min-height: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+  .dimension-label input { box-sizing: border-box; width: 100%; min-width: 0; min-height: 32px; padding: 5px 10px; border: 1px solid rgba(126, 164, 198, .55); border-radius: 9px; outline: 0; background: rgba(255, 255, 255, .88); color: #294c6d; font: 750 14px/1.2 "Segoe UI", sans-serif; text-align: center; touch-action: auto; -webkit-user-select: text; user-select: text; }
+  .dimension-label input:focus { background: #fff; border-color: rgba(49, 95, 145, .78); box-shadow: 0 0 0 2px rgba(49, 95, 145, .2), inset 0 1px 2px rgba(31, 49, 69, .05); }
+  .dimension-value { display: inline-block; padding: 1px 4px; color: var(--dimension-color, #294c6d); font: 800 clamp(18px, 2.2vw, 22px)/1.1 "Segoe UI", sans-serif; letter-spacing: .015em; white-space: nowrap; text-shadow: 0 1px 2px rgba(255,255,255,.95), 0 0 1px rgba(255,255,255,.9); cursor: grab; }
+  .dimension-label.is-committed .dimension-value { -webkit-text-stroke: .25px rgba(255,255,255,.55); }
   .dimension-label.is-committed .dimension-value:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
   body.fullscreen-mode .edit-group { min-width: 0; overflow: hidden; }
   body.fullscreen-mode .edit-group .drawing-tool-group-row { min-width: 0; max-width: 100%; gap: 3px; }
@@ -4030,7 +4031,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.16.17';
+      const APP_VERSION = '1.16.19';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -6960,9 +6961,9 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
           lineStroke.dimension = {
             value: '',
             t: .5,
-            offset: -.08,
+            offset: -.045,
             x: clamp((firstPoint.x + lastPoint.x) / 2, 0, 1),
-            y: clamp((firstPoint.y + lastPoint.y) / 2 - .08, 0, 1)
+            y: clamp((firstPoint.y + lastPoint.y) / 2 - .045, 0, 1)
           };
         }
         strokes.push(lineStroke);
@@ -8297,6 +8298,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       function blockFullscreenImageNativeActions(event) {
         if (!fullscreenMode) return;
         if (!isEventInsideImageStage(event)) return;
+        if (event.target?.closest?.('.dimension-label, input, textarea, button, select')) return;
         event.preventDefault();
       }
 
@@ -8870,8 +8872,12 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
             const t = Number.isFinite(Number(dimension.t))
               ? clamp(Number(dimension.t), 0, 1)
               : clamp(((imageX - ax) * dx + (imageY - ay) * dy) / (length * length), 0, 1);
-            const offsetPx = Number.isFinite(Number(dimension.offset))
-              ? Number(dimension.offset) * Math.min(frame.photoRect.width, frame.photoRect.height)
+            const storedOffset = Number(dimension.offset);
+            const normalizedOffset = Number.isFinite(storedOffset)
+              ? (Math.abs(storedOffset + .08) < .0005 ? -.045 : storedOffset)
+              : null;
+            const offsetPx = normalizedOffset !== null
+              ? normalizedOffset * Math.min(frame.photoRect.width, frame.photoRect.height)
               : ((imageX - (ax + t * dx)) * (-dy) + (imageY - (ay + t * dy)) * dx) / length;
             imageX = ax + t * dx + (-dy / length) * offsetPx;
             imageY = ay + t * dy + (dx / length) * offsetPx;
@@ -8910,8 +8916,12 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
             input.placeholder = 'Dimensiune';
             input.setAttribute('aria-label', 'Dimensiunea liniei');
             input.autocomplete = 'off';
+            input.autocapitalize = 'off';
+            input.enterKeyHint = 'done';
             input.spellcheck = false;
             input.addEventListener('pointerdown', (event) => event.stopPropagation());
+            input.addEventListener('touchstart', (event) => event.stopPropagation(), { passive: true });
+            input.addEventListener('touchend', (event) => event.stopPropagation(), { passive: true });
             input.addEventListener('click', (event) => event.stopPropagation());
             input.addEventListener('input', () => {
               dimension.value = input.value;
@@ -8949,6 +8959,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
             });
             label.appendChild(valueElement);
           }
+          label.addEventListener('touchstart', (event) => event.stopPropagation(), { passive: true });
           label.addEventListener('pointerdown', (event) => {
             if (event.target?.tagName === 'INPUT' || event.detail > 1 || (event.button !== undefined && event.button !== 0)) return;
             event.preventDefault();
