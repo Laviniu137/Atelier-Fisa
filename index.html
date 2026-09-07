@@ -3168,20 +3168,22 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   body:not(.fullscreen-mode) #editorView #thumbnailAddImage { min-width: 158px; padding: 10px 16px; background: #eaf2f9; border-color: #b9cde0; color: var(--ds-blue-dark); box-shadow: 0 4px 10px rgba(49,95,145,.10), inset 0 1px 0 #fff; }
   body:not(.fullscreen-mode) #editorView #thumbnailAddImage svg { color: var(--ds-blue); }
   body:not(.fullscreen-mode) #editorView #thumbnailAddImage:hover:not(:disabled) { background: #dceaf5; border-color: #9fb9d1; color: var(--ds-blue-dark); }
-  body:not(.fullscreen-mode) #editorView .image-thumb-wrap { width: 104px; flex-basis: 104px; gap: 7px; padding: 6px 6px 7px; border: 1px solid var(--ds-line); border-radius: 16px; background: #f6f8fa; box-shadow: 0 3px 10px rgba(31,49,69,.07); }
-  body:not(.fullscreen-mode) #editorView .image-thumb { width: 92px; min-width: 92px; height: 70px; min-height: 70px; flex-basis: 70px; border: 2px solid var(--ds-blue-line); border-radius: 12px; background: var(--ds-surface-blue); box-shadow: 0 4px 10px rgba(31,49,69,.10), inset 0 1px 0 #fff; }
-  body:not(.fullscreen-mode) #editorView .image-thumb::before { height: 4px; background: #a9bfd3; border-radius: 11px 11px 0 0; }
-  body:not(.fullscreen-mode) #editorView .image-thumb img { border-radius: 8px; }
-  body:not(.fullscreen-mode) #editorView .image-thumb:hover:not(.is-active) { border-color: #8eacc8; box-shadow: 0 7px 14px rgba(31,49,69,.14); transform: translateY(-2px); }
-  body:not(.fullscreen-mode) #editorView .image-thumb.is-active { border-color: var(--ds-blue); background: #f7fbff; box-shadow: 0 0 0 3px #d1e1ef, 0 8px 16px rgba(49,95,145,.18); }
-  body:not(.fullscreen-mode) #editorView .image-thumb.is-active::before { background: var(--ds-blue); }
-  body:not(.fullscreen-mode) #editorView .image-thumb-title { max-width: 92px; padding: 3px 10px; border: 1px solid var(--ds-line); border-radius: 999px; background: var(--ds-surface-blue); color: var(--ds-muted); font-size: 10px; line-height: 1.25; }
-  body:not(.fullscreen-mode) #editorView .image-thumb-wrap:has(.is-active) .image-thumb-title { border-color: var(--ds-blue-line); background: #dfeaf5; color: var(--ds-blue-dark); font-weight: 700; }
-  body:not(.fullscreen-mode) #editorView .image-thumb { border-color: var(--ds-blue-line); border-radius: 15px; background: var(--ds-surface-blue); box-shadow: var(--ds-shadow-sm), inset 0 1px 0 #fff; }
-  body:not(.fullscreen-mode) #editorView .image-thumb:hover:not(.is-active) { border-color: #9fb9d1; box-shadow: 0 8px 16px rgba(31,49,69,.14); }
-  body:not(.fullscreen-mode) #editorView .image-thumb.is-active { border-color: var(--ds-blue); background: #f7fbff; box-shadow: 0 0 0 3px #d1e1ef, 0 8px 18px rgba(49,95,145,.16); }
-  body:not(.fullscreen-mode) #editorView .image-thumb-title { border-color: var(--ds-line); border-radius: 999px; background: var(--ds-surface-blue); color: var(--ds-muted); }
-  body:not(.fullscreen-mode) #editorView .image-thumb-wrap:has(.is-active) .image-thumb-title { border-color: var(--ds-blue-line); background: #dfeaf5; color: var(--ds-blue-dark); }
+  /* Unified filmstrip cards: one frame, generous preview, readable caption. */
+  body:not(.fullscreen-mode) #editorView .thumbnail-strip { gap: 12px; padding: 8px 4px; align-items: stretch; }
+  body:not(.fullscreen-mode) #editorView .image-thumb-wrap { box-sizing: border-box; width: 132px; flex: 0 0 132px; gap: 0; padding: 6px; border: 1px solid var(--ds-line); border-radius: 16px; background: var(--ds-surface); box-shadow: var(--ds-shadow-sm); transition: border-color .18s ease, box-shadow .18s ease; }
+  body:not(.fullscreen-mode) #editorView .image-thumb-wrap:hover { border-color: var(--ds-line-strong); box-shadow: var(--ds-shadow-md); }
+  body:not(.fullscreen-mode) #editorView .image-thumb-wrap:has(.is-active) { border-color: var(--ds-blue); background: var(--ds-surface-blue); box-shadow: 0 0 0 2px rgba(49,95,145,.12), var(--ds-shadow-sm); }
+  body:not(.fullscreen-mode) #editorView .image-thumb,
+  body:not(.fullscreen-mode) #editorView .image-thumb:hover:not(.is-active),
+  body:not(.fullscreen-mode) #editorView .image-thumb.is-active { box-sizing: border-box; width: 100%; min-width: 0; height: 88px; min-height: 88px; flex: 0 0 88px; padding: 4px; border: 0; border-radius: 10px; background: var(--ds-surface-soft); box-shadow: none; transform: none; }
+  body:not(.fullscreen-mode) #editorView .image-thumb::before,
+  body:not(.fullscreen-mode) #editorView .image-thumb::after { display: none; }
+  body:not(.fullscreen-mode) #editorView .image-thumb img { width: 100%; height: 100%; object-fit: contain; border-radius: 6px; }
+  body:not(.fullscreen-mode) #editorView .image-thumb:focus-visible { outline: 2px solid var(--ds-blue); outline-offset: 2px; }
+  body:not(.fullscreen-mode) #editorView .image-thumb-caption { box-sizing: border-box; width: 100%; min-height: 36px; padding: 8px 4px 2px; display: flex; align-items: center; justify-content: flex-start; }
+  body:not(.fullscreen-mode) #editorView .image-thumb-title,
+  body:not(.fullscreen-mode) #editorView .image-thumb-wrap:has(.is-active) .image-thumb-title { display: block; width: 100%; max-width: 100%; padding: 0; border: 0; border-radius: 0; background: transparent; color: var(--ds-ink); font-size: 12px; font-weight: 600; line-height: 18px; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  body:not(.fullscreen-mode) #editorView .image-thumb-wrap:has(.is-active) .image-thumb-title { color: var(--ds-blue-dark); font-weight: 700; }
   body:not(.fullscreen-mode) #editorView .notes { padding: 16px; }
   body:not(.fullscreen-mode) #editorView .notes-toolbar { gap: 8px; }
   body:not(.fullscreen-mode) #editorView #addNote { background: var(--ds-blue); border-color: var(--ds-blue); color: #fff; box-shadow: 0 7px 16px rgba(49,95,145,.18); }
@@ -3943,7 +3945,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.16.6';
+      const APP_VERSION = '1.16.7';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
