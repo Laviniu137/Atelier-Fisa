@@ -11,11 +11,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Fișă atelier">
-  <link rel="manifest" href="manifest.webmanifest?v=1.4.24">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.4.24">
-  <link rel="apple-touch-icon" href="icon-180.png?v=1.4.24">
-  <link rel="apple-touch-startup-image" href="startup-ipad-portrait.png" media="(device-width: 820px) and (device-height: 1180px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="startup-ipad-landscape.png" media="(device-width: 1180px) and (device-height: 820px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+  <link rel="manifest" href="manifest.webmanifest?v=1.17.1">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.17.1">
+  <link rel="apple-touch-icon" href="icon-180.png?v=1.17.1">
   <title>Notițe pe imagini</title>
   <style>
     :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #29261f; background: #edeae4; }
@@ -3612,7 +3610,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 7.5 16.5"></path><path d="m9.5 14.5 2.5-2.5"></path><path d="m14 10 2.5-2.5"></path><path d="M18 6 19 5"></path></svg>
                   </button>
                   <button type="button" id="fullscreenDimensionBtn" class="drawing-tool-button" data-tool-label="Dimensiune" aria-label="Activează dimensiunea pentru linie" title="Dimensiune linie" aria-pressed="false" hidden>
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20 20 4"></path><path d="m7 17-2-2M10 14 8 12M13 11l-2-2M16 8l-2-2M19 5l-2-2"></path></svg>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6"></path><path d="m5 14 1 4 4 1M14 5l4 1 1 4"></path><path d="M9 15 15 9"></path></svg>
                   </button>
                   <button type="button" id="fullscreenEraserBtn" class="drawing-tool-button" data-tool-label="Radieră" aria-label="Radieră" title="Radieră">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.2 15.4 11 7.2a2.2 2.2 0 0 0-3.1 0L3.8 11.3a2.2 2.2 0 0 0 0 3.1l3.3 3.3a2.2 2.2 0 0 0 1.5.6H17"></path><path d="M13 20h8"></path></svg>
@@ -4049,7 +4047,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.17.0';
+      const APP_VERSION = '1.17.1';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -4111,7 +4109,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         updateCloudAccountUi();
       }
       function clearFirebaseSyncFailure() { firebaseLastSyncError = ''; }
-      function getCloudStatusMessage() { if (firebaseUser) return firebaseLastSyncError || 'Sincronizare live activă prin Firebase între tabletă și PC.'; if (firebaseInitialized) return 'Conectează contul Google pentru sincronizare live între tabletă și PC.'; if (!googleDriveConnected) return 'Conectează Google Drive o singură dată pe fiecare dispozitiv pentru sincronizare automată.'; return googleDriveAuthorizationNeeded ? 'Google Drive este configurat. Apasă „Sincronizează acum” pentru a reîmprospăta accesul.' : 'Google Drive este conectat. Proiectele se salvează local și se actualizează automat între tabletă și PC.'; }
+      function getCloudStatusMessage() { if (firebaseUser) return firebaseLastSyncError || 'Proiectele și notițele sunt sincronizate live între tabletă și PC.'; if (firebaseInitialized) return 'Conectează același cont Google pe tabletă și PC pentru a sincroniza proiectele și notițele.'; if (!googleDriveConnected) return 'Conectează Google Drive o singură dată pe fiecare dispozitiv pentru sincronizarea proiectelor.'; return googleDriveAuthorizationNeeded ? 'Google Drive este configurat. Apasă „Sincronizează acum” pentru a reîmprospăta accesul.' : 'Google Drive este conectat. Proiectele se salvează local și se actualizează automat între tabletă și PC.'; }
       function getSyncIndicatorLabel() {
         if (firebaseUser) {
           if (navigator.onLine === false) return '💾 Salvat local';
@@ -4307,6 +4305,87 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         if (published) await firebaseBroadcastRealtimeSignal().catch((error) => console.warn('Semnalul live va fi reîncercat la următoarea modificare.', error));
         return Boolean(published);
       }
+
+      async function firebaseLoadA4Note(meta) {
+        if (!firebaseUser || !firebaseDb || !meta?.id) return null;
+        const parent = firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid);
+        const reads = [];
+        for (let index = 0; index < Number(meta.chunks || 0); index += 1) {
+          reads.push(parent.collection('noteChunks').doc(firebaseChunkId(meta.id, index, meta.chunkVersion || '')).get());
+        }
+        const chunks = await Promise.all(reads);
+        const text = chunks.map((item) => item.exists ? String(item.data()?.data || '') : '').join('');
+        return text ? JSON.parse(text) : null;
+      }
+
+      async function firebaseUploadA4Note(note) {
+        if (!firebaseUser || !firebaseDb || !note?.id) throw new Error('AUTH_REQUIRED');
+        const text = JSON.stringify(note);
+        const savedAt = Date.parse(note.updatedAt || '') || Date.now();
+        const parent = firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid);
+        const manifestRef = parent.collection('state').doc('manifest');
+        const initial = await manifestRef.get();
+        const current = initial.exists ? initial.data() : { version: 1, records: {}, tombstones: {}, notes: {}, noteTombstones: {} };
+        if ((Date.parse(current.noteTombstones?.[note.id] || '') || 0) > savedAt || (Date.parse(current.notes?.[note.id]?.updatedAt || '') || 0) > savedAt) return false;
+        const chunkVersion = String(note.updatedAt || new Date().toISOString());
+        const chunks = await firebaseWriteTextChunks(parent.collection('noteChunks'), text, index => firebaseChunkId(note.id, index, chunkVersion), chunkVersion);
+        const published = await firebaseDb.runTransaction(async transaction => {
+          const snapshot = await transaction.get(manifestRef);
+          const latest = snapshot.exists ? snapshot.data() : { version: 1, records: {}, tombstones: {}, notes: {}, noteTombstones: {} };
+          const notes = { ...(latest.notes || {}) };
+          const noteTombstones = { ...(latest.noteTombstones || {}) };
+          if ((Date.parse(noteTombstones[note.id] || '') || 0) > savedAt || (Date.parse(notes[note.id]?.updatedAt || '') || 0) > savedAt) return false;
+          delete noteTombstones[note.id];
+          notes[note.id] = { id: note.id, updatedAt: note.updatedAt || chunkVersion, chunks, chunkVersion };
+          firebaseManifest = { ...latest, version: 1, updatedAt: new Date().toISOString(), notes, noteTombstones };
+          transaction.set(manifestRef, firebaseManifest);
+          return true;
+        });
+        if (published) await firebaseBroadcastRealtimeSignal().catch(() => {});
+        return Boolean(published);
+      }
+
+      async function firebaseDeleteA4Note(noteId, deletedAt = new Date().toISOString()) {
+        if (!firebaseUser || !firebaseDb || !noteId) throw new Error('AUTH_REQUIRED');
+        const parent = firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid);
+        const manifestRef = parent.collection('state').doc('manifest');
+        const deleted = await firebaseDb.runTransaction(async transaction => {
+          const snapshot = await transaction.get(manifestRef);
+          const latest = snapshot.exists ? snapshot.data() : { version: 1, records: {}, tombstones: {}, notes: {}, noteTombstones: {} };
+          const notes = { ...(latest.notes || {}) };
+          const noteTombstones = { ...(latest.noteTombstones || {}) };
+          if ((Date.parse(notes[noteId]?.updatedAt || '') || 0) > (Date.parse(deletedAt) || 0)) return false;
+          const previous = noteTombstones[noteId] || '';
+          noteTombstones[noteId] = Date.parse(previous) > Date.parse(deletedAt) ? previous : deletedAt;
+          delete notes[noteId];
+          firebaseManifest = { ...latest, version: 1, updatedAt: new Date().toISOString(), notes, noteTombstones };
+          transaction.set(manifestRef, firebaseManifest);
+          return true;
+        });
+        if (deleted) await firebaseBroadcastRealtimeSignal().catch(() => {});
+        return Boolean(deleted);
+      }
+
+      async function firebasePullA4Notes() {
+        if (!firebaseUser || !firebaseDb) throw new Error('AUTH_REQUIRED');
+        const manifestRef = firebaseManifestRef || firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid).collection('state').doc('manifest');
+        firebaseManifestRef = manifestRef;
+        const snapshot = await manifestRef.get();
+        const remote = snapshot.exists ? snapshot.data() : { notes: {}, noteTombstones: {} };
+        const notes = (await Promise.all(Object.values(remote.notes || {}).map(meta => firebaseLoadA4Note(meta)))).filter(Boolean);
+        return { notes, tombstones: { ...(remote.noteTombstones || {}) } };
+      }
+
+      window.atelierNotesCloud = {
+        connected: () => Boolean(firebaseUser && firebaseDb),
+        save: note => firebaseUploadA4Note(note),
+        remove: (noteId, deletedAt) => firebaseDeleteA4Note(noteId, deletedAt),
+        pull: () => firebasePullA4Notes()
+      };
+
+      function notifyA4NotesCloudChange() {
+        window.dispatchEvent(new CustomEvent('atelier-notes-cloud-change'));
+      }
       async function firebaseRecordDeletion(projectId, deletedAt = new Date().toISOString()) {
         if (!firebaseUser || !firebaseDb || !projectId) throw new Error('SYNC_UNAVAILABLE');
         const parent = firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid);
@@ -4384,13 +4463,16 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
 
         // Publicăm fiecare proiect local. Firebase păstrează proiectele sau ștergerile mai noi.
         const records = await readAllProjectRecords();
-        if (!records.length) throw new Error('Nu există proiecte locale de trimis.');
+        const a4Notes = await window.atelierNotes?.manager?.store?.all?.() || [];
+        if (!records.length && !a4Notes.length) throw new Error('Nu există proiecte sau notițe locale de trimis.');
         for (const record of records) {
           await firebaseUploadRecord(record);
         }
+        for (const note of a4Notes) await firebaseUploadA4Note(note);
         await firebaseRefreshFromCloud();
         await renderProjectCards();
-        showSaveToast(records.length + ' proiecte au fost trimise în sincronizare.');
+        await window.atelierNotes?.sync?.().catch(() => {});
+        showSaveToast(`${records.length} proiecte și ${a4Notes.length} notițe au fost trimise în sincronizare.`);
       }
 
       async function firebaseReconcile(remote) {
@@ -4645,6 +4727,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         firebaseManifest = null;
         firebaseLastRemoteUpdatedAt = '';
         updateCloudAccountUi();
+        notifyA4NotesCloudChange();
         if (!firebaseUser || !firebaseDb) return;
         firebaseManifestRef = firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid).collection('state').doc('manifest');
         // Trimitem mai întâi munca păstrată offline. Abia apoi ascultăm actualizările
@@ -4653,6 +4736,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         await resumePendingFirebaseSync({ reloadQueue: true });
         firebaseManifestUnsubscribe = firebaseManifestRef.onSnapshot((snapshot) => {
           const data = snapshot.data();
+          notifyA4NotesCloudChange();
           if (!data) { firebaseReconcile({ version: 1, records: {}, tombstones: {} }).catch(() => {}); return; }
           if (firebaseRunning) {
             firebasePendingRemote = data;
@@ -10402,6 +10486,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
           } else {
             await synchronizeCloudProjects();
           }
+          await window.atelierNotes?.sync?.().catch((error) => console.warn('Sincronizarea notițelor va reîncerca.', error));
           updateCloudAccountUi();
           showSaveToast('Proiectele sunt sincronizate.');
           closeCloudAccountDialog();

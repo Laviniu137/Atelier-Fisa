@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fisa-atelier-v174';
+const CACHE_NAME = 'fisa-atelier-v176';
 const APP_FILES = [
   './',
   './index.html',
@@ -7,12 +7,9 @@ const APP_FILES = [
   './notes/notes-editor.js',
   './notes/pdf-lib.min.js',
   './manifest.webmanifest',
-  './icon-180.png?v=1.4.24',
-  './icon-192.png?v=1.4.24',
-  './icon-512.png?v=1.4.24',
-  './startup-ipad-portrait.png',
-  './startup-ipad-landscape.png',
-  './sample.png'
+  './icon-180.png?v=1.17.1',
+  './icon-192.png?v=1.17.1',
+  './icon-512.png?v=1.17.1'
 ];
 
 self.addEventListener('install', (event) => {
