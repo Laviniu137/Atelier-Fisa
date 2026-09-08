@@ -1,4 +1,4 @@
-# Notițe A4 — 1.17.3
+# Notițe A4 — 1.17.4
 
 ## Publicare
 
