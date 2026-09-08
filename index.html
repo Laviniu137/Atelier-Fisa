@@ -3301,6 +3301,8 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   .dimension-label.is-committed { width: max-content; min-width: 0; min-height: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
   .dimension-label input { box-sizing: border-box; width: 100%; min-width: 0; min-height: 32px; padding: 5px 10px; border: 1px solid rgba(126, 164, 198, .55); border-radius: 9px; outline: 0; background: rgba(255, 255, 255, .88); color: #294c6d; font: 750 14px/1.2 "Segoe UI", sans-serif; text-align: center; touch-action: auto; -webkit-user-select: text; user-select: text; }
   .dimension-label input:focus { background: #fff; border-color: rgba(49, 95, 145, .78); box-shadow: 0 0 0 2px rgba(49, 95, 145, .2), inset 0 1px 2px rgba(31, 49, 69, .05); }
+  .dimension-label input { flex: 1 1 0; width: 0; font-size: 16px; }
+  .dimension-label .dimension-confirm { flex: 0 0 38px; min-width: 38px; min-height: 36px; margin-left: 4px; padding: 0; border: 1px solid var(--ds-blue); border-radius: 8px; background: var(--ds-blue); color: #fff; font: 700 12px/1 "Segoe UI", sans-serif; box-shadow: none; touch-action: manipulation; }
   .dimension-value { display: inline-block; padding: 1px 4px; color: var(--dimension-color, #294c6d); font: 800 clamp(18px, 2.2vw, 22px)/1.1 "Segoe UI", sans-serif; letter-spacing: .015em; white-space: nowrap; text-shadow: 0 1px 2px rgba(255,255,255,.95), 0 0 1px rgba(255,255,255,.9); cursor: grab; }
   .dimension-label.is-committed .dimension-value { -webkit-text-stroke: .25px rgba(255,255,255,.55); }
   .dimension-label.is-committed .dimension-value:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
@@ -4038,7 +4040,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.16.30';
+      const APP_VERSION = '1.16.31';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -6962,7 +6964,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
           dashed: Boolean(activeStroke.dashed),
           type: 'line'
         };
-        if (dimensionModeEnabled && !lineStroke.eraser) ensureLineDimension(lineStroke);
+        if (dimensionModeEnabled && !lineStroke.eraser && !lineStroke.dashed) ensureLineDimension(lineStroke);
         strokes.push(lineStroke);
         selectedDimensionStrokeIndex = strokes.length - 1;
         redoStack = [];
@@ -7832,16 +7834,6 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       function beginDrawing(event) {
         if (placePendingNoteAtEvent(event)) return;
         if (!sourceImage || activeTool !== 'draw' || event.altKey) return;
-        const lineHit = findLineStrokeAtEvent(event);
-        if (lineHit) {
-          selectedDimensionStrokeIndex = lineHit.index;
-          dimensionEditingIndex = null;
-          if (dimensionModeEnabled) ensureLineDimension(lineHit.stroke);
-          renderDimensions();
-          syncBrushControls();
-          event.preventDefault();
-          return;
-        }
         if (selectedDimensionStrokeIndex !== null) {
           selectedDimensionStrokeIndex = null;
           dimensionEditingIndex = null;
@@ -8955,11 +8947,10 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
 
       function renderDimensions() {
         if (!dimensionLayer) return;
-        const focusedInput = document.activeElement?.closest?.('.dimension-label input');
-        const focusedIndex = focusedInput ? Number(focusedInput.closest('.dimension-label')?.dataset.strokeIndex) : null;
-        if (Number.isInteger(focusedIndex)) dimensionEditingIndex = focusedIndex;
+        // Keep live input nodes attached through keyboard/viewport resize on iPad.
+        const existingLabels = new Map(Array.from(dimensionLayer.children,
+          (label) => [Number(label.dataset.strokeIndex), label]));
         rebuildingDimensionInput = true;
-        dimensionLayer.innerHTML = '';
         const dimensions = strokes
           .map((stroke, index) => ({ stroke, index, dimension: stroke?.dimension }))
           .filter((entry) => {
@@ -8970,13 +8961,25 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         dimensionLayer.hidden = !dimensions.length;
         const frame = getActiveImageFrame();
         dimensions.forEach(({ stroke, index, dimension }) => {
-          const label = document.createElement('div');
           const value = typeof dimension.value === 'string' ? dimension.value.trim() : '';
           const isEditing = !value || dimensionEditingIndex === index;
+          const existing = existingLabels.get(index);
+          if (existing && existing.dimensionStroke === stroke
+              && Boolean(existing.querySelector('input')) === isEditing) {
+            positionDimensionElement(existing, dimension, frame, stroke);
+            existingLabels.delete(index);
+            return;
+          }
+          if (existing) {
+            existing.remove();
+            existingLabels.delete(index);
+          }
+          const label = document.createElement('div');
+          label.dimensionStroke = stroke;
           label.className = `dimension-label${isEditing ? '' : ' is-committed'}`;
           label.dataset.strokeIndex = String(index);
           label.style.setProperty('--dimension-color', typeof stroke.color === 'string' ? stroke.color : '#294c6d');
-          label.title = isEditing ? 'Introdu dimensiunea, apoi apasă Enter' : 'Tragează de-a lungul liniei; dublu-click pentru editare';
+          label.title = isEditing ? 'Introdu dimensiunea, apoi apasă OK' : 'Trage de-a lungul liniei; dublu-click pentru editare';
           positionDimensionElement(label, dimension, frame, stroke);
 
           if (isEditing) {
@@ -9014,12 +9017,27 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
             };
             input.addEventListener('blur', commitDimensionValue);
             input.addEventListener('keydown', (event) => {
-              if (event.key === 'Enter') {
+              if (event.key === 'Enter' && !event.isComposing) {
                 event.preventDefault();
                 input.blur();
               }
             });
             label.appendChild(input);
+            const confirm = document.createElement('button');
+            confirm.type = 'button';
+            confirm.className = 'dimension-confirm';
+            confirm.textContent = 'OK';
+            confirm.setAttribute('aria-label', 'Confirmă dimensiunea');
+            confirm.addEventListener('pointerdown', (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+            });
+            confirm.addEventListener('click', (event) => {
+              event.stopPropagation();
+              if (document.activeElement === input) input.blur();
+              else commitDimensionValue();
+            });
+            label.appendChild(confirm);
           } else {
             const valueElement = document.createElement('span');
             valueElement.className = 'dimension-value';
@@ -9038,7 +9056,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
           }
           label.addEventListener('touchstart', (event) => event.stopPropagation(), { passive: true });
           label.addEventListener('pointerdown', (event) => {
-            if (event.target?.tagName === 'INPUT' || event.detail > 1 || (event.button !== undefined && event.button !== 0)) return;
+            if (event.target?.closest?.('input, button') || event.detail > 1 || (event.button !== undefined && event.button !== 0)) return;
             event.preventDefault();
             event.stopPropagation();
             const dragFrame = getActiveImageFrame();
@@ -9057,13 +9075,8 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
           });
           dimensionLayer.appendChild(label);
         });
+        existingLabels.forEach((label) => label.remove());
         rebuildingDimensionInput = false;
-        if (Number.isInteger(focusedIndex)) {
-          requestAnimationFrame(() => {
-            const editor = dimensionLayer.querySelector(`.dimension-label[data-stroke-index="${focusedIndex}"] input`);
-            editor?.focus({ preventScroll: true });
-          });
-        }
       }
 
       function positionDimensionLabels(frame = getActiveImageFrame()) {
@@ -10164,28 +10177,10 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       }
       if (fullscreenDimensionBtn) {
         fullscreenDimensionBtn.addEventListener('click', () => {
-          const selectedLine = Number.isInteger(selectedDimensionStrokeIndex)
-            ? strokes[selectedDimensionStrokeIndex]
-            : null;
           if (activeTool !== 'draw' || activeDrawMode !== 'line' || lineDashed || isErasing) return;
           dimensionModeEnabled = !dimensionModeEnabled;
-          if (dimensionModeEnabled && selectedLine?.type === 'line' && !selectedLine.eraser) {
-            ensureLineDimension(selectedLine);
-            dimensionEditingIndex = selectedDimensionStrokeIndex;
-          } else {
-            dimensionEditingIndex = null;
-          }
-          renderDimensions();
           applyCurrentBrushSettings();
           syncBrushControls();
-          if (dimensionModeEnabled) {
-            requestAnimationFrame(() => {
-              const editor = dimensionLayer?.querySelector(
-                `.dimension-label[data-stroke-index="${selectedDimensionStrokeIndex}"] input`
-              );
-              editor?.focus({ preventScroll: true });
-            });
-          }
           scheduleSave();
         });
       }
