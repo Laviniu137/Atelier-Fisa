@@ -99,6 +99,13 @@
 .an-context .an-field select {min-width:112px;padding-right:28px;}
 .an-context .an-field input[type=number] {width:72px;}
 .an-context .an-field input[type=color] {width:46px;min-width:46px;padding:3px;}
+.an-choice-field {align-self:stretch;display:flex;flex-direction:column;justify-content:center;gap:4px;min-width:max-content;padding:5px 8px;border:1px solid #e0e7ed;border-radius:10px;background:#f8fafc;color:#5c7083;}
+.an-choice-heading {font-size:10px;line-height:1.1;font-weight:600;letter-spacing:.035em;}
+.an-choice-buttons {display:flex;gap:4px;align-items:stretch;}
+.an-context .an-choice-button {min-height:31px;min-width:42px;padding:5px 7px;gap:4px;border-radius:7px;background:#fff;border-color:#d3dee8;color:#35516a;font-size:11px;}
+.an-context .an-choice-button svg {width:15px;height:15px;}
+.an-context .an-choice-button[aria-pressed=true] {background:linear-gradient(180deg,#eaf3fb,#dceaf6);border-color:#9ebbd5;color:#214f7b;box-shadow:inset 0 1px 0 #fff;}
+.an-context .an-choice-button:hover:not(:disabled) {background:#eef5fa;border-color:#bad0e2;}
 .an-context .an-button {align-self:stretch;min-height:50px;padding:8px 12px;border-radius:10px;background:#f8fafc;border-color:#dce5ec;}
 .an-context .an-button[aria-pressed=true] {background:#e4eef7;border-color:#aac2d8;color:#244f79;}
 .an-context .an-button.an-danger {margin-left:4px;background:#fff8f8;border-color:#efcbd0;}

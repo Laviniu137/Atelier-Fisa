@@ -17,6 +17,7 @@
     copy:'M8 8h13v13H8ZM3 16V3h13', pen:'m5 19 3-7L17 3l4 4-9 9Z M5 19l4-4', eraser:'m3 14 9-11 9 8-9 10H9Z M7 10l9 8',
     pan:'M5 12V8a2 2 0 0 1 4 0v4-8a2 2 0 0 1 4 0v8-6a2 2 0 0 1 4 0v6-3a2 2 0 0 1 4 0v8l-4 5H9l-6-7a2 2 0 0 1 2-3Z',
     line:'M4 20 20 4', dashed:'m4 20 3-3m3-3 4-4m3-3 3-3', highlighter:'m4 16 9-13 8 7-12 10Z M4 16l5 4-6 1Z',
+    ellipse:'M12 4C7.1 4 4 7.6 4 12s3.1 8 8 8 8-3.6 8-8-3.1-8-8-8Z', arrow:'M4 12h15M12 5l7 7-7 7',
     close:'m5 5 14 14M5 19 19 5', export:'M12 15V3m-5 5 5-5 5 5M4 14v7h16v-7', edit:'m4 20 4-1L20 7l-4-4L4 15Z',
     lock:'M5 10h14v11H5ZM8 10V6a4 4 0 0 1 8 0v4', up:'m5 14 7-7 7 7', down:'m5 10 7 7 7-7'
   };
@@ -160,6 +161,13 @@
       const e=this.e,o=e.object;this.context.hidden=false;this.context.replaceChildren();
       this.context.dataset.mode=o&&e.tool==='select'?o.type:e.tool;
       const add=(label,control)=>this.context.append(field(label,control));
+      const addChoices=(label,choices,value,change)=>{
+        const wrap=el('div','an-choice-field');wrap.setAttribute('role','group');wrap.setAttribute('aria-label',label);
+        wrap.append(el('span','an-choice-heading',label));
+        const buttons=el('div','an-choice-buttons');
+        for(const [id,name,icon] of choices){const b=button(name,()=>change(id),icon,'an-choice-button');b.setAttribute('aria-pressed',String(id===value));buttons.append(b);}
+        wrap.append(buttons);this.context.append(wrap);
+      };
       const addRange=(label,value,min,max,change,suffix='px',changeEvent='input')=>{const wrap=el('label','an-field an-range-field'),top=el('span','an-field-heading'),name=el('span','',label),out=el('output','an-range-value',`${value} ${suffix}`),range=input(value,'range');range.min=min;range.max=max;range.setAttribute('aria-label',label);range.addEventListener('input',()=>out.textContent=`${range.value} ${suffix}`);range.addEventListener(changeEvent,()=>change(Number(range.value)));top.append(name,out);wrap.append(top,range);this.context.append(wrap);return range;};
       if(o&&e.tool==='select') {
         this.context.append(el('span','an-context-title',({text:'Text',image:'Imagine',drawing:'Desen',shape:'Formă'})[o.type]));
@@ -179,13 +187,13 @@
         add('Stil text',select([['body','Corp de text'],['title','Titlu'],['subtitle','Subtitlu']],'body',v=>change({fontSize:v==='title'?36:v==='subtitle'?28:22,bold:v!=='body'})));
         const color=input(style.color,'color');color.addEventListener('change',()=>change({color:color.value}));add('Culoare text',color);
       } else if(['pencil','marker'].includes(e.tool)) {
-        const choices=e.tool==='marker'?[['marker','Marker'],['highlighter','Highlighter']]:[['pencil','Creion'],['pen','Pix'],['line','Linie'],['dashed','Linie punctată'],['eraser','Gumă']];
-        add('Instrument',select(choices,e.drawKind,v=>{e.drawKind=v;this.renderContext();}));
+        const choices=e.tool==='marker'?[['marker','Marker','marker'],['highlighter','Highlighter','highlighter']]:[['pencil','Creion','pencil'],['pen','Pix','pen'],['line','Linie','line'],['dashed','Linie punctată','dashed'],['eraser','Gumă','eraser']];
+        addChoices('Instrument',choices,e.drawKind,v=>{e.drawKind=v;this.renderContext();});
         addRange('Grosime',e.drawWidth,1,40,value=>e.drawWidth=value);
         const color=input(e.drawColor,'color');color.addEventListener('input',()=>e.drawColor=color.value);add('Culoare',color);
         this.context.append(button('Șterge desenul',()=>confirmAction('Ștergi toate trasările de pe pagină?',()=>e.edit(()=>{e.page.objects=e.page.objects.filter(o=>o.type!=='drawing');})),'trash','an-danger'));
       } else if(e.tool==='shape') {
-        add('Formă',select([['rect','Dreptunghi'],['ellipse','Elipsă'],['arrow','Săgeată']],e.shapeKind,v=>e.shapeKind=v));addRange('Grosime contur',e.drawWidth,1,24,value=>e.drawWidth=value);const color=input(e.drawColor,'color');color.addEventListener('input',()=>e.drawColor=color.value);add('Culoare contur',color);
+        addChoices('Formă',[['rect','Dreptunghi','shape'],['ellipse','Elipsă','ellipse'],['arrow','Săgeată','arrow']],e.shapeKind,v=>{e.shapeKind=v;this.renderContext();});addRange('Grosime contur',e.drawWidth,1,24,value=>e.drawWidth=value);const color=input(e.drawColor,'color');color.addEventListener('input',()=>e.drawColor=color.value);add('Culoare contur',color);
       } else if(!o) {if(e.tool==='select'){this.context.hidden=true;return;}this.context.append(el('span','an-hint',e.tool==='pan'?'Trage pentru deplasare. Două degete pentru zoom.':'Alege instrumentul și lucrează direct pe foaia A4.'));}
     }
   }
