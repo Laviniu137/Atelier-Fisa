@@ -3296,21 +3296,29 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   body:not(.fullscreen-mode) #editorView .fullscreen-image-nav:hover:not(:disabled) { border-color: var(--ds-blue); background: var(--ds-surface-blue); color: var(--ds-blue); box-shadow: 0 10px 22px rgba(49, 95, 145, .2), inset 0 1px 0 #fff; }
   body:not(.fullscreen-mode) #editorView .fullscreen-image-nav svg { width: 22px; height: 22px; stroke-width: 2.5; }
   .dimension-layer { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
-  .dimension-label { position: absolute; display: flex; align-items: center; width: 136px; min-width: 136px; min-height: 42px; padding: 4px; transform: translate(-50%, -50%); border: 1px solid rgba(86, 137, 181, .68); border-radius: 13px; background: linear-gradient(145deg, rgba(255, 255, 255, .99), rgba(229, 240, 250, .97)); box-shadow: 0 9px 20px rgba(31, 49, 69, .2), 0 0 0 3px rgba(255, 255, 255, .4), inset 0 1px 0 #fff; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); pointer-events: auto; cursor: grab; touch-action: none; }
-  .dimension-label.is-dragging { cursor: grabbing; box-shadow: 0 8px 18px rgba(31, 49, 69, .24); }
-  .dimension-label.is-committed { width: max-content; min-width: 0; min-height: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
-  .dimension-label input { box-sizing: border-box; width: 100%; min-width: 0; min-height: 32px; padding: 5px 10px; border: 1px solid rgba(126, 164, 198, .55); border-radius: 9px; outline: 0; background: rgba(255, 255, 255, .88); color: #294c6d; font: 750 14px/1.2 "Segoe UI", sans-serif; text-align: center; touch-action: auto; -webkit-user-select: text; user-select: text; }
-  .dimension-label input:focus { background: #fff; border-color: rgba(49, 95, 145, .78); box-shadow: 0 0 0 2px rgba(49, 95, 145, .2), inset 0 1px 2px rgba(31, 49, 69, .05); }
-  .dimension-label input { flex: 1 1 0; width: 0; font-size: 16px; }
-  .dimension-label .dimension-confirm { flex: 0 0 38px; min-width: 38px; min-height: 36px; margin-left: 4px; padding: 0; border: 1px solid var(--ds-blue); border-radius: 8px; background: var(--ds-blue); color: #fff; font: 700 12px/1 "Segoe UI", sans-serif; box-shadow: none; touch-action: manipulation; }
-  .dimension-value { display: inline-block; padding: 1px 4px; color: var(--dimension-color, #294c6d); font: 800 clamp(18px, 2.2vw, 22px)/1.1 "Segoe UI", sans-serif; letter-spacing: .015em; white-space: nowrap; text-shadow: 0 1px 2px rgba(255,255,255,.95), 0 0 1px rgba(255,255,255,.9); cursor: grab; }
-  .dimension-label.is-committed .dimension-value { -webkit-text-stroke: .25px rgba(255,255,255,.55); }
-  .dimension-label.is-committed .dimension-value:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  .dimension-label { position: absolute; display: flex; align-items: center; gap: 8px; width: 228px; min-width: 228px; min-height: 58px; padding: 6px; transform: translate(-50%, -50%); border: 1px solid #cbd8e4; border-radius: 16px; background: #f8fafc; box-shadow: 0 8px 24px #233c5420, 0 1px 3px #233c5410; pointer-events: auto; cursor: grab; touch-action: none; }
+  .dimension-label.is-dragging { cursor: grabbing; }
+  .dimension-label.is-committed { width: max-content; min-width: 0; min-height: 36px; padding: 4px 6px; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+  .dimension-label input { box-sizing: border-box; flex: 1 1 0; width: 0; min-width: 0; min-height: 44px; padding: 8px 12px; border: 1px solid #dbe3eb; border-radius: 11px; outline: 0; background: #fff; color: #294c6d; font: 650 16px/1.25 "Segoe UI", sans-serif; text-align: center; touch-action: auto; -webkit-user-select: text; user-select: text; }
+  .dimension-label input::placeholder { color: #687a8d; font-weight: 500; opacity: 1; }
+  .dimension-label input:focus { border-color: #7195b7; box-shadow: 0 0 0 2px #315f9114; }
+  .dimension-label input:focus-visible { outline: none !important; }
+  .dimension-label .dimension-confirm { flex: 0 0 44px; min-width: 44px; min-height: 44px; margin: 0; padding: 0; border: 1px solid #315f91; border-radius: 11px; background: linear-gradient(180deg, #416f9d, #315f91); color: #fff; font: 700 12px/1 "Segoe UI", sans-serif; box-shadow: inset 0 1px 0 #ffffff20; touch-action: manipulation; }
+  .dimension-label .dimension-confirm:hover { background: #294f79; transform: none; }
+  .dimension-value { display: inline-block; padding: 2px 4px; color: var(--dimension-color, #294c6d); font: 750 clamp(18px, 2.2vw, 22px)/1.25 "Segoe UI", sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; text-shadow: 0 0 2px #fff, 0 1px 2px #fff; cursor: pointer; -webkit-user-select: none; user-select: none; border-radius: 5px; }
+  .dimension-value:hover, .dimension-value:focus-visible { background: #eef4f9d9; outline: 1px solid #b6cbdf; outline-offset: 2px; }
   body.fullscreen-mode .edit-group { min-width: 0; overflow: hidden; }
   body.fullscreen-mode .edit-group .drawing-tool-group-row { min-width: 0; max-width: 100%; gap: 3px; }
   body.fullscreen-mode .edit-group .drawing-tool-button { width: 44px; min-width: 44px; }
   body.fullscreen-mode .edit-group .drawing-tool-button[data-tool-label] { width: 46px; min-width: 46px; }
   body.fullscreen-mode .edit-group .drawing-tool-button[data-tool-label] svg { left: 13px; width: 19px; height: 19px; }
+  body.fullscreen-mode .edit-group { padding-inline: 8px; }
+  body.fullscreen-mode .edit-group .drawing-tool-group-row { gap: 2px; flex-wrap: wrap; }
+  body.fullscreen-mode .edit-group .drawing-tool-button[data-tool-label] { width: 44px; min-width: 44px; }
+  body.fullscreen-mode .edit-group #fullscreenDimensionBtn { width: 64px; min-width: 64px; border: 1px solid #71869c; border-radius: 12px; background: #354556; box-shadow: inset 0 1px 0 #ffffff0d; }
+  body.fullscreen-mode .edit-group #fullscreenDimensionBtn.active { background: linear-gradient(180deg, #456f99, #345d86); border-color: #93b5d4; box-shadow: inset 0 1px 0 #ffffff25, 0 2px 6px #101d2c30; }
+  body.fullscreen-mode .edit-group #fullscreenDimensionBtn svg { left: 22px; top: 8px; width: 20px; height: 20px; }
+  body.fullscreen-mode .edit-group #fullscreenDimensionBtn::after { visibility: visible; font-size: 9px; font-weight: 600; line-height: 12px; text-transform: none; letter-spacing: 0; bottom: 6px; color: #eff6fc; background: none; }
   body:not(.fullscreen-mode) #editorView .dimension-label { z-index: 4; }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 
@@ -4040,7 +4048,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.16.31';
+      const APP_VERSION = '1.16.32';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -8945,6 +8953,16 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         element.style.top = `${(topPx / frame.stageRect.height) * 100}%`;
       }
 
+      function openDimensionEditor(index) {
+        if (!strokes[index]?.dimension) return;
+        dimensionEditingIndex = index;
+        renderDimensions();
+        const editor = dimensionLayer.querySelector(`.dimension-label[data-stroke-index="${index}"] input`);
+        // Synchronous focus from tap/click is required for the iPad keyboard.
+        editor?.focus({ preventScroll: true });
+        editor?.select();
+      }
+
       function renderDimensions() {
         if (!dimensionLayer) return;
         // Keep live input nodes attached through keyboard/viewport resize on iPad.
@@ -8979,7 +8997,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
           label.className = `dimension-label${isEditing ? '' : ' is-committed'}`;
           label.dataset.strokeIndex = String(index);
           label.style.setProperty('--dimension-color', typeof stroke.color === 'string' ? stroke.color : '#294c6d');
-          label.title = isEditing ? 'Introdu dimensiunea, apoi apasă OK' : 'Trage de-a lungul liniei; dublu-click pentru editare';
+          label.title = isEditing ? 'Introdu dimensiunea, apoi apasă OK' : 'Apasă pentru editare; trage pentru repoziționare';
           positionDimensionElement(label, dimension, frame, stroke);
 
           if (isEditing) {
@@ -9042,15 +9060,15 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
             const valueElement = document.createElement('span');
             valueElement.className = 'dimension-value';
             valueElement.textContent = value;
-            valueElement.setAttribute('aria-label', `Dimensiune: ${value}`);
-            valueElement.addEventListener('dblclick', (event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              dimensionEditingIndex = index;
-              renderDimensions();
-              const editor = dimensionLayer.querySelector(`.dimension-label[data-stroke-index="${index}"] input`);
-              editor?.focus();
-              editor?.select();
+            valueElement.setAttribute('aria-label', `Editează dimensiunea: ${value}`);
+            valueElement.setAttribute('role', 'button');
+            valueElement.tabIndex = 0;
+            valueElement.addEventListener('keydown', (event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                event.stopPropagation();
+                openDimensionEditor(index);
+              }
             });
             label.appendChild(valueElement);
           }
@@ -9065,9 +9083,12 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
               label,
               dimension,
               stroke,
-              frame: dragFrame
+              frame: dragFrame,
+              startX: event.clientX,
+              startY: event.clientY,
+              moved: false,
+              onTap: !isEditing ? () => openDimensionEditor(index) : null
             };
-            label.classList.add('is-dragging');
             label.setPointerCapture(event.pointerId);
             window.addEventListener('pointermove', updateDimensionDrag, { passive: false });
             window.addEventListener('pointerup', stopDimensionDrag, { once: true, passive: false });
@@ -9091,6 +9112,11 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       function updateDimensionDrag(event) {
         if (!dimensionDragState || event.pointerId !== dimensionDragState.pointerId) return;
         event.preventDefault();
+        if (!dimensionDragState.moved) {
+          if (Math.hypot(event.clientX - dimensionDragState.startX, event.clientY - dimensionDragState.startY) < 6) return;
+          dimensionDragState.moved = true;
+          dimensionDragState.label.classList.add('is-dragging');
+        }
         const frame = dimensionDragState.frame || getActiveImageFrame();
         const point = clientPointToImageCoordinates(event.clientX, event.clientY, frame);
         const points = dimensionDragState.stroke?.points;
@@ -9121,6 +9147,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       function stopDimensionDrag(event) {
         if (!dimensionDragState || (event.pointerId !== undefined && event.pointerId !== dimensionDragState.pointerId)) return;
         if (event) event.preventDefault();
+        const onTap = event.type === 'pointerup' && !dimensionDragState.moved ? dimensionDragState.onTap : null;
         const label = dimensionDragState.label;
         if (label) {
           label.classList.remove('is-dragging');
@@ -9131,6 +9158,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         window.removeEventListener('pointerup', stopDimensionDrag);
         window.removeEventListener('pointercancel', stopDimensionDrag);
         scheduleSave();
+        onTap?.();
       }
 
       function releasePointerCapture(target, pointerId) {
