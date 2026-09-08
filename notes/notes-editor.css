@@ -164,9 +164,9 @@
 .an-modes>.an-button svg {width:17px;height:17px;}
 .an-history {padding-left:8px;gap:3px;}
 .an-history .an-button {min-width:36px;min-height:36px;padding:7px;}
-.an-context {min-height:54px;gap:0;padding:4px 5px;border-color:#dfe7ed;border-radius:13px;background:#fff;box-shadow:0 3px 12px #233e550c;}
-.an-context .an-field,.an-choice-field,.an-color-field {align-self:center;min-height:44px;padding:4px 9px;border:0;border-radius:0;background:transparent;box-shadow:none;}
-.an-context>.an-field,.an-context>.an-choice-field,.an-context>.an-color-field,.an-context>.an-button {border-left:1px solid #e5ebf0;}
+.an-context {min-height:54px;gap:4px 0;padding:4px 5px;border-color:#dfe7ed;border-radius:13px;background:#fff;box-shadow:0 3px 12px #233e550c;flex-wrap:wrap;align-items:center;overflow:visible;}
+.an-context .an-field,.an-choice-field,.an-color-field {align-self:center;flex:0 0 auto;min-height:44px;padding:4px 9px;border:0;border-radius:0;background:transparent;box-shadow:none;}
+.an-context>.an-field,.an-context>.an-choice-field,.an-context>.an-color-field,.an-context>.an-button {flex:0 0 auto;border-left:1px solid #e5ebf0;}
 .an-context>:first-child {border-left:0;}
 .an-context .an-field {min-width:78px;gap:2px;}
 .an-context .an-field>span:first-child,.an-choice-heading {font-size:9px;letter-spacing:.055em;color:#708296;font-weight:750;}
@@ -194,7 +194,7 @@
 .an-color-swatches {grid-template-columns:repeat(8,16px);gap:4px;width:156px;}
 .an-context .an-color-swatch {min-width:16px;min-height:16px;width:16px;height:16px;border-width:1.5px;}
 .an-color-custom {width:30px!important;min-width:30px!important;height:26px!important;min-height:26px!important;border-radius:7px!important;}
-.an-context[data-mode=text] {gap:0;padding:4px 5px;background:#fff;}
+.an-context[data-mode=text] {gap:4px 0;padding:4px 5px;background:#fff;}
 .an-context[data-mode=text] .an-field {min-width:82px;}
 .an-context[data-mode=text] .an-field:first-of-type {min-width:116px;}
 .an-context[data-mode=text]>.an-button {min-width:36px;width:36px;padding:6px;}
