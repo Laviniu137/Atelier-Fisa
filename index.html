@@ -3345,6 +3345,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   #projectManagerView .project-card-name { overflow-wrap: anywhere; }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 </style>
+<link rel="stylesheet" href="notes/notes-editor.css">
 </head>
 <body>
   <div id="saveToast" class="save-toast" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -3394,7 +3395,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
     </section>
 
     <section id="workspaceNotes" hidden aria-labelledby="workspaceNotesTitle">
-      <div class="workspace-notes-heading"><div><h2 id="workspaceNotesTitle" class="project-manager-page-title" tabindex="-1">Notițe</h2><p class="project-manager-subtitle">Însemnările tale generale, salvate pe acest dispozitiv.</p></div><button class="ui-action ui-action-primary" type="button" id="workspaceAddNote">＋ Notiță nouă</button></div>
+      <div class="workspace-notes-heading"><div><h2 id="workspaceNotesTitle" class="project-manager-page-title" tabindex="-1">Notițe</h2><p class="project-manager-subtitle">Documente A4 cu text, schițe și imagini. Salvate pe acest dispozitiv.</p></div><button class="ui-action ui-action-primary" type="button" id="workspaceAddNote">＋ Notiță nouă</button></div>
       <p id="workspaceNotesStatus" role="status" aria-live="polite"></p>
       <div id="workspaceNotesList"></div>
     </section>
@@ -4048,7 +4049,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.16.32';
+      const APP_VERSION = '1.17.0';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -10777,6 +10778,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
                   return;
                 }
               }
+              try { await window.atelierNotes?.flush(); } catch { return; }
               worker.postMessage({ type: 'SKIP_WAITING' });
             };
 
@@ -10794,9 +10796,10 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
               });
             });
 
-            navigator.serviceWorker.addEventListener('controllerchange', () => {
+            navigator.serviceWorker.addEventListener('controllerchange', async () => {
               if (refreshingAfterUpdate) return;
               refreshingAfterUpdate = true;
+              try { await window.atelierNotes?.flush(); } catch { refreshingAfterUpdate = false; return; }
               window.location.reload();
             });
 
@@ -10825,75 +10828,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
     })();
   </script>
 
-<script>
-(() => {
-  const projects = document.querySelector('#projectManagerView > .project-manager-content');
-  const notesPanel = document.getElementById('workspaceNotes');
-  const projectNav = document.getElementById('workspaceProjectsNav');
-  const noteNav = document.getElementById('workspaceNotesNav');
-  const list = document.getElementById('workspaceNotesList');
-  const status = document.getElementById('workspaceNotesStatus');
-  const storageKey = 'atelier-fisa-general-notes-v1';
-  let notes = [];
-  let readable = true;
-  try {
-    const raw = localStorage.getItem(storageKey);
-    const data = raw ? JSON.parse(raw) : [];
-    if (!Array.isArray(data) || data.some(n => !n || typeof n.title !== 'string' || typeof n.content !== 'string')) throw new Error('Invalid notes');
-    notes = data;
-  } catch (_) {
-    readable = false;
-    status.textContent = 'Notițele nu au putut fi citite. Reîncarcă pagina pentru a încerca din nou.';
-  }
-  function showNotes(show) {
-    projects.hidden = show;
-    notesPanel.hidden = !show;
-    (show ? noteNav : projectNav).setAttribute('aria-current', 'page');
-    (show ? projectNav : noteNav).removeAttribute('aria-current');
-    document.title = (show ? 'Notițe' : 'Proiectele mele') + ' | La-Tâmplar';
-  }
-  projectNav.addEventListener('click', () => showNotes(false));
-  noteNav.addEventListener('click', () => showNotes(true));
-  ['pmNewProject','pmImportProject','backToProjects'].forEach(id => document.getElementById(id).addEventListener('click', () => showNotes(false)));
-  function save() {
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(notes));
-      status.textContent = 'Notițele au fost salvate pe acest dispozitiv.';
-    } catch (_) {
-      status.textContent = 'Salvarea nu a reușit. Păstrează pagina deschisă și copiază textul înainte de a pleca.';
-    }
-  }
-  function render() {
-    list.replaceChildren();
-    if (!notes.length && readable) {
-      const empty = document.createElement('p');
-      empty.className = 'project-empty';
-      empty.textContent = 'Nu ai încă notițe. Apasă „Notiță nouă” pentru prima însemnare.';
-      list.append(empty);
-    }
-    notes.forEach((note, index) => {
-      const card = document.createElement('article');
-      card.className = 'workspace-note-card';
-      [['title','Titlu','input'],['content','Notiță','textarea']].forEach(([key,caption,tag]) => {
-        const label = document.createElement('label');
-        const input = document.createElement(tag);
-        input.id = 'general-note-' + index + '-' + key;
-        label.htmlFor = input.id;
-        label.textContent = caption;
-        input.value = note[key];
-        input.addEventListener('input', () => { note[key] = input.value; save(); });
-        card.append(label,input);
-      });
-      list.append(card);
-    });
-  }
-  document.getElementById('workspaceAddNote').disabled = !readable;
-  document.getElementById('workspaceAddNote').addEventListener('click', () => {
-    notes.unshift({title: '', content: ''});
-    save(); render(); list.querySelector('input').focus();
-  });
-  render();
-})();
-</script>
+<script src="notes/pdf-lib.min.js"></script>
+<script src="notes/notes-editor.js"></script>
 </body>
 </html>

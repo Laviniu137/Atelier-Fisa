@@ -1,8 +1,11 @@
-const CACHE_NAME = 'fisa-atelier-v173';
+const CACHE_NAME = 'fisa-atelier-v174';
 const APP_FILES = [
   './',
   './index.html',
   './sw.js',
+  './notes/notes-editor.css',
+  './notes/notes-editor.js',
+  './notes/pdf-lib.min.js',
   './manifest.webmanifest',
   './icon-180.png?v=1.4.24',
   './icon-192.png?v=1.4.24',
