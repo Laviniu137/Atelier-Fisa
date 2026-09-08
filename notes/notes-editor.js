@@ -75,7 +75,7 @@
   }
 
   class TextObject {
-    static create(x,y,text='',w=300,h=130) {return {id:uid(),type:'text',x,y,w,h,rotation:0,opacity:1,locked:false,text,font:'Arial',fontSize:22,bold:false,italic:false,underline:false,color:'#25384b',align:'left',list:'none'};}
+    static create(x,y,text='',w=300,h=40) {return {id:uid(),type:'text',x,y,w,h,rotation:0,opacity:1,locked:false,text,font:'Arial',fontSize:22,bold:false,italic:false,underline:false,color:'#25384b',align:'left',list:'none'};}
     static lines(o) {return o.text.split('\n').map((line,i)=>o.list==='bullet'?`• ${line}`:o.list==='number'?`${i+1}. ${line}`:line);}
     static paint(ctx,o) {
       ctx.font=`${o.italic?'italic ':''}${o.bold?'700':'400'} ${o.fontSize}px ${o.font}`; ctx.fillStyle=o.color; ctx.textBaseline='top';
@@ -133,7 +133,7 @@
     render() {
       const o=this.e.object;this.node.hidden=!o||!!this.e.textEditor;if(!o){this.node.replaceChildren();this.objectId=null;return;}
       Object.assign(this.node.style,{left:`${o.x}px`,top:`${o.y}px`,width:`${o.w}px`,height:`${o.h}px`,transform:`rotate(${o.rotation}deg)`});
-      this.node.classList.toggle('is-locked',!!o.locked);
+      this.node.classList.toggle('is-locked',!!o.locked);this.node.classList.toggle('is-text',o.type==='text');
       if(this.objectId===o.id&&this.locked===o.locked)return;
       this.objectId=o.id;this.locked=o.locked;this.node.replaceChildren();if(o.locked)return;
       for(const name of ['nw','ne','sw','se','rotate']){const h=el('button',`an-handle an-${name}`);h.type='button';h.setAttribute('aria-label',name==='rotate'?'Rotește obiectul':`Redimensionează ${name}`);h.dataset.handle=name;h.addEventListener('pointerdown',event=>this.e.beginTransform(event,name));this.node.append(h);}
@@ -161,7 +161,7 @@
     renderContext() {
       const e=this.e,o=e.object;this.context.hidden=false;this.context.replaceChildren();
       this.context.dataset.mode=o&&e.tool==='select'?o.type:e.tool;
-      const add=(label,control)=>this.context.append(field(label,control));
+      const add=(label,control,target=this.context)=>target.append(field(label,control));
       const addChoices=(label,choices,value,change)=>{
         const wrap=el('div','an-choice-field');wrap.setAttribute('role','group');wrap.setAttribute('aria-label',label);
         wrap.append(el('span','an-choice-heading',label));
@@ -169,25 +169,35 @@
         for(const [id,name,icon] of choices){const b=button(name,()=>change(id),icon,'an-choice-button');b.setAttribute('aria-pressed',String(id===value));buttons.append(b);}
         wrap.append(buttons);this.context.append(wrap);
       };
-      const addRange=(label,value,min,max,change,suffix='px',changeEvent='input')=>{const wrap=el('label','an-field an-range-field'),top=el('span','an-field-heading'),name=el('span','',label),out=el('output','an-range-value',`${value} ${suffix}`),range=input(value,'range');range.min=min;range.max=max;range.setAttribute('aria-label',label);range.addEventListener('input',()=>out.textContent=`${range.value} ${suffix}`);range.addEventListener(changeEvent,()=>change(Number(range.value)));top.append(name,out);wrap.append(top,range);this.context.append(wrap);return range;};
-      const addPalette=(label,value,change)=>{const wrap=el('div','an-color-field');wrap.setAttribute('role','group');wrap.setAttribute('aria-label',label);wrap.append(el('span','an-choice-heading',label));const colors=['#25384b','#111827','#d94a4a','#e88b24','#f2c94c','#3c9b68','#287dc4','#7654b8'];const swatches=el('div','an-color-swatches');for(const color of colors){const swatch=button(color,()=>change(color),null,'an-color-swatch');swatch.style.setProperty('--an-swatch',color);swatch.style.backgroundColor=color;swatch.setAttribute('aria-pressed',String(color.toLowerCase()===String(value).toLowerCase()));swatches.append(swatch);}const custom=input(value,'color');custom.className='an-color-custom';custom.setAttribute('aria-label',`${label} personalizată`);custom.addEventListener('input',()=>change(custom.value));wrap.append(swatches,custom);this.context.append(wrap);};
+      const addRange=(label,value,min,max,change,suffix='px',changeEvent='input',target=this.context)=>{const wrap=el('label','an-field an-range-field'),top=el('span','an-field-heading'),name=el('span','',label),out=el('output','an-range-value',`${value} ${suffix}`),range=input(value,'range');range.min=min;range.max=max;range.setAttribute('aria-label',label);range.addEventListener('input',()=>out.textContent=`${range.value} ${suffix}`);range.addEventListener(changeEvent,()=>change(Number(range.value)));top.append(name,out);wrap.append(top,range);target.append(wrap);return range;};
+      const addPalette=(label,value,change,target=this.context)=>{const wrap=el('div','an-color-field');wrap.setAttribute('role','group');wrap.setAttribute('aria-label',label);wrap.append(el('span','an-choice-heading',label));const colors=['#25384b','#111827','#d94a4a','#e88b24','#f2c94c','#3c9b68','#287dc4','#7654b8'];const swatches=el('div','an-color-swatches');for(const color of colors){const swatch=button(color,()=>change(color),null,'an-color-swatch');swatch.style.setProperty('--an-swatch',color);swatch.style.backgroundColor=color;swatch.setAttribute('aria-pressed',String(color.toLowerCase()===String(value).toLowerCase()));swatches.append(swatch);}const custom=input(value,'color');custom.className='an-color-custom';custom.setAttribute('aria-label',`${label} personalizată`);custom.addEventListener('input',()=>change(custom.value));wrap.append(swatches,custom);target.append(wrap);};
+      const group=className=>el('div',`an-toolbar-group ${className}`);
+      let textFormatGroup=null;
       if(o&&e.tool==='select') {
-        this.context.append(el('span','an-context-title',({text:'Text',image:'Imagine',drawing:'Desen',shape:'Formă'})[o.type]));
-        if(o.type==='text'){this.context.append(button('Editează',()=>e.editText(o),'edit'));}
-        if(o.type==='image'&&!o.locked){this.context.append(button('Decupează',()=>e.cropImage(o)),button('Înlocuiește',()=>e.chooseImage(o.id),'image'));}
-        const rotation=input(o.rotation,'number');rotation.min=-360;rotation.max=360;rotation.step=1;rotation.addEventListener('change',()=>e.changeObject({rotation:clamp(Number(rotation.value)||0,-360,360)}));rotation.disabled=!!o.locked;add('Rotație °',rotation);
-        const opacity=addRange('Opacitate',Math.round(o.opacity*100),5,100,value=>e.changeObject({opacity:value/100}),'%','change');opacity.disabled=!!o.locked;
-        this.context.append(button('Duplică',()=>e.duplicate(),'copy','an-icon'),button(o.locked?'Deblochează':'Blochează',()=>e.changeObject({locked:!o.locked},true),'lock'),button('În față',()=>e.order(1),'up','an-icon'),button('În spate',()=>e.order(-1),'down','an-icon'),button('Șterge',()=>e.removeObject(),'trash','an-danger an-icon'));
+        if(o.type==='text'){
+          const objectGroup=group('an-text-object-group'),state=group('an-text-state-group'),transform=group('an-text-transform-group'),actions=group('an-text-actions-group');
+          state.append(el('span','an-context-title','Text'),button('Editează',()=>e.editText(o),'edit','an-toolbar-icon-button'));
+          const rotation=input(o.rotation,'number');rotation.min=-360;rotation.max=360;rotation.step=1;rotation.addEventListener('change',()=>e.changeObject({rotation:clamp(Number(rotation.value)||0,-360,360)}));rotation.disabled=!!o.locked;add('Rotație °',rotation,transform);
+          const opacity=addRange('Opacitate',Math.round(o.opacity*100),5,100,value=>e.changeObject({opacity:value/100}),'%','change',transform);opacity.disabled=!!o.locked;
+          actions.append(button('Duplică',()=>e.duplicate(),'copy','an-icon an-toolbar-icon-button'),button(o.locked?'Deblochează':'Blochează',()=>e.changeObject({locked:!o.locked},true),'lock','an-toolbar-icon-button'),button('În față',()=>e.order(1),'up','an-icon an-toolbar-icon-button'),button('În spate',()=>e.order(-1),'down','an-icon an-toolbar-icon-button'),button('Șterge',()=>e.removeObject(),'trash','an-danger an-icon an-toolbar-icon-button'));
+          objectGroup.append(state,transform,actions);this.context.append(objectGroup);textFormatGroup=group('an-text-format-group');this.context.append(textFormatGroup);
+        }else{
+          this.context.append(el('span','an-context-title',({image:'Imagine',drawing:'Desen',shape:'Formă'})[o.type]));
+          if(o.type==='image'&&!o.locked){this.context.append(button('Decupează',()=>e.cropImage(o)),button('Înlocuiește',()=>e.chooseImage(o.id),'image'));}
+          const rotation=input(o.rotation,'number');rotation.min=-360;rotation.max=360;rotation.step=1;rotation.addEventListener('change',()=>e.changeObject({rotation:clamp(Number(rotation.value)||0,-360,360)}));rotation.disabled=!!o.locked;add('Rotație °',rotation);
+          const opacity=addRange('Opacitate',Math.round(o.opacity*100),5,100,value=>e.changeObject({opacity:value/100}),'%','change');opacity.disabled=!!o.locked;
+          this.context.append(button('Duplică',()=>e.duplicate(),'copy','an-icon'),button(o.locked?'Deblochează':'Blochează',()=>e.changeObject({locked:!o.locked},true),'lock'),button('În față',()=>e.order(1),'up','an-icon'),button('În spate',()=>e.order(-1),'down','an-icon'),button('Șterge',()=>e.removeObject(),'trash','an-danger an-icon'));
+        }
       }
       if((o?.type==='text'&&!o.locked)||e.tool==='text') {
-        const style=o?.type==='text'?o:e.textStyle, change=patch=>o?.type==='text'?e.changeObject(patch):Object.assign(e.textStyle,patch);
-        add('Font',select([['Arial','Arial'],['Georgia','Georgia'],['Verdana','Verdana'],['Courier New','Monospace']],style.font,v=>change({font:v})));
-        const fontSize=input(style.fontSize,'number');fontSize.min=8;fontSize.max=144;fontSize.addEventListener('change',()=>change({fontSize:clamp(Number(fontSize.value)||22,8,144)}));add('Mărime',fontSize);
-        for(const [key,name] of [['bold','Bold'],['italic','Italic'],['underline','Subliniat']]){const b=button(name,()=>{change({[key]:!style[key]});if(!o)this.renderContext();});b.classList.add('an-text-style-button',`an-text-style-${key}`);b.setAttribute('aria-pressed',String(!!style[key]));this.context.append(b);}
-        add('Aliniere',select([['left','Stânga'],['center','Centru'],['right','Dreapta']],style.align,v=>change({align:v})));
-        add('Listă',select([['none','Fără listă'],['bullet','Cu puncte'],['number','Numerotată']],style.list,v=>change({list:v})));
-        add('Stil text',select([['body','Corp de text'],['title','Titlu'],['subtitle','Subtitlu']],'body',v=>change({fontSize:v==='title'?36:v==='subtitle'?28:22,bold:v!=='body'})));
-        addPalette('Culoare text',style.color,color=>change({color}));
+        const style=o?.type==='text'?o:e.textStyle, change=patch=>o?.type==='text'?e.changeObject(patch):Object.assign(e.textStyle,patch),target=textFormatGroup||this.context;
+        add('Font',select([['Arial','Arial'],['Georgia','Georgia'],['Verdana','Verdana'],['Courier New','Monospace']],style.font,v=>change({font:v})),target);
+        const fontSize=input(style.fontSize,'number');fontSize.min=8;fontSize.max=144;fontSize.addEventListener('change',()=>change({fontSize:clamp(Number(fontSize.value)||22,8,144)}));add('Mărime',fontSize,target);
+        const textStyles=group('an-text-style-group');for(const [key,name] of [['bold','Bold'],['italic','Italic'],['underline','Subliniat']]){const b=button(name,()=>{change({[key]:!style[key]});if(!o)this.renderContext();});b.classList.add('an-text-style-button',`an-text-style-${key}`);b.setAttribute('aria-pressed',String(!!style[key]));textStyles.append(b);}target.append(textStyles);
+        add('Aliniere',select([['left','Stânga'],['center','Centru'],['right','Dreapta']],style.align,v=>change({align:v})),target);
+        add('Listă',select([['none','Fără listă'],['bullet','Cu puncte'],['number','Numerotată']],style.list,v=>change({list:v})),target);
+        add('Stil text',select([['body','Corp de text'],['title','Titlu'],['subtitle','Subtitlu']],'body',v=>change({fontSize:v==='title'?36:v==='subtitle'?28:22,bold:v!=='body'})),target);
+        addPalette('Culoare text',style.color,color=>change({color}),target);
       } else if(e.tool==='pencil') {
         const choices=[['pencil','Creion','pencil'],['highlighter','Evidențiator','highlighter'],['line','Linie','line'],['dashed','Linie punctată','dashed'],['eraser','Gumă','eraser']];
         addChoices('Instrument',choices,e.drawKind,v=>{e.drawKind=v;this.renderContext();});
@@ -282,7 +292,7 @@
       this.toolbar.render();this.selection.render();this.requestPaint();
     }
     erase(p){this.page.objects=this.page.objects.filter(o=>{if(o.type!=='drawing'||o.locked)return true;const q=this.local(o,p);return !(q.x>=-8&&q.x<=o.w+8&&q.y>=-8&&q.y<=o.h+8);});this.requestPaint();}
-    editText(o,checkpoint=true){if(o.locked)return;this.endText();if(checkpoint)this.snapshot();this.selected=o.id;this.tool='select';const t=el('textarea','an-text-editor');t.value=o.text;t.setAttribute('aria-label','Textul casetei');Object.assign(t.style,{left:`${o.x}px`,top:`${o.y}px`,width:`${o.w}px`,height:`${o.h}px`,transform:`rotate(${o.rotation}deg)`,fontFamily:o.font,fontSize:`${o.fontSize}px`,fontWeight:o.bold?'700':'400',fontStyle:o.italic?'italic':'normal',textDecoration:o.underline?'underline':'none',color:o.color,textAlign:o.align});t.addEventListener('pointerdown',event=>event.stopPropagation());t.addEventListener('input',()=>{o.text=t.value;this.changed();});t.addEventListener('blur',()=>this.endText());this.textEditor=t;this.sheet.append(t);this.selection.render();this.toolbar.render();this.requestPaint();t.focus({preventScroll:true});}
+    editText(o,checkpoint=true){if(o.locked)return;this.endText();if(checkpoint)this.snapshot();this.selected=o.id;this.tool='select';const t=el('textarea','an-text-editor');t.value=o.text;t.setAttribute('aria-label','Textul casetei');Object.assign(t.style,{left:`${o.x}px`,top:`${o.y}px`,width:`${o.w}px`,height:`${o.h}px`,transform:`rotate(${o.rotation}deg)`,fontFamily:o.font,fontSize:`${o.fontSize}px`,fontWeight:o.bold?'700':'400',fontStyle:o.italic?'italic':'normal',textDecoration:o.underline?'underline':'none',color:o.color,textAlign:o.align});const fit=()=>{t.style.height='0px';o.h=Math.max(Math.ceil(o.fontSize*1.35+4),t.scrollHeight);t.style.height=`${o.h}px`;};t.addEventListener('pointerdown',event=>event.stopPropagation());t.addEventListener('input',()=>{o.text=t.value;fit();this.changed();});t.addEventListener('blur',()=>this.endText());this.textEditor=t;this.sheet.append(t);fit();this.selection.render();this.toolbar.render();this.requestPaint();t.focus({preventScroll:true});}
     endText(){if(!this.textEditor)return;const t=this.textEditor;this.textEditor=null;t.remove();this.selection.render();this.requestPaint();this.pages.render();}
     changeObject(patch,allowLocked=false){const o=this.object;if(!o||o.locked&&!allowLocked)return;this.endText();this.snapshot();Object.assign(o,patch);this.changed();this.toolbar.render();this.selection.render();this.pages.render();}
     duplicate(){const o=this.object;if(!o)return;this.endText();this.snapshot();const n=copy(o);n.id=uid();n.x+=18;n.y+=18;n.locked=false;this.page.objects.push(n);this.selected=n.id;this.changed();this.toolbar.render();this.selection.render();this.pages.render();}
