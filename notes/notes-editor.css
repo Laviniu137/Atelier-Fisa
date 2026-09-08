@@ -149,6 +149,53 @@
 .an-context[data-mode=text]>.an-button {min-width:68px;padding-inline:12px;font-weight:700;}
 .an-context[data-mode=text] .an-color-field {min-width:214px;}
 .an-context[data-mode=image] .an-button:first-of-type,.an-context[data-mode=image] .an-button:nth-of-type(2) {background:#eef5fb;border-color:#c7d9e8;color:#28567f;}
+
+/* Visual-only toolbar refinement: keeps every existing control and interaction intact. */
+.an-toolbar {padding:8px 16px 10px;gap:7px;background:linear-gradient(180deg,#ffffff,#f6f8fa);box-shadow:0 4px 14px #203b520d;}
+.an-modes {gap:3px;padding:4px;border-radius:12px;box-shadow:0 1px 5px #233e550d;}
+.an-modes>.an-button {min-height:40px;padding:8px 10px;border-radius:9px;font-size:12px;}
+.an-modes>.an-button svg {width:17px;height:17px;}
+.an-history {padding-left:8px;gap:3px;}
+.an-history .an-button {min-width:36px;min-height:36px;padding:7px;}
+.an-context {min-height:54px;gap:0;padding:4px 5px;border-color:#dfe7ed;border-radius:13px;background:#fff;box-shadow:0 3px 12px #233e550c;}
+.an-context .an-field,.an-choice-field,.an-color-field {align-self:center;min-height:44px;padding:4px 9px;border:0;border-radius:0;background:transparent;box-shadow:none;}
+.an-context>.an-field,.an-context>.an-choice-field,.an-context>.an-color-field,.an-context>.an-button {border-left:1px solid #e5ebf0;}
+.an-context>:first-child {border-left:0;}
+.an-context .an-field {min-width:78px;gap:2px;}
+.an-context .an-field>span:first-child,.an-choice-heading {font-size:9px;letter-spacing:.055em;color:#708296;font-weight:750;}
+.an-context .an-field :is(select,input) {min-height:29px;border-color:#d7e1e9;border-radius:7px;background:#fbfcfd;font-size:12px;box-shadow:none;}
+.an-context .an-field select {min-width:102px;padding-right:27px;background-position:right 7px center;}
+.an-range-field {min-width:154px!important;}
+.an-range-field input[type=range] {width:132px;}
+.an-range-value {padding:2px 6px;border-color:#d4e1eb;background:#f4f8fb;color:#315f91;font-size:9px;}
+.an-choice-field {display:grid;grid-template-columns:auto 1fr;align-items:center;gap:7px;min-width:0;}
+.an-choice-buttons {gap:3px;}
+.an-context .an-choice-button {min-width:38px;min-height:36px;padding:6px 7px;border-radius:8px;border-color:transparent;background:transparent;box-shadow:none;font-size:11px;}
+.an-context .an-choice-button:hover:not(:disabled) {background:#f0f5f9;border-color:#d7e3ec;}
+.an-context .an-choice-button[aria-pressed=true] {background:#e4eff8;border-color:#abc6dd;color:#244f79;box-shadow:inset 0 1px 0 #fff;}
+.an-context .an-choice-button svg {width:16px;height:16px;}
+.an-context[data-mode=pencil] .an-choice-field {min-width:0;}
+.an-context[data-mode=pencil] .an-choice-buttons {grid-template-columns:repeat(5,84px);}
+.an-context[data-mode=pencil] .an-choice-button {width:84px;min-width:84px;min-height:38px;padding:6px 5px;}
+.an-context .an-button {align-self:center;min-height:38px;padding:7px 9px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-size:12px;}
+.an-context .an-button:hover:not(:disabled) {background:#f0f5f9;border-color:#d7e3ec;}
+.an-context .an-button.an-danger {min-width:38px;margin-left:0;padding:7px;color:#b3434c;background:transparent;border-color:transparent;}
+.an-context .an-button.an-danger:hover:not(:disabled) {background:#fff1f2;border-color:#f0c5ca;color:#a3343e;}
+.an-context .an-button.an-danger>span {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);}
+.an-context .an-button.an-danger svg {width:18px;height:18px;}
+.an-color-field {grid-template-columns:156px 30px;grid-template-rows:auto 1fr;gap:3px 6px;min-width:220px;flex:0 0 220px;}
+.an-color-swatches {grid-template-columns:repeat(8,16px);gap:4px;width:156px;}
+.an-context .an-color-swatch {min-width:16px;min-height:16px;width:16px;height:16px;border-width:1.5px;}
+.an-color-custom {width:30px!important;min-width:30px!important;height:26px!important;min-height:26px!important;border-radius:7px!important;}
+.an-context[data-mode=text] {gap:0;padding:4px 5px;background:#fff;}
+.an-context[data-mode=text] .an-field {min-width:82px;}
+.an-context[data-mode=text] .an-field:first-of-type {min-width:116px;}
+.an-context[data-mode=text]>.an-button {min-width:36px;width:36px;padding:6px;}
+.an-context[data-mode=text]>.an-text-style-button>span {font-size:0;}
+.an-context[data-mode=text]>.an-text-style-bold::after {content:'B';font:750 14px/1 Georgia,serif;}
+.an-context[data-mode=text]>.an-text-style-italic::after {content:'I';font:italic 700 14px/1 Georgia,serif;}
+.an-context[data-mode=text]>.an-text-style-underline::after {content:'U';font:750 13px/1 "Segoe UI",sans-serif;text-decoration:underline;}
+.an-context[data-mode=text] .an-color-field {min-width:220px;}
 @media(max-width:900px){.an-editor-header{padding:10px 12px}.an-toolbar{padding:6px 12px}.an-modes>.an-button{padding:10px}.an-modes>.an-button span{font-size:12px}.an-editor-body{grid-template-columns:116px minmax(0,1fr)}.an-pages{padding:8px}.an-board{padding:20px}.an-context{max-height:78px}.an-context[data-mode=pencil],.an-context[data-mode=text],.an-context[data-mode=shape]{max-height:none;flex-wrap:wrap;overflow:visible}.an-editor-footer{padding:6px 12px}}
 @media(max-width:600px){.an-editor-header{gap:6px}.an-editor-header>.an-button{padding:8px}.an-editor-header>.an-button span{font-size:11px}.an-document-name strong{font-size:14px}.an-save-status{font-size:10px}.an-editor-body{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) 88px}.an-board{grid-row:1}.an-pages{grid-row:2;display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;border-top:1px solid var(--an-line);border-right:0}.an-pages-head{flex:0 0 68px;flex-direction:column;justify-content:center}.an-page-thumb{flex:0 0 62px;margin:0;font-size:10px;gap:2px;padding:4px}.an-page-thumb canvas{height:42px}.an-modes>.an-button{flex-direction:column;gap:4px;padding:6px 8px;min-width:58px}.an-history{padding-left:6px}.an-search-row{flex-wrap:wrap}.an-search-row input{flex-basis:100%}.an-editor-footer{gap:4px}.an-editor-footer>.an-button{min-width:32px;padding:6px}.an-editor-footer>span:first-child{font-size:10px}.an-board{padding:16px}}
 @media(prefers-reduced-motion:reduce){.an-editor *,.an-dialog *{transition:none!important;scroll-behavior:auto!important}}
