@@ -67,14 +67,16 @@
 .an-sheet {position:absolute;top:0;left:0;transform-origin:0 0;background:#fff;box-shadow:0 8px 30px #22364b20,0 0 0 1px #d6dfe6;isolation:isolate;}
 .an-canvas {display:block;touch-action:none;outline:none;}
 .an-selection {position:absolute;pointer-events:none;border:calc(1.5px / var(--an-zoom,1)) solid #487cac;transform-origin:center;z-index:2;}
-.an-selection.is-text {border-color:#487cac99;border-style:dashed;}
+.an-selection.is-text {border:calc(1px / var(--an-zoom,1)) solid #5c8fba80;border-radius:calc(4px / var(--an-zoom,1));}
 .an-selection.is-locked {border-style:dashed;border-color:#94a6b6;}
 .an-handle {position:absolute;pointer-events:auto;width:var(--an-handle,16px);height:var(--an-handle,16px);min-width:0;min-height:0;padding:0;border:1.5px solid #487cac;border-radius:50%;background:#fff;box-shadow:0 1px 4px #17375322;touch-action:none;}
 .an-handle:hover:not(:disabled) {transform:none;background:#dcebf8;}
 .an-nw {left:0;top:0;translate:-50% -50%;cursor:nwse-resize;}.an-ne {right:0;top:0;translate:50% -50%;cursor:nesw-resize;}.an-sw {left:0;bottom:0;translate:-50% 50%;cursor:nesw-resize;}.an-se {right:0;bottom:0;translate:50% 50%;cursor:nwse-resize;}
 .an-rotate {left:50%;top:calc(-2 * var(--an-handle,16px));translate:-50% 0;cursor:grab;background:#e8f1fa;}
 .an-rotate::after {content:'↻';display:grid;place-items:center;width:100%;height:100%;color:#315f91;font-size:12px;font-weight:700;}
-.an-text-editor {position:absolute;padding:2px 4px;z-index:3;line-height:1.35;border:0;border-radius:0;outline:none!important;background:transparent;box-shadow:none;resize:none;transform-origin:center;touch-action:auto;overflow:hidden;}
+.an-selection.is-text .an-handle {width:calc(var(--an-handle,16px) * .7);height:calc(var(--an-handle,16px) * .7);border-width:calc(1px / var(--an-zoom,1));box-shadow:0 1px 3px #1737531c;}
+.an-selection.is-text .an-rotate {top:calc(-1.55 * var(--an-handle,16px));}
+.an-text-editor {position:absolute;box-sizing:border-box;padding:2px 4px;z-index:3;line-height:1.35;border:0;border-radius:0;outline:none!important;background:transparent;box-shadow:none;resize:none;transform-origin:center;touch-action:auto;overflow:hidden;}
 .an-editor-footer {display:flex;align-items:center;gap:8px;min-height:52px;padding:6px 20px;border-top:1px solid var(--an-line);background:#fff;font-size:12px;overflow-x:auto;white-space:nowrap;}
 .an-editor-footer>span:first-child {margin-right:auto;}
 .an-editor-footer .an-button {min-height:36px;padding:6px 10px;flex-shrink:0;}
