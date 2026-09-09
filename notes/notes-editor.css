@@ -332,3 +332,40 @@
   .an-editor.an-pages-collapsed .an-editor-body,.an-editor.an-focus-mode .an-editor-body {grid-template-rows:minmax(0,1fr);}
   .an-editor.an-focus-mode .an-document-name {display:none;}
 }
+
+/* Shared spacing system for every note toolbar and note card. */
+.an-editor,#workspaceNotes {--an-space-1:4px;--an-space-2:8px;--an-space-3:12px;--an-space-4:16px;--an-space-6:24px;--an-control-height:40px;}
+.an-toolbar {padding:var(--an-space-2) var(--an-space-3);gap:var(--an-space-2);}
+.an-modes {gap:var(--an-space-1);padding:var(--an-space-1);}
+.an-modes>.an-button {height:var(--an-control-height);min-height:var(--an-control-height);padding-inline:var(--an-space-3);gap:var(--an-space-2);border-radius:9px;}
+.an-context {width:fit-content;max-width:100%;min-height:52px;padding:var(--an-space-1);gap:0;border-radius:13px;align-items:center;}
+.an-context>.an-field,.an-context>.an-choice-field,.an-context>.an-color-field,.an-context>.an-toolbar-group {height:44px;min-height:44px;margin:0;padding-block:var(--an-space-1);}
+.an-context>:not(:first-child) {border-left:1px solid #e3eaf0;}
+.an-context .an-choice-field {gap:var(--an-space-2);padding-inline:var(--an-space-3);}
+.an-context .an-choice-buttons {gap:var(--an-space-1);}
+.an-context .an-choice-button,.an-context[data-mode=pencil] .an-choice-button {height:36px;min-height:36px;padding-inline:var(--an-space-2);gap:var(--an-space-2);border-radius:8px;}
+.an-context[data-mode=pencil] .an-choice-button {width:86px;min-width:86px;}
+.an-context .an-field {gap:var(--an-space-1);padding-inline:var(--an-space-3);}
+.an-context .an-color-field {gap:var(--an-space-2);padding-inline:var(--an-space-3);}
+.an-context .an-color-swatches {gap:6px;}
+.an-context .an-color-swatch {flex-basis:18px;width:18px;height:18px;min-width:18px;min-height:18px;}
+.an-context .an-color-custom {width:28px!important;min-width:28px!important;height:28px!important;min-height:28px!important;}
+.an-context .an-color-field+.an-button.an-danger {margin-left:var(--an-space-2);padding-left:var(--an-space-3);}
+.an-context .an-context-history {margin-left:var(--an-space-2);padding-left:var(--an-space-2);}
+.an-text-object-group,.an-text-format-group {align-items:center;min-height:44px;}
+.an-text-format-group {padding-left:0;}
+.an-text-style-group {gap:var(--an-space-1);padding:var(--an-space-1) var(--an-space-2);}
+.an-text-style-group .an-button {width:34px;min-width:34px;height:34px;min-height:34px;}
+
+/* Cards share a fixed rhythm: preview, title, metadata, relation, then footer. */
+#workspaceNotesList.an-note-grid {gap:var(--an-space-4);grid-auto-rows:364px;align-items:stretch;}
+.an-note-card {height:364px;min-height:364px;padding:var(--an-space-3);overflow:visible;border-radius:16px;}
+.an-note-card .an-note-open {display:flex;flex-direction:column;min-height:0;}
+.an-note-open canvas {height:158px;border-radius:12px;background:#e3e7ed;}
+.an-note-open>span {min-height:44px;padding:var(--an-space-3) 46px 0 var(--an-space-1);font-size:14px;line-height:1.35;}
+.an-note-card-menu {top:184px;right:var(--an-space-3);}
+.an-note-date {min-height:20px;margin:var(--an-space-1) var(--an-space-1) 0;padding:0;line-height:1.45;}
+.an-note-project {min-height:24px;margin:var(--an-space-2) var(--an-space-1) 0;padding:4px var(--an-space-2);}
+.an-note-card-stats {min-height:46px;gap:var(--an-space-1);margin:var(--an-space-3) var(--an-space-1) 0;padding-top:var(--an-space-3);}
+.an-note-card-stats>span {min-height:26px;padding:5px var(--an-space-2);display:grid;place-items:center;}
+@media(max-width:900px){.an-context {width:auto;}.an-context.is-expanded {width:auto;}.an-note-card {height:364px;}}
