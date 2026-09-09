@@ -36,7 +36,7 @@
 .an-note-card-menu-items .an-button.an-danger {color:#b3434c;}
 .an-note-card-menu-items .an-button.an-danger:hover:not(:disabled) {background:#fff0f1;}
 .an-empty {grid-column:1/-1;border:1px dashed #c6d4e0;background:#f7fafc;padding:40px;border-radius:16px;color:var(--an-muted);text-align:center;}
-.an-editor {position:fixed;inset:0;z-index:10000;height:100dvh;background:var(--an-bg);display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;overscroll-behavior:none;}
+.an-editor {position:fixed;inset:0;z-index:10000;height:100dvh;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);background:var(--an-bg);display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;overscroll-behavior:none;}
 .an-editor-header,.an-editor-footer,.an-toolbar,.an-modes,.an-context {min-width:0;}
 .an-editor-header {display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--an-line);background:#fff;margin:0;box-shadow:none;border-radius:0;}
 .an-document-name {flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
