@@ -220,7 +220,7 @@
         this.context.append(button('Șterge desenul',()=>confirmAction('Ștergi toate trasările de pe pagină?',()=>e.edit(()=>{e.page.objects=e.page.objects.filter(o=>o.type!=='drawing');})),'trash','an-danger'));
       } else if(e.tool==='shape') {
         addChoices('Formă',[['rect','Dreptunghi','shape'],['ellipse','Elipsă','ellipse'],['arrow','Săgeată','arrow']],e.shapeKind,v=>{e.shapeKind=v;this.renderContext();});addRange('Grosime contur',e.drawWidth,1,24,value=>e.drawWidth=value);addPalette('Culoare contur',e.drawColor,color=>{e.drawColor=color;this.renderContext();});
-      } else if(!o) {if(e.tool==='select'){this.context.append(this.historyControls());return;}this.context.append(el('span','an-hint',e.tool==='pan'?'Trage pentru deplasare. Două degete pentru zoom.':'Alege instrumentul și lucrează direct pe foaia A4.'));}
+      } else if(!o) {if(e.tool==='select'){this.context.hidden=true;this.contextToggle.hidden=true;return;}this.context.append(el('span','an-hint',e.tool==='pan'?'Trage pentru deplasare. Două degete pentru zoom.':'Alege instrumentul și lucrează direct pe foaia A4.'));}
       this.context.append(this.historyControls());
     }
   }
