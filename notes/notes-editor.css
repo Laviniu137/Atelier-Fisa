@@ -361,6 +361,7 @@
 #workspaceNotesList.an-note-grid {gap:var(--an-space-4);grid-auto-rows:364px;align-items:stretch;}
 .an-note-card {height:364px;min-height:364px;padding:var(--an-space-3);overflow:visible;border-radius:16px;}
 .an-note-card .an-note-open {display:flex;flex-direction:column;min-height:0;}
+.an-note-card .an-note-open:hover:not(:disabled),.an-note-card .an-note-open:active:not(:disabled) {background:transparent;border-color:transparent;box-shadow:none;transform:none;}
 .an-note-open canvas {height:158px;border-radius:12px;background:#e3e7ed;}
 .an-note-open>span {min-height:44px;padding:var(--an-space-3) 46px 0 var(--an-space-1);font-size:14px;line-height:1.35;}
 .an-note-card-menu {top:184px;right:var(--an-space-3);}
