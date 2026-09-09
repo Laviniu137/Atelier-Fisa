@@ -157,8 +157,9 @@
     render() {
       const e=this.e;this.modes.replaceChildren();
       for(const [id,name,icon] of [['select','Selectare','select'],['text','Text','text'],['pencil','Desen','pencil'],['shape','Forme','shape'],['image','Imagine','image'],['pan','Deplasare','pan']]){const b=button(name,()=>id==='image'?e.chooseImage():e.setTool(id),icon);b.dataset.mode=id;b.setAttribute('aria-pressed',String(e.tool===id));this.modes.append(b);}
-      const history=el('div','an-history');const undo=button('Undo',()=>e.undo(),'undo','an-icon'),redo=button('Redo',()=>e.redo(),'redo','an-icon');undo.disabled=!e.past.length;redo.disabled=!e.future.length;history.append(undo,redo);this.modes.append(history);this.renderContext();
+      this.renderContext();
     }
+    historyControls(){const e=this.e,history=el('div','an-history an-context-history');history.setAttribute('aria-label','Istoric modificări');const undo=button('Undo',()=>e.undo(),'undo','an-icon'),redo=button('Redo',()=>e.redo(),'redo','an-icon');undo.disabled=!e.past.length;redo.disabled=!e.future.length;history.append(undo,redo);return history;}
     renderContext() {
       const e=this.e,o=e.object;this.context.hidden=false;this.context.classList.remove('is-expanded');this.contextToggle.hidden=false;this.contextToggle.setAttribute('aria-expanded','false');this.context.replaceChildren();
       this.context.dataset.mode=o&&e.tool==='select'?o.type:e.tool;
@@ -207,7 +208,8 @@
         this.context.append(button('Șterge desenul',()=>confirmAction('Ștergi toate trasările de pe pagină?',()=>e.edit(()=>{e.page.objects=e.page.objects.filter(o=>o.type!=='drawing');})),'trash','an-danger'));
       } else if(e.tool==='shape') {
         addChoices('Formă',[['rect','Dreptunghi','shape'],['ellipse','Elipsă','ellipse'],['arrow','Săgeată','arrow']],e.shapeKind,v=>{e.shapeKind=v;this.renderContext();});addRange('Grosime contur',e.drawWidth,1,24,value=>e.drawWidth=value);addPalette('Culoare contur',e.drawColor,color=>{e.drawColor=color;this.renderContext();});
-      } else if(!o) {if(e.tool==='select'){this.context.hidden=true;this.contextToggle.hidden=true;return;}this.context.append(el('span','an-hint',e.tool==='pan'?'Trage pentru deplasare. Două degete pentru zoom.':'Alege instrumentul și lucrează direct pe foaia A4.'));}
+      } else if(!o) {if(e.tool==='select'){this.context.append(this.historyControls());return;}this.context.append(el('span','an-hint',e.tool==='pan'?'Trage pentru deplasare. Două degete pentru zoom.':'Alege instrumentul și lucrează direct pe foaia A4.'));}
+      this.context.append(this.historyControls());
     }
   }
 
