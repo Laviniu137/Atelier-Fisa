@@ -429,3 +429,58 @@
   .an-context[data-mode=text]>.an-text-zone:first-child {border-top:0;}
   .an-context[data-mode=text] .an-text-format-group,.an-context[data-mode=text] .an-text-appearance-group {flex-wrap:wrap;}
 }
+
+/* Unified studio toolbar: visual overrides only; editor interactions stay unchanged. */
+.an-editor {--an-ink:#24384b;--an-muted:#607286;--an-blue:#315f91;--an-line:#dbe3ea;}
+.an-editor .an-toolbar {padding:12px 18px 14px;gap:12px;background:#f0f3f5;border-bottom:1px solid #dbe3ea;box-shadow:0 4px 18px #203b5208;}
+.an-editor .an-modes {width:fit-content;max-width:100%;gap:4px;padding:5px;background:#e9eef1;border:1px solid #dbe3ea;border-radius:16px;}
+.an-editor .an-modes>.an-button {height:44px;min-height:44px;padding:0 18px;border:1px solid transparent;border-radius:11px;color:#607286;font-size:13px;font-weight:650;transition:background .16s ease,color .16s ease,box-shadow .16s ease;}
+.an-editor .an-modes>.an-button:hover:not(:disabled) {background:#ffffffa8;color:#24384b;}
+.an-editor .an-modes>.an-button[aria-pressed=true] {background:#fff;color:#315f91;border-color:#c1d3e4;box-shadow:0 3px 8px #203b5210,0 1px 2px #203b5208;}
+.an-editor .an-modes>.an-button svg {width:19px;height:19px;stroke-width:1.8;}
+.an-editor .an-context,.an-editor .an-context[data-mode=text] {width:100%;min-height:76px;padding:10px 12px;gap:4px;background:#fff;border:1px solid #dbe3ea;border-radius:17px;box-shadow:0 3px 12px #203b5205;}
+.an-editor .an-context>.an-field,.an-editor .an-context>.an-choice-field,.an-editor .an-context>.an-color-field,.an-editor .an-context>.an-toolbar-group,.an-editor .an-context[data-mode=text]>.an-text-zone {height:auto;min-height:52px;padding:4px 14px;border-color:#e4eaf0;}
+.an-editor .an-context .an-field>span:first-child,.an-editor .an-context .an-choice-heading {font-size:10px;font-weight:600;letter-spacing:.02em;color:#607286;}
+.an-editor .an-context .an-field {gap:6px;}
+.an-editor .an-context .an-button {font-size:12px;border-radius:10px;}
+.an-editor .an-context .an-popover-trigger,.an-editor .an-context[data-mode=text] .an-text-format-group .an-popover-trigger {height:38px;min-height:38px;padding:8px 12px;border:1px solid #d9e3eb;background:#f8fafc;color:#24384b;border-radius:10px;box-shadow:0 1px 2px #203b5204;}
+.an-editor .an-context .an-popover-trigger:hover:not(:disabled),.an-editor .an-context .an-popover-trigger[aria-expanded=true] {background:#e7eff7;border-color:#abc6dd;color:#315f91;}
+.an-editor .an-context .an-popover-icon-trigger,.an-editor .an-context[data-mode=text] .an-text-format-group .an-popover-icon-trigger {width:38px;min-width:38px;padding:8px;}
+.an-editor .an-context .an-text-style-group {gap:3px;padding:4px;background:#edf3f7;border-radius:12px;margin:0 7px;}
+.an-editor .an-context[data-mode=text] .an-text-style-group .an-button,.an-editor .an-context[data-mode=text] .an-toolbar-icon-button,.an-editor .an-context[data-mode=text] .an-context-history .an-button {width:36px;min-width:36px;height:36px;min-height:36px;border-radius:9px;}
+.an-editor .an-context .an-choice-buttons,.an-editor .an-context[data-mode=pencil] .an-choice-buttons {gap:5px;height:auto;padding:4px;background:#edf3f7;border-radius:12px;}
+.an-editor .an-context .an-choice-button,.an-editor .an-context[data-mode=pencil] .an-choice-button {height:38px;min-height:38px;width:auto;min-width:38px;padding:0 12px;border-radius:9px;background:transparent;color:#607286;box-shadow:none;}
+.an-editor .an-context .an-choice-button[aria-pressed=true],.an-editor .an-context[data-mode=pencil] .an-choice-button[aria-pressed=true],.an-editor .an-context[data-mode=text] .an-text-style-group .an-button[aria-pressed=true] {background:#fff;color:#315f91;box-shadow:0 2px 6px #203b5212,inset 0 0 0 1px #c1d3e4;border-color:transparent;}
+.an-editor .an-context[data-mode=text] .an-text-state-group .an-context-title {height:30px;padding:0 10px;background:#e7eff7;border-color:#d9e4ed;color:#315f91;border-radius:8px;font-size:9px;letter-spacing:.07em;}
+.an-editor .an-context .an-color-swatches,.an-editor .an-context[data-mode=text] .an-text-appearance-group .an-color-swatches {gap:8px;padding:4px;}
+.an-editor .an-context .an-color-swatch,.an-editor .an-context[data-mode=text] .an-text-appearance-group .an-color-swatch {width:22px;height:22px;min-width:22px;min-height:22px;flex-basis:22px;border:3px solid #fff;box-shadow:0 0 0 1px #dbe3ea;}
+.an-editor .an-context .an-color-swatch[aria-pressed=true] {box-shadow:0 0 0 2px #315f91,0 0 0 4px #e7eff7;}
+.an-editor .an-context input[type=range] {accent-color:#315f91;}
+.an-editor .an-toolbar-popover {padding:14px;border:1px solid #dbe3ea;border-radius:18px;box-shadow:0 18px 50px #203b5220,0 3px 8px #203b5208;}
+.an-editor .an-toolbar-popover-title {margin:4px 5px 12px;color:#607286;font-size:10px;}
+.an-editor .an-toolbar-popover .an-popover-option {min-height:40px;border-radius:10px;}
+.an-editor .an-toolbar-popover .an-popover-option.is-selected {background:#e7eff7;color:#315f91;border-color:#c1d3e4;box-shadow:none;}
+.an-editor .an-button:focus-visible {outline:3px solid #648fba!important;outline-offset:3px;}
+@media(max-width:900px) {
+ .an-editor .an-toolbar {padding:8px 12px;gap:8px;}
+ .an-editor .an-modes {width:auto;}
+ .an-editor .an-modes>.an-button {padding-inline:12px;}
+ .an-editor .an-context,.an-editor .an-context[data-mode=text] {width:auto;min-height:0;max-height:min(340px,calc(100dvh - 170px));padding:10px;flex-wrap:wrap;overflow:auto;box-shadow:0 16px 40px #203b5224;}
+ .an-editor .an-context>.an-field,.an-editor .an-context>.an-choice-field,.an-editor .an-context>.an-color-field,.an-editor .an-context[data-mode=text]>.an-text-zone {max-width:100%;padding:7px;}
+ .an-editor .an-context .an-choice-buttons {flex-wrap:wrap;}
+ .an-editor .an-context-toggle {min-height:44px;min-width:44px;border-radius:12px;color:#315f91;border-color:#c1d3e4;}
+ .an-editor .an-context-toggle[aria-expanded=true] {background:#e7eff7;}
+}
+@media(prefers-reduced-motion:reduce) {.an-editor .an-modes>.an-button {transition:none;}}
+
+/* Consistent labels, dropdown affordances and touch targets across tools. */
+.an-editor .an-context .an-field>span:first-child,.an-editor .an-context .an-choice-heading {font-size:11px;line-height:1.3;font-weight:600;}
+.an-editor .an-context .an-popover-trigger:not(.an-popover-icon-trigger)::after {content:'';width:5px;height:5px;margin-left:9px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg) translateY(-2px);opacity:.6;}
+.an-editor .an-context .an-range-value {color:var(--an-blue);background:#e7eff7;border-radius:6px;padding:2px 6px;font-variant-numeric:tabular-nums;}
+.an-editor .an-context[data-mode=pencil] .an-choice-heading {display:block;}
+.an-editor .an-context[data-mode=pencil] .an-choice-field {flex-direction:column;align-items:flex-start;gap:6px;}
+.an-editor .an-context .an-button {transition:background .15s ease,box-shadow .15s ease,border-color .15s ease;}
+.an-editor .an-context>.an-context-history {margin-left:auto;border-left:1px solid var(--an-line);padding-left:12px;}
+.an-editor .an-toolbar-popover {max-width:calc(100vw - 40px);max-height:calc(100dvh - 210px);overflow:auto;}
+@media(pointer:coarse) {.an-editor .an-context .an-button,.an-editor .an-context[data-mode=text] .an-text-style-group .an-button,.an-editor .an-context[data-mode=text] .an-toolbar-icon-button {min-height:44px;min-width:44px;}.an-editor .an-context .an-color-swatch,.an-editor .an-context[data-mode=text] .an-text-appearance-group .an-color-swatch {min-width:28px;min-height:28px;flex-basis:28px;}}
+@media(prefers-reduced-motion:reduce) {.an-editor .an-context .an-button {transition:none;}}
