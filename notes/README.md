@@ -1,4 +1,4 @@
-# Notițe A4 — 1.19.0
+# Notițe A4 — 1.19.1
 
 ## Publicare
 
@@ -39,7 +39,8 @@ Obiectele conțin `type`, `x`, `y`, `w`, `h`, `rotation`, `opacity`, `locked`
 Salvarea este locală acestui browser/dispozitiv; nu adaugă sincronizare în cloud.
 Notițele generale vechi sunt importate o singură dată, iar cheia lor localStorage
 originală este păstrată. Notițele interactive din proiectele cu imagini rămân separate.
-Guma elimină trasări întregi; nu modifică textul sau imaginile.
+Guma șterge local porțiuni din trasări, inclusiv printr-un gest continuu; păstrează textul, imaginile și obiectele blocate. Undo reface întregul gest de ștergere.
+Evidențiatorul folosește o urmă continuă translucidă, fără suprapuneri între segmente. Grosimea sa și mărimea gumei sunt independente de creion.
 
 Touch: un deget pentru instrumentul activ, două pentru zoom/deplasare.
 În timpul unei trasări cu pen, contactele touch suplimentare sunt ignorate.

@@ -484,3 +484,33 @@
 .an-editor .an-toolbar-popover {max-width:calc(100vw - 40px);max-height:calc(100dvh - 210px);overflow:auto;}
 @media(pointer:coarse) {.an-editor .an-context .an-button,.an-editor .an-context[data-mode=text] .an-text-style-group .an-button,.an-editor .an-context[data-mode=text] .an-toolbar-icon-button {min-height:44px;min-width:44px;}.an-editor .an-context .an-color-swatch,.an-editor .an-context[data-mode=text] .an-text-appearance-group .an-color-swatch {min-width:28px;min-height:28px;flex-basis:28px;}}
 @media(prefers-reduced-motion:reduce) {.an-editor .an-context .an-button {transition:none;}}
+/* Aligned text inspector and tactile brush controls. */
+.an-editor .an-context .an-range-field {min-width:164px!important;gap:10px;padding:9px 14px!important;}
+.an-editor .an-context .an-field-heading {display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;}
+.an-editor .an-context .an-range-value {padding:4px 8px;border:1px solid #c1d3e4;border-radius:8px;font-size:12px;font-weight:650;min-width:48px;text-align:center;}
+.an-editor .an-context input[type=range] {appearance:none;width:136px;height:6px;min-height:6px;border:0;border-radius:99px;background:#dbe3ea;cursor:pointer;overflow:visible;}
+.an-editor .an-context input[type=range]::-webkit-slider-thumb {appearance:none;width:20px;height:20px;border:3px solid #fff;border-radius:50%;background:#315f91;box-shadow:0 0 0 1px #abc6dd,0 2px 5px #203b5224;}
+.an-editor .an-context input[type=range]::-moz-range-thumb {width:14px;height:14px;border:3px solid #fff;border-radius:50%;background:#315f91;box-shadow:0 0 0 1px #abc6dd;}
+.an-editor .an-context .an-button.an-clear-drawing {display:inline-flex;width:auto;min-width:98px;min-height:42px;padding:10px 14px;margin:0 12px;border:1px solid #dbe3ea;border-radius:11px;background:#fff;gap:8px;}
+.an-editor .an-context .an-button.an-clear-drawing span {position:static;width:auto;height:auto;overflow:visible;clip-path:none;display:inline;}
+.an-editor .an-context .an-button.an-clear-drawing:hover {background:#fff0f1;border-color:#b3434c;}
+.an-editor .an-context[data-mode=text] {flex-wrap:wrap;align-items:stretch;gap:8px;padding:10px;overflow:auto;}
+.an-editor .an-context[data-mode=text]>.an-text-zone {flex:0 1 auto;min-height:66px;height:auto;padding:8px 12px;border:1px solid #e4eaf0;border-radius:12px;background:#f8fafc;gap:8px;}
+.an-editor .an-context[data-mode=text] .an-text-format-group {display:flex;align-items:flex-end;flex-wrap:wrap;gap:8px;}
+.an-editor .an-context[data-mode=text] .an-text-format-group>.an-field {padding:0;gap:6px;}
+.an-editor .an-context[data-mode=text] .an-text-format-group>.an-field>span {line-height:14px;}
+.an-editor .an-context[data-mode=text] .an-text-format-group .an-popover-trigger {height:38px;min-height:38px;}
+.an-editor .an-context[data-mode=text] .an-text-style-group {height:38px;padding:2px;margin:0;align-self:flex-end;}
+.an-editor .an-context[data-mode=text] .an-text-style-group .an-button {height:34px;min-height:34px;}
+.an-editor .an-context[data-mode=text] .an-text-appearance-group {align-items:center;flex-wrap:wrap;}
+.an-editor .an-context[data-mode=text] .an-text-transform-group {align-items:flex-end;gap:8px;}
+@media(max-width:900px){.an-editor .an-context[data-mode=text]>.an-text-zone {max-width:100%;flex-wrap:wrap;}.an-editor .an-context[data-mode=text] .an-text-format-group {flex:1 1 100%;}.an-editor .an-context[data-mode=text] .an-text-style-group {align-self:flex-end;}}
+@media(min-width:1101px){
+ .an-editor .an-context[data-mode=text] {display:grid;grid-template-columns:minmax(560px,1.25fr) minmax(420px,1fr);align-items:stretch;}
+ .an-editor .an-context[data-mode=text]>.an-text-format-group {grid-column:1;grid-row:1;}
+ .an-editor .an-context[data-mode=text]>.an-text-appearance-group {grid-column:2;grid-row:1;}
+ .an-editor .an-context[data-mode=text]>.an-text-object-group {grid-column:1;grid-row:2;}
+ .an-editor .an-context[data-mode=text]>.an-text-properties-group {grid-column:2;grid-row:2;}
+ .an-editor .an-context[data-mode=text]:not(:has(.an-text-properties-group))>.an-text-object-group {display:none;}
+ .an-editor .an-context[data-mode=text] .an-text-appearance-group .an-context-history {margin-left:auto;}
+}
