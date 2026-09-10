@@ -183,15 +183,16 @@
       const group=className=>el('div',`an-toolbar-group ${className}`);
       const addPopover=(label,summary,icon,build,target=this.context)=>{let trigger;trigger=button(label,()=>this.togglePopover(trigger,label,build),icon,'an-popover-trigger');trigger.setAttribute('aria-expanded','false');trigger.lastElementChild.textContent=summary||'';if(!summary)trigger.classList.add('an-popover-icon-trigger');target.append(field(label,trigger));return trigger;};
       const popoverOption=(label,action,icon,cls='')=>button(label,()=>{action();this.closePopover();},icon,`an-popover-option ${cls}`);
-      let textFormatGroup=null;
+      let textFormatGroup=null,textAppearanceGroup=null,contextHistoryPlaced=false;
       if(o&&e.tool==='select') {
         if(o.type==='text'){
-          const objectGroup=group('an-text-object-group'),state=group('an-text-state-group'),transform=group('an-text-transform-group'),actions=group('an-text-actions-group');
+          const objectGroup=group('an-text-zone an-text-object-group'),state=group('an-text-state-group'),properties=group('an-text-zone an-text-properties-group'),transform=group('an-text-transform-group'),actions=group('an-text-actions-group');
           state.append(el('span','an-context-title','Text'),button('Editează',()=>e.editText(o),'edit','an-toolbar-icon-button'));
           const rotation=input(o.rotation,'number');rotation.min=-360;rotation.max=360;rotation.step=1;rotation.addEventListener('change',()=>e.changeObject({rotation:clamp(Number(rotation.value)||0,-360,360)}));rotation.disabled=!!o.locked;add('Rotație °',rotation,transform);
           const opacity=addRange('Opacitate',Math.round(o.opacity*100),5,100,value=>e.changeObject({opacity:value/100}),'%','change',transform);opacity.disabled=!!o.locked;
-          actions.append(button('Duplică',()=>e.duplicate(),'copy','an-icon an-toolbar-icon-button'),button(o.locked?'Deblochează':'Blochează',()=>e.changeObject({locked:!o.locked},true),'lock','an-toolbar-icon-button'),button('În față',()=>e.order(1),'up','an-icon an-toolbar-icon-button'),button('În spate',()=>e.order(-1),'down','an-icon an-toolbar-icon-button'),button('Șterge',()=>e.removeObject(),'trash','an-danger an-icon an-toolbar-icon-button'));
-          objectGroup.append(state,transform,actions);this.context.append(objectGroup);textFormatGroup=group('an-text-format-group');this.context.append(textFormatGroup);
+          let arrangeTrigger;arrangeTrigger=button('Aranjare',()=>this.togglePopover(arrangeTrigger,'Aranjare',()=>{const content=el('div','an-popover-options');content.append(popoverOption('În față',()=>e.order(1),'up'),popoverOption('În spate',()=>e.order(-1),'down'));return content;}),'more','an-icon an-toolbar-icon-button an-arrange-trigger');arrangeTrigger.setAttribute('aria-expanded','false');
+          actions.append(button('Duplică',()=>e.duplicate(),'copy','an-icon an-toolbar-icon-button'),button(o.locked?'Deblochează':'Blochează',()=>e.changeObject({locked:!o.locked},true),'lock','an-toolbar-icon-button'),arrangeTrigger,button('Șterge',()=>e.removeObject(),'trash','an-danger an-icon an-toolbar-icon-button'));
+          objectGroup.append(state,actions);properties.append(transform);this.context.append(objectGroup,properties);textFormatGroup=group('an-text-zone an-text-format-group');textAppearanceGroup=group('an-text-zone an-text-appearance-group');this.context.append(textFormatGroup,textAppearanceGroup);
         }else{
           this.context.append(el('span','an-context-title',({image:'Imagine',drawing:'Desen',shape:'Formă'})[o.type]));
           if(o.type==='image'&&!o.locked){this.context.append(button('Decupează',()=>e.cropImage(o)),button('Înlocuiește',()=>e.chooseImage(o.id),'image'));}
@@ -201,7 +202,8 @@
         }
       }
       if((o?.type==='text'&&!o.locked)||e.tool==='text') {
-        const style=o?.type==='text'?o:e.textStyle,target=textFormatGroup||this.context,update=patch=>{if(o?.type==='text')e.changeObject(patch);else{Object.assign(e.textStyle,patch);this.renderContext();}};
+        if(!textFormatGroup){const objectGroup=group('an-text-zone an-text-object-group'),state=group('an-text-state-group');state.append(el('span','an-context-title','Text nou'));objectGroup.append(state);textFormatGroup=group('an-text-zone an-text-format-group');textAppearanceGroup=group('an-text-zone an-text-appearance-group');this.context.append(objectGroup,textFormatGroup,textAppearanceGroup);}
+        const style=o?.type==='text'?o:e.textStyle,target=textFormatGroup,update=patch=>{if(o?.type==='text')e.changeObject(patch);else{Object.assign(e.textStyle,patch);this.renderContext();}};
         const fonts=[['Arial','Arial'],['Georgia','Georgia'],['Verdana','Verdana'],['Courier New','Monospace']];
         addPopover('Font',style.font,null,()=>{const content=el('div','an-font-popover'),search=input('','search');search.placeholder='Caută un font';search.setAttribute('aria-label','Caută un font');const options=el('div','an-popover-options');for(const [value,label] of fonts){const option=popoverOption(label,()=>update({font:value}),'',`an-font-option${value===style.font?' is-selected':''}`);option.style.fontFamily=value;options.append(option);}search.addEventListener('input',()=>{const query=search.value.trim().toLocaleLowerCase('ro-RO');for(const option of options.children)option.hidden=!option.textContent.toLocaleLowerCase('ro-RO').includes(query);});content.append(search,options);return content;},target).style.fontFamily=style.font;
         addPopover('Mărime',`${style.fontSize}px`,null,()=>{const content=el('div','an-size-popover'),stepper=el('div','an-size-stepper'),manual=input(style.fontSize,'number');manual.min=8;manual.max=144;manual.setAttribute('aria-label','Valoare mărime');const set=value=>update({fontSize:clamp(Number(value)||22,8,144)});stepper.append(button('Micșorează',()=>set(style.fontSize-1),'minus','an-stepper-button'),manual,button('Mărește',()=>set(style.fontSize+1),'plus','an-stepper-button'));manual.addEventListener('change',()=>set(manual.value));const presets=el('div','an-size-presets');for(const value of [12,14,16,18,24,32])presets.append(popoverOption(`${value}`,()=>set(value),'',`an-size-preset${value===style.fontSize?' is-selected':''}`));content.append(stepper,presets);return content;},target);
@@ -212,7 +214,7 @@
         addPopover('Listă','',listIcon,()=>{const content=el('div','an-icon-popover-grid an-list-popover');for(const [value,label,icon] of lists)content.append(popoverOption(label,()=>update({list:value}),icon,`an-icon-popover-option${value===style.list?' is-selected':''}`));return content;},target);
         const presets=[['body','Corp de text',22,false],['subtitle','Subtitlu',28,true],['title','Titlu',36,true],['heading','Heading',44,true]],currentPreset=presets.find(item=>item[2]===style.fontSize&&item[3]===style.bold)?.[0]||'body';
         addPopover('Stil text',presets.find(item=>item[0]===currentPreset)[1],null,()=>{const content=el('div','an-style-popover');for(const [id,label,fontSize,bold] of presets){const option=popoverOption(label,()=>update({fontSize,bold}),'',`an-style-preview${id===currentPreset?' is-selected':''}`);option.style.fontSize=`${Math.min(fontSize,24)}px`;option.style.fontWeight=bold?'700':'400';content.append(option);}return content;},target);
-        addPalette('Culoare text',style.color,color=>update({color}),target);
+        addPalette('Culoare text',style.color,color=>update({color}),textAppearanceGroup);textAppearanceGroup.append(this.historyControls());contextHistoryPlaced=true;
       } else if(e.tool==='pencil') {
         const choices=[['pencil','Creion','pencil'],['highlighter','Evidențiator','highlighter'],['line','Linie','line'],['dashed','Linie punctată','dashed'],['eraser','Gumă','eraser']];
         addChoices('Instrument',choices,e.drawKind,v=>{e.drawKind=v;this.renderContext();});
@@ -222,7 +224,7 @@
       } else if(e.tool==='shape') {
         addChoices('Formă',[['rect','Dreptunghi','shape'],['ellipse','Elipsă','ellipse'],['arrow','Săgeată','arrow']],e.shapeKind,v=>{e.shapeKind=v;this.renderContext();});addRange('Grosime contur',e.drawWidth,1,24,value=>e.drawWidth=value);addPalette('Culoare contur',e.drawColor,color=>{e.drawColor=color;this.renderContext();});
       } else if(!o) {if(e.tool==='select'){this.context.hidden=true;this.contextToggle.hidden=true;return;}this.context.append(el('span','an-hint',e.tool==='pan'?'Trage pentru deplasare. Două degete pentru zoom.':'Alege instrumentul și lucrează direct pe foaia A4.'));}
-      this.context.append(this.historyControls());
+      if(!contextHistoryPlaced){const history=this.historyControls();if(textAppearanceGroup){textAppearanceGroup.append(history);contextHistoryPlaced=true;}else this.context.append(history);}
     }
   }
 
