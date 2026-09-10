@@ -11,9 +11,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Fișă atelier">
-  <link rel="manifest" href="manifest.webmanifest?v=1.18.14">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.18.14">
-  <link rel="apple-touch-icon" href="icon-180.png?v=1.18.14">
+  <link rel="manifest" href="manifest.webmanifest?v=1.18.15">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.18.15">
+  <link rel="apple-touch-icon" href="icon-180.png?v=1.18.15">
   <title>Notițe pe imagini</title>
   <style>
     :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #29261f; background: #edeae4; --app-safe-top: env(safe-area-inset-top, 0px); --app-safe-right: env(safe-area-inset-right, 0px); --app-safe-bottom: env(safe-area-inset-bottom, 0px); --app-safe-left: env(safe-area-inset-left, 0px); }
@@ -4055,7 +4055,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.18.14';
+      const APP_VERSION = '1.18.15';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -4632,11 +4632,16 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         await flushPendingFirebaseDeletions();
         await flushPendingFirebaseRecords();
       }
+      function isNotesWorkspaceActive() {
+        const notesWorkspace = document.getElementById('workspaceNotes');
+        return Boolean(document.getElementById('atelierNoteEditor') || (notesWorkspace && !notesWorkspace.hidden));
+      }
       function canAutoRefreshProjectManager() {
         const blockingDialogs = [cloudAccountDialog, deleteProjectDialog, saveProjectDialog, autosaveRecoveryDialog, clearAllDialog, removeImageDialog, exportImageDialog, exportProjectDialog, deleteNoteDialog, pencilEditorOverlay, pencilUnsavedDialog];
         return Boolean(
           firebaseUser
           && !projectManagerView.hidden
+          && !isNotesWorkspaceActive()
           && !projectDirty
           && document.visibilityState === 'visible'
           && Date.now() - firebaseManagerLastInteractionAt > 4500
@@ -10886,9 +10891,14 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('./sw.js').then((registration) => {
             let refreshingAfterUpdate = false;
+            let pendingUpdateWorker = null;
 
             const activateUpdateSafely = async (worker) => {
               if (!worker || worker.state !== 'installed' || !navigator.serviceWorker.controller) return;
+              pendingUpdateWorker = worker;
+              // Nu întrerupem lista sau editorul de notițe. Actualizarea rămâne pregătită
+              // și se activează după ce utilizatorul revine voluntar la Proiecte.
+              if (isNotesWorkspaceActive()) return;
               // Actualizarea este automată, însă întâi salvăm proiectul în lucru.
               if (projectDirty && activeProjectId) {
                 try {
@@ -10899,8 +10909,13 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
                 }
               }
               try { await window.atelierNotes?.flush(); } catch { return; }
+              pendingUpdateWorker = null;
               worker.postMessage({ type: 'SKIP_WAITING' });
             };
+
+            window.addEventListener('atelier-notes-inactive', () => {
+              if (pendingUpdateWorker) activateUpdateSafely(pendingUpdateWorker);
+            });
 
             if (registration.waiting) {
               activateUpdateSafely(registration.waiting);
@@ -10918,6 +10933,9 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
 
             navigator.serviceWorker.addEventListener('controllerchange', async () => {
               if (refreshingAfterUpdate) return;
+              // Un alt tab poate activa worker-ul. Păstrăm editorul curent deschis și
+              // folosim noua versiune la următoarea navigare naturală a paginii.
+              if (isNotesWorkspaceActive()) return;
               refreshingAfterUpdate = true;
               try { await window.atelierNotes?.flush(); } catch { refreshingAfterUpdate = false; return; }
               window.location.reload();
