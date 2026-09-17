@@ -477,18 +477,21 @@
 .an-note-card {display:flex;flex-direction:column;gap:0;height:auto;min-height:0;padding:12px;background:#fff;border:1px solid #dbe3ea;box-shadow:0 8px 24px #203b5210;}
 .an-note-card .an-note-open {order:0;flex:0 0 auto;width:100%;}
 .an-note-open canvas {display:block;width:100%;height:148px;object-fit:contain;background:#edf1f4;border:1px solid #e3e9ee;}
-.an-note-card-heading {order:1;display:flex;align-items:center;gap:8px;min-width:0;margin:12px 4px 0;}
+.an-note-card-heading {order:1;display:flex;align-items:center;gap:8px;min-width:0;margin:12px 4px 0;padding-right:94px;box-sizing:border-box;}
 .an-note-card-title {flex:1;min-width:0;margin:0;color:#24384b;font-size:16px;line-height:1.3;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .an-favorite-button {flex:0 0 34px;width:34px;min-width:34px;height:34px;min-height:34px;padding:7px;border:1px solid #d9e3eb;border-radius:10px;background:#f8fafc;color:#7890a3;box-shadow:none;}
 .an-favorite-button span {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);}
-.an-favorite-button svg {width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;}
+.an-favorite-button svg {width:18px;height:18px;fill:currentColor;stroke:currentColor;stroke-width:1.2;}
 .an-favorite-button.is-active {color:#315f91;background:#e7eff7;border-color:#abc6dd;}
 .an-note-card .an-note-open>span {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);}
 .an-note-date {order:2;margin:7px 4px 0;font-size:12px;line-height:1.4;}
 .an-note-project {order:3;align-self:flex-start;margin:8px 4px 0;max-width:calc(100% - 8px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .an-note-card-stats {order:4;margin:12px 4px 0;padding-top:10px;min-height:0;}
-.an-note-card-menu {order:5;position:absolute;top:12px;right:12px;}
-@media(max-width:900px){.an-note-card{height:auto;min-height:0;}.an-note-open canvas{height:132px;}}
+.an-note-card-menu {order:5;position:absolute;top:172px;right:12px;z-index:6;}
+.an-note-card-menu summary {display:grid;place-items:center;width:34px;height:34px;border:1px solid var(--ds-line,#d9e3ed);border-radius:var(--ds-radius-sm,10px);background:var(--ds-surface-soft,#f0f4f8);color:var(--ds-muted,#6b7f93);}
+.an-note-card-menu[open] summary {border-color:var(--ds-line-strong,#abc6dd);background:var(--ds-surface-blue,#e7eff7);color:var(--ds-blue-dark,#315f91);}
+.an-note-card-heading .an-favorite-button {position:absolute;top:172px;right:58px;z-index:6;}
+@media(max-width:900px){.an-note-card{height:auto;min-height:0;}.an-note-open canvas{height:132px;}.an-note-card-menu,.an-note-card-heading .an-favorite-button{top:156px;}}
 
 /* Consistent labels, dropdown affordances and touch targets across tools. */
 .an-editor .an-context .an-field>span:first-child,.an-editor .an-context .an-choice-heading {font-size:11px;line-height:1.3;font-weight:600;}
