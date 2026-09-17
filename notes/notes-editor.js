@@ -201,6 +201,14 @@
       for(const [id,name,icon] of [['select','Selectare','select'],['text','Text','text'],['pencil','Desen','pencil'],['shape','Forme','shape'],['image','Imagine','image']]){const b=button(name,()=>id==='image'?e.chooseImage():e.setTool(id),icon);b.dataset.mode=id;b.setAttribute('aria-pressed',String(e.tool===id));this.modes.append(b);}
       this.renderContext();
     }
+    openWidthPanel(trigger,name,key,max){
+      const e=this.e,panel=el('div','an-width-panel'),heading=el('div','an-width-panel-heading'),value=el('output','',e[key]+' px'),range=input(e[key],'range'),presets=el('div','an-width-presets'),preview=el('div','an-width-preview'),stroke=el('span');
+      heading.append(el('span','','Grosime'),value);range.min=1;range.max=max;range.step=1;range.setAttribute('aria-label','Grosime '+name);preview.append(stroke);
+      const sync=()=>{const width=Number(range.value);value.textContent=width+' px';stroke.style.height=Math.min(width,40)+'px';stroke.style.background=e.drawKind==='eraser'?'#94a3b8':e.drawColor;stroke.style.opacity=e.drawKind==='highlighter'?'.35':'1';stroke.style.borderTop=e.drawKind==='dashed'?Math.min(width,12)+'px dashed '+e.drawColor:'';if(e.drawKind==='dashed'){stroke.style.height='0';stroke.style.background='none';}for(const b of presets.children)b.setAttribute('aria-pressed',String(Number(b.dataset.width)===width));};
+      for(const width of (max===80?[5,10,20,40,80]:[1,2,3,5,8])){const b=button(width+' px',()=>{range.value=width;e[key]=width;sync();},null,'an-width-preset'),dot=el('i');dot.style.width=dot.style.height=Math.min(20,Math.max(4,width*2))+'px';b.prepend(dot);b.dataset.width=width;presets.append(b);}
+      range.addEventListener('input',()=>{e[key]=Number(range.value);sync();});panel.append(heading,range,el('span','an-width-caption','Presetări rapide'),presets,el('span','an-width-caption','Previzualizare'),preview);sync();this.openPopover(trigger,name,panel);
+      const rect=trigger.getBoundingClientRect();this.activePopover.node.classList.add('an-width-popover');this.activePopover.node.style.setProperty('left',Math.max(8,Math.min(rect.left,window.innerWidth-312))+'px','important');this.activePopover.node.style.setProperty('top',Math.max(8,Math.min(rect.bottom+8,window.innerHeight-310))+'px','important');
+    }
     historyControls(){const e=this.e,history=el('div','an-history an-context-history');history.setAttribute('aria-label','Istoric modificări');const undo=button('Undo',()=>e.undo(),'undo','an-icon'),redo=button('Redo',()=>e.redo(),'redo','an-icon');undo.disabled=!e.past.length;redo.disabled=!e.future.length;history.append(undo,redo);return history;}
     renderContext() {
       this.closePopover();this.objectActions.replaceChildren();const e=this.e,o=e.object;this.node.classList.toggle('an-text-toolbar',o?.type==='text'||e.tool==='text');this.context.hidden=false;this.context.classList.remove('is-expanded');this.contextToggle.hidden=false;this.contextToggle.setAttribute('aria-expanded','false');this.context.replaceChildren();
@@ -210,7 +218,7 @@
         const wrap=el('div','an-choice-field');wrap.setAttribute('role','group');wrap.setAttribute('aria-label',label);
         wrap.append(el('span','an-choice-heading',label));
         const buttons=el('div','an-choice-buttons');
-        for(const [id,name,icon] of choices){const b=button(name,()=>change(id),icon,'an-choice-button');b.setAttribute('aria-pressed',String(id===value));buttons.append(b);}
+        for(const [id,name,icon] of choices){const b=button(name,()=>change(id),icon,'an-choice-button');b.dataset.choice=id;b.setAttribute('aria-pressed',String(id===value));buttons.append(b);}
         wrap.append(buttons);this.context.append(wrap);
       };
       const addRange=(label,value,min,max,change,suffix='px',changeEvent='input',target=this.context)=>{const wrap=el(suffix==='px'?'div':'label','an-field an-range-field'),top=el('span','an-field-heading'),name=el('span','',label),out=el('output','an-range-value',`${value} ${suffix}`),range=input(value,'range');range.min=min;range.max=max;range.setAttribute('aria-label',label);range.addEventListener('input',()=>out.textContent=`${range.value} ${suffix}`);range.addEventListener(changeEvent,()=>change(Number(range.value)));top.append(name,out);wrap.append(top,range);
@@ -260,8 +268,7 @@
         addPalette('Culoare text',style.color,color=>update({color}),textAppearanceGroup);textAppearanceGroup.append(this.historyControls());contextHistoryPlaced=true;
       } else if(e.tool==='pencil') {
         const choices=[['pencil','Creion','pencil'],['highlighter','Evidențiator','highlighter'],['line','Linie','line'],['dashed','Linie punctată','dashed'],['eraser','Gumă','eraser']];
-        addChoices('Instrument',choices,e.drawKind,v=>{e.drawKind=v;this.renderContext();});
-        const widthKey=e.drawKind==='highlighter'?'highlighterWidth':e.drawKind==='eraser'?'eraserWidth':'drawWidth';addRange(e.drawKind==='eraser'?'Mărime gumă':'Grosime',e[widthKey],1,e.drawKind==='eraser'?80:40,value=>e[widthKey]=value);
+        addChoices('Instrument',choices,e.drawKind,v=>{e.drawKind=v;this.renderContext();const key=v==='highlighter'?'highlighterWidth':v==='eraser'?'eraserWidth':'drawWidth';this.openWidthPanel(this.context.querySelector('[data-choice="'+v+'"]'),choices.find(item=>item[0]===v)[1],key,v==='eraser'?80:40);});
         addPalette('Culoare',e.drawColor,color=>{e.drawColor=color;this.renderContext();});
         this.context.append(button('Șterge',()=>confirmAction('Ștergi toate trasările de pe pagină?',()=>e.edit(()=>{e.page.objects=e.page.objects.filter(o=>o.type!=='drawing');})),'trash','an-danger an-clear-drawing'));
       } else if(e.tool==='shape') {
