@@ -11,9 +11,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Fișă atelier">
-  <link rel="manifest" href="manifest.webmanifest?v=1.20.6">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.20.6">
-  <link rel="apple-touch-icon" href="icon-180.png?v=1.20.6">
+  <link rel="manifest" href="manifest.webmanifest?v=1.20.8">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.20.8">
+  <link rel="apple-touch-icon" href="icon-180.png?v=1.20.8">
   <title>Notițe pe imagini</title>
   <style>
     :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #29261f; background: #edeae4; --app-safe-top: env(safe-area-inset-top, 0px); --app-safe-right: env(safe-area-inset-right, 0px); --app-safe-bottom: env(safe-area-inset-bottom, 0px); --app-safe-left: env(safe-area-inset-left, 0px); }
@@ -3351,7 +3351,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   #projectManagerView .project-card-name { overflow-wrap: anywhere; }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 </style>
-<link rel="stylesheet" href="notes/notes-editor.css?v=1.20.6">
+<link rel="stylesheet" href="notes/notes-editor.css?v=1.20.8">
 <style>
 /* Favorite affordances and tighter project card framing. */
 #projectManagerView .project-card {min-height:0;grid-template-rows:176px auto;}
@@ -3389,6 +3389,45 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
 body:not(.fullscreen-mode) #editorView .quick-color-history {gap:3px;margin-left:3px;padding-left:5px;}
 body:not(.fullscreen-mode) #editorView .quick-color-history .quick-color-history-button {width:22px;height:22px;min-width:22px;min-height:22px;border-width:7px;}
 @media(max-width:900px){.quick-color-history{gap:3px;padding-left:5px;margin-left:2px;}.quick-color-history .quick-color-history-button{width:21px;height:21px;min-width:21px;min-height:21px;}}
+</style>
+<style>
+/* Cards share dimensions and reserve real layout space for actions. */
+#projectManagerView .project-grid,#workspaceNotes .an-note-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(250px,100%),1fr));gap:16px;align-items:start;}
+#projectManagerView .project-card,#workspaceNotes .an-note-card{height:auto;min-height:0;align-self:start;border-radius:18px;container-type:inline-size;}
+#projectManagerView .project-card{grid-template-rows:176px auto;}
+#projectManagerView .project-card-body{display:flex;flex-direction:column;gap:12px;padding:14px;}
+#projectManagerView .project-card-top{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:10px;}
+#projectManagerView .project-card-title-column{display:flex;min-width:0;gap:8px;}
+#projectManagerView .project-card-title-row{display:block;padding:0;min-width:0;width:100%;}
+#projectManagerView .project-card-open{display:block;width:100%;max-width:none;white-space:normal;overflow:visible;text-overflow:clip;-webkit-line-clamp:unset;line-clamp:unset;word-break:normal;overflow-wrap:break-word;font-size:15px;line-height:1.4;}
+#projectManagerView .project-card-actions,#workspaceNotes .an-card-actions{display:flex;align-items:center;gap:10px;flex:none;}
+#projectManagerView .project-card-favorite,#workspaceNotes .an-note-card-heading .an-favorite-button{position:static;inset:auto;box-sizing:border-box;width:40px;min-width:40px;height:40px;min-height:40px;padding:9px;margin:0;border-radius:11px;flex:none;}
+#projectManagerView .project-card-menu,#workspaceNotes .an-note-card-menu{position:relative;inset:auto;order:initial;margin:0;flex:none;}
+#projectManagerView .project-card-menu summary,#workspaceNotes .an-note-card-menu summary{box-sizing:border-box;width:40px;min-width:40px;height:40px;min-height:40px;padding:0;background:var(--ui-soft,#e7e7e4);color:var(--ds-muted,#6b7f93);border:1px solid var(--ds-line,#d9e3ed);border-radius:11px;display:grid;place-items:center;}
+#projectManagerView .project-card-date,#workspaceNotes .an-note-date{white-space:normal;overflow-wrap:normal;font-size:12px;line-height:1.5;}
+#workspaceNotes .an-note-card{display:flex;flex-direction:column;padding:0;gap:0;overflow:visible;}
+#workspaceNotes .an-note-open{display:block;margin:0;padding:0;min-height:0;height:176px;border:0;border-radius:18px 18px 0 0;overflow:hidden;background:#edf1f4;}
+#workspaceNotes .an-note-open canvas{display:block;box-sizing:border-box;width:100%;height:176px;border:0;border-radius:0;object-fit:contain;}
+#workspaceNotes .an-note-card-heading{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:10px;margin:14px 14px 0;padding:0;}
+#workspaceNotes .an-note-card-title{width:auto;max-width:none;white-space:normal;overflow:visible;text-overflow:clip;word-break:normal;overflow-wrap:break-word;font-size:15px;line-height:1.4;margin:0;}
+#workspaceNotes .an-note-date{margin:8px 14px 0;}
+#workspaceNotes .an-note-project{margin:8px 14px 0;}
+#workspaceNotes .an-note-card-stats{margin:12px 14px 14px;padding-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+#workspaceNotes .an-note-card-stats>span{white-space:normal;line-height:1.3;min-width:0;padding:6px;font-size:11px;}
+#projectManagerView .project-card-stats{margin:0;padding-top:12px;}
+@container(max-width:350px){
+ #projectManagerView .project-card-top{grid-template-columns:minmax(0,1fr);}
+ #projectManagerView .project-card-actions{justify-self:end;}
+ #workspaceNotes .an-note-card-heading{grid-template-columns:minmax(0,1fr);}
+ #workspaceNotes .an-card-actions{justify-self:end;}
+}
+@media(max-width:1100px) and (min-width:601px){#projectManagerView .project-grid,#workspaceNotes .an-note-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}}
+@media(max-width:600px){#projectManagerView .project-grid,#workspaceNotes .an-note-grid{grid-template-columns:minmax(0,1fr);}}
+/* Consistent thickness sliders in the project and handwriting editors. */
+#fullscreenBrushSize,#pencilEditorSize{appearance:none;height:6px;min-height:6px;border:0;border-radius:99px;background:#dbe5ee;accent-color:#315f91;cursor:pointer;}
+#fullscreenBrushSize::-webkit-slider-thumb,#pencilEditorSize::-webkit-slider-thumb{appearance:none;width:20px;height:20px;border-radius:50%;background:#315f91;border:3px solid white;box-shadow:0 1px 5px #203b5230;}
+#fullscreenBrushSizeValue,#pencilEditorSizeValue{border:1px solid #d9e3ed;border-radius:9px;padding:6px 9px;background:#f5f8fb;font-size:12px;font-weight:650;white-space:nowrap;}
+
 </style>
 </head>
 <body>
@@ -4105,7 +4144,7 @@ body:not(.fullscreen-mode) #editorView .quick-color-history .quick-color-history
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.20.6';
+      const APP_VERSION = '1.20.8';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -6375,7 +6414,7 @@ body:not(.fullscreen-mode) #editorView .quick-color-history .quick-color-history
           menu.appendChild(menuItems);
 
           top.appendChild(titleColumn);
-          top.appendChild(menu);
+          const cardActions = document.createElement('div');cardActions.className='project-card-actions';cardActions.append(favorite,menu);top.appendChild(cardActions);
 
           const stats = document.createElement('div');
           stats.className = 'project-card-stats';
@@ -11042,6 +11081,6 @@ body:not(.fullscreen-mode) #editorView .quick-color-history .quick-color-history
   </script>
 
 <script src="notes/pdf-lib.min.js"></script>
-<script src="notes/notes-editor.js?v=1.20.6"></script>
+<script src="notes/notes-editor.js?v=1.20.8"></script>
 </body>
 </html>
