@@ -11,9 +11,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Fișă atelier">
-  <link rel="manifest" href="manifest.webmanifest?v=1.19.6">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.19.6">
-  <link rel="apple-touch-icon" href="icon-180.png?v=1.19.6">
+  <link rel="manifest" href="manifest.webmanifest?v=1.19.7">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.19.7">
+  <link rel="apple-touch-icon" href="icon-180.png?v=1.19.7">
   <title>Notițe pe imagini</title>
   <style>
     :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #29261f; background: #edeae4; --app-safe-top: env(safe-area-inset-top, 0px); --app-safe-right: env(safe-area-inset-right, 0px); --app-safe-bottom: env(safe-area-inset-bottom, 0px); --app-safe-left: env(safe-area-inset-left, 0px); }
@@ -3351,7 +3351,20 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   #projectManagerView .project-card-name { overflow-wrap: anywhere; }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 </style>
-<link rel="stylesheet" href="notes/notes-editor.css?v=1.19.6">
+<link rel="stylesheet" href="notes/notes-editor.css?v=1.19.7">
+<style>
+/* Favorite affordances and tighter project card framing. */
+#projectManagerView .project-card {min-height:0;grid-template-rows:176px auto;}
+#projectManagerView .project-card-body {padding:14px 16px 15px;gap:12px;min-height:0;}
+#projectManagerView .project-card-title-column {min-width:0;}
+#projectManagerView .project-card-title-row {display:flex;align-items:center;gap:8px;min-width:0;}
+#projectManagerView .project-card-open {min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#projectManagerView .project-card-favorite {flex:0 0 34px;width:34px;height:34px;padding:0;border:1px solid var(--ds-line,#dbe3ea);border-radius:10px;background:#f8fafc;color:#8193a3;font-size:19px;line-height:1;}
+#projectManagerView .project-card-favorite:hover {background:#e7eff7;color:#315f91;border-color:#abc6dd;}
+#projectManagerView .project-card-favorite.is-active {background:#e7eff7;color:#315f91;border-color:#abc6dd;}
+#projectManagerView .project-card-stats {margin-top:2px;}
+@media(max-width:720px){#projectManagerView .project-card {grid-template-rows:142px auto;}#projectManagerView .project-card-body{padding:12px 14px 13px;}}
+</style>
 </head>
 <body>
   <div id="saveToast" class="save-toast" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -4055,7 +4068,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.19.6';
+      const APP_VERSION = '1.19.7';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -4166,7 +4179,8 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
         const nextRecord = buildProjectRecordFromPayload(cloneProjectData(remoteRecord.payload), {
           id: remoteRecord.id,
           name: remoteRecord.name || remoteRecord?.payload?.projectName || 'Proiect nou',
-          createdAt: remoteRecord.created_at || remoteRecord?.payload?.updatedAt
+          createdAt: remoteRecord.created_at || remoteRecord?.payload?.updatedAt,
+          favorite: remoteRecord.favorite ?? remoteRecord?.payload?.favorite
         });
         nextRecord.updatedAt = remoteRecord?.payload?.updatedAt || remoteRecord.updated_at || nextRecord.updatedAt;
         nextRecord.payload.updatedAt = nextRecord.updatedAt;
@@ -5242,10 +5256,12 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
           updatedAt: nowIso,
           thumbnail: getProjectThumbnail(images),
           stats,
+          favorite: Boolean(options.favorite ?? payload?.favorite),
           payload: {
             ...(payload || {}),
             projectName,
             projectStatus,
+            favorite: Boolean(options.favorite ?? payload?.favorite),
             updatedAt: nowIso
           }
         };
@@ -6165,7 +6181,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       async function renderProjectCards() {
         const records = await readAllProjectRecords();
         const sortedRecords = records.slice().sort((first, second) => {
-          return Date.parse(second?.updatedAt || '') - Date.parse(first?.updatedAt || '');
+          return Number(Boolean(second.favorite)) - Number(Boolean(first.favorite)) || Date.parse(second?.updatedAt || '') - Date.parse(first?.updatedAt || '');
         });
         const filteredRecords = selectedProjectStatusFilter === 'all'
           ? sortedRecords
@@ -6210,6 +6226,20 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
           top.className = 'project-card-top';
 
           const titleColumn = document.createElement('div');
+          titleColumn.className = 'project-card-title-column';
+          const favorite = document.createElement('button');
+          favorite.type = 'button';
+          favorite.className = 'project-card-favorite' + (record.favorite ? ' is-active' : '');
+          favorite.setAttribute('aria-pressed', String(Boolean(record.favorite)));
+          favorite.setAttribute('aria-label', record.favorite ? 'Elimină proiectul din favorite' : 'Adaugă proiectul la favorite');
+          favorite.title = favorite.getAttribute('aria-label');
+          favorite.textContent = '★';
+          favorite.addEventListener('click', async (event) => {
+            event.stopPropagation();
+            const updatedAt = new Date().toISOString();
+            await saveProjectRecord({ ...record, favorite: !record.favorite, updatedAt, payload: { ...(record.payload || {}), favorite: !record.favorite, updatedAt } });
+            await renderProjectCards();
+          });
           const openButton = document.createElement('button');
           openButton.type = 'button';
           openButton.className = 'project-card-open';
@@ -6217,7 +6247,11 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
           openButton.addEventListener('click', () => {
             openProjectById(record.id);
           });
-          titleColumn.appendChild(openButton);
+          const titleRow = document.createElement('div');
+          titleRow.className = 'project-card-title-row';
+          titleRow.appendChild(openButton);
+          titleRow.appendChild(favorite);
+          titleColumn.appendChild(titleRow);
 
           const updated = document.createElement('div');
           updated.className = 'project-card-date';
@@ -6629,7 +6663,8 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
             id: nextActiveProjectId,
             name: currentName,
             createdAt: existingRecord?.createdAt,
-            status: currentProjectStatus || existingRecord?.status
+            status: currentProjectStatus || existingRecord?.status,
+            favorite: existingRecord?.favorite
           });
 
           await saveProjectRecord(record);
@@ -10967,6 +11002,6 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   </script>
 
 <script src="notes/pdf-lib.min.js"></script>
-<script src="notes/notes-editor.js?v=1.19.6"></script>
+<script src="notes/notes-editor.js?v=1.19.7"></script>
 </body>
 </html>
