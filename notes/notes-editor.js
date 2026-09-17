@@ -14,7 +14,7 @@
     marker:'m5 14 9-11 6 5-9 11Z M5 14l6 5-6 2-3-3Z', shape:'M4 4h16v16H4Z', image:'M3 3h18v18H3Z M3 17l6-6 4 4 3-3 5 5 M15 7h.01',
     undo:'M9 5 4 10l5 5 M4 10h10a6 6 0 0 1 6 6', redo:'m15 5 5 5-5 5 M20 10H10a6 6 0 0 0-6 6',
     plus:'M12 4v16M4 12h16', back:'m12 4-8 8 8 8M4 12h16', trash:'M4 7h16M9 7V3h6v4M6 7l1 14h10l1-14M10 11v6M14 11v6',
-    copy:'M8 8h13v13H8ZM3 16V3h13', pen:'m5 19 3-7L17 3l4 4-9 9Z M5 19l4-4', eraser:'m3 14 9-11 9 8-9 10H9Z', more:'M5 12h.01M12 12h.01M19 12h.01', pages:'M5 3h14v18H5ZM8 7h8M8 11h8M8 15h5', focus:'M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5',
+    copy:'M8 8h13v13H8ZM3 16V3h13', pen:'m5 19 3-7L17 3l4 4-9 9Z M5 19l4-4', eraser:'m3 14 9-11 9 8-9 10H9Z', more:'M5 12h.01M12 12h.01M19 12h.01', sidebar:'M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z M10 3v18M5 7h3M5 11h3M5 15h3', pages:'M5 3h14v18H5ZM8 7h8M8 11h8M8 15h5', focus:'M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5',
     pan:'M5 12V8a2 2 0 0 1 4 0v4-8a2 2 0 0 1 4 0v8-6a2 2 0 0 1 4 0v6-3a2 2 0 0 1 4 0v8l-4 5H9l-6-7a2 2 0 0 1 2-3Z',
     line:'M4 20 20 4', dashed:'m4 20 3-3m3-3 4-4m3-3 3-3', highlighter:'m4 16 9-13 8 7-12 10Z M4 16l5 4-6 1Z',
     ellipse:'M12 4C7.1 4 4 7.6 4 12s3.1 8 8 8 8-3.6 8-8-3.1-8-8-8Z', arrow:'M4 12h15M12 5l7 7-7 7',
@@ -144,9 +144,9 @@
     }
   }
   class PageManager {
-    constructor(editor) {this.e=editor;this.node=el('aside','an-pages');this.node.setAttribute('aria-label','Paginile notiței');}
+    constructor(editor) {this.e=editor;this.node=el('aside','an-pages');this.node.setAttribute('aria-label','Paginile notiței');this.node.id='an-note-pages';}
     render() {
-      this.node.replaceChildren();const e=this.e,head=el('div','an-pages-head');head.append(el('strong','',`${e.note.pages.length} pagini`),button('Adaugă pagină',()=>this.add(),'plus','an-icon'));this.node.append(head);
+      this.node.replaceChildren();const e=this.e,head=el('div','an-pages-head');const title=el('strong','an-pages-title','Pagini');title.append(el('span','an-pages-count',String(e.note.pages.length)));head.append(title,button('Închide panoul de pagini',()=>e.togglePages(),'close','an-icon'));this.node.append(head);const add=button('Adaugă pagină',()=>this.add(),'plus','an-page-add');this.node.append(add);
       e.note.pages.forEach((p,i)=>{const card=button(`Pagina ${i+1}`,()=>e.switchPage(i));card.classList.add('an-page-thumb');card.setAttribute('aria-current',String(i===e.pageIndex));const c=el('canvas');c.width=120;c.height=Math.round(120*size(p)[1]/size(p)[0]);card.prepend(c);this.node.append(card);A4Canvas.render(p,.18).then(render=>{if(card.isConnected)c.getContext('2d').drawImage(render,0,0,c.width,c.height);}).catch(error=>e.status(error.message,true));});
     }
     add() {const e=this.e,template=e.manager.pageTemplates('Pagina nouă');dialog('Adaugă pagină A4',template.node,()=>{const {orientation,paper}=template.value;e.edit(()=>{e.note.pages.splice(e.pageIndex+1,0,pageData(orientation,paper));e.pageIndex++;});e.fit();},'Adaugă');}
@@ -257,10 +257,10 @@
       this.manager=manager;this.note=copy(note);this.pageIndex=clamp(note.activePage||0,0,note.pages.length-1);this.selected=null;this.tool='select';this.drawKind='pencil';this.drawColor='#25384b';this.drawWidth=3;this.highlighterWidth=20;this.eraserWidth=24;this.shapeKind='rect';this.textStyle=TextObject.create(0,0);this.past=[];this.future=[];this.images=new Map();this.pointers=new Map();this.zoom=1;this.saveChain=Promise.resolve();this.dirty=false;this.revision=0;this.suppressClickUntil=0;this.pagesCollapsed=false;this.focusMode=false;
       this.root=el('section','an-editor');this.root.setAttribute('aria-label','Editor de notițe A4');this.root.id='atelierNoteEditor';
       const header=el('header','an-editor-header');const titleBlock=el('div','an-document-name');this.title=el('strong','',this.note.title);this.saveStatus=el('span','an-save-status','Salvat pe acest dispozitiv');this.saveStatus.setAttribute('role','status');titleBlock.append(this.title,this.saveStatus);
-      this.pagesToggle=button('Ascunde paginile',()=>this.togglePages(),'pages','an-icon an-pages-toggle');this.pagesToggle.setAttribute('aria-pressed','false');this.focusToggle=button('Mod focus',()=>this.toggleFocus(),'focus','an-icon an-focus-toggle');this.focusToggle.setAttribute('aria-pressed','false');header.append(button('Notițe',()=>this.close(),'back'),titleBlock,this.pagesToggle,button('Detalii',()=>manager.details(this.note,updated=>{this.edit(()=>Object.assign(this.note,updated));this.title.textContent=this.note.title;}),'edit'),this.focusToggle,button('Export',()=>this.exportMenu(),'export'));
-      this.sheet=el('div','an-sheet');this.canvas=el('canvas','an-canvas');this.canvas.setAttribute('aria-label','Pagina A4. Alege un instrument pentru a edita.');this.sheet.append(this.canvas);this.canvas.tabIndex=0;
+      this.pagesToggle=button('Pagini',()=>this.togglePages(),'sidebar','an-pages-toggle');this.pagesToggle.setAttribute('aria-expanded','true');this.pagesToggle.setAttribute('aria-controls','an-note-pages');this.pagesToggle.title='Ascunde paginile';this.focusToggle=button('Mod focus',()=>this.toggleFocus(),'focus','an-icon an-focus-toggle');this.focusToggle.setAttribute('aria-pressed','false');header.append(button('Notițe',()=>this.close(),'back'),titleBlock,this.pagesToggle,button('Detalii',()=>manager.details(this.note,updated=>{this.edit(()=>Object.assign(this.note,updated));this.title.textContent=this.note.title;}),'edit'),this.focusToggle,button('Export',()=>this.exportMenu(),'export'));
+      this.sheet=el('div','an-sheet');this.canvas=el('canvas','an-canvas');this.canvas.setAttribute('aria-label','Pagina A4. Alege un instrument pentru a edita.');this.sheet.append(this.canvas);this.canvas.tabIndex=0;this.canvas.draggable=false;
       this.board=el('div','an-board');this.space=el('div','an-sheet-space');this.space.append(this.sheet);this.board.append(this.space);
-      this.pages=new PageManager(this);this.selection=new SelectionLayer(this);this.toolbar=new Toolbar(this);
+      this.pages=new PageManager(this);this.selection=new SelectionLayer(this);this.toolbar=new Toolbar(this);this.toolbar.top.prepend(this.pagesToggle);
       const body=el('div','an-editor-body');body.append(this.pages.node,this.board);
       this.footer=el('footer','an-editor-footer');this.pageLabel=el('span');this.zoomLabel=el('span');
       this.footer.append(this.pageLabel,button('−',()=>this.setZoom(this.zoom/1.2)),this.zoomLabel,button('+',()=>this.setZoom(this.zoom*1.2)),button('Încadrează',()=>this.fit()),button('Duplică pagina',()=>this.pages.duplicate(),'copy','an-icon'),button('Pagina înainte',()=>this.pages.move(-1),'up','an-icon'),button('Pagina înapoi',()=>this.pages.move(1),'down','an-icon'),button('Șterge pagina',()=>this.pages.remove(),'trash','an-icon'));
@@ -271,6 +271,9 @@
       this.board.addEventListener('pointerdown',event=>{if(event.target===this.board||event.target===this.space)this.down(event,true);},{signal});
       this.board.addEventListener('wheel',event=>{if(event.ctrlKey||event.metaKey){event.preventDefault();this.zoomAt(this.zoom*Math.exp(-event.deltaY*.008),event.clientX,event.clientY);}},{passive:false,signal});
       this.board.addEventListener('contextmenu',event=>{if(event.target!==this.textEditor)event.preventDefault();},{signal});
+      const editable=target=>target instanceof Element&&Boolean(target.closest('input,textarea,select,[contenteditable]'));
+      for(const type of ['selectstart','dragstart'])this.root.addEventListener(type,event=>{if(!editable(event.target))event.preventDefault();},{signal});
+      for(const type of ['touchstart','touchmove'])this.board.addEventListener(type,event=>{if(!editable(event.target)&&event.cancelable)event.preventDefault();},{passive:false,signal});
       this.root.addEventListener('keydown',event=>this.key(event),{signal});
       window.addEventListener('beforeunload',event=>{if(this.dirty){this.flush().catch(()=>{});event.preventDefault();event.returnValue='';}},{signal});
       document.addEventListener('visibilitychange',()=>{if(document.hidden)this.flush().catch(()=>{});},{signal});
@@ -279,7 +282,7 @@
     }
     get page(){return this.note.pages[this.pageIndex];}
     get object(){return this.page.objects.find(o=>o.id===this.selected);}
-    togglePages(){this.pagesCollapsed=!this.pagesCollapsed;this.root.classList.toggle('an-pages-collapsed',this.pagesCollapsed);this.pagesToggle.setAttribute('aria-pressed',String(this.pagesCollapsed));this.pagesToggle.setAttribute('aria-label',this.pagesCollapsed?'Arată paginile':'Ascunde paginile');this.pagesToggle.title=this.pagesCollapsed?'Arată paginile':'Ascunde paginile';requestAnimationFrame(()=>this.fit());}
+    togglePages(){this.pagesCollapsed=!this.pagesCollapsed;this.root.classList.toggle('an-pages-collapsed',this.pagesCollapsed);this.pagesToggle.setAttribute('aria-expanded',String(!this.pagesCollapsed));this.pagesToggle.title=this.pagesCollapsed?'Arată paginile':'Ascunde paginile';requestAnimationFrame(()=>this.fit());}
     toggleFocus(){this.focusMode=!this.focusMode;this.root.classList.toggle('an-focus-mode',this.focusMode);this.focusToggle.setAttribute('aria-pressed',String(this.focusMode));this.focusToggle.setAttribute('aria-label',this.focusMode?'Ieși din modul focus':'Mod focus');this.focusToggle.title=this.focusMode?'Ieși din modul focus':'Mod focus';this.toolbar.context.classList.remove('is-expanded');this.toolbar.contextToggle.setAttribute('aria-expanded','false');requestAnimationFrame(()=>this.fit());}
     status(text,error=false){this.saveStatus.textContent=text;this.saveStatus.classList.toggle('an-error',error);}
     snapshot(){this.past.push(copy(this.note));if(this.past.length>30)this.past.shift();this.future=[];}
@@ -305,7 +308,7 @@
     down(event,pan=false){
       if(event.button>0||event.isPrimary===false&&event.pointerType!=='touch')return;
       if(this.gesture?.pen&&event.pointerType==='touch')return;
-      event.preventDefault();this.endText();this.pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});event.target.setPointerCapture(event.pointerId);
+      event.preventDefault();this.endText();const nativeSelection=window.getSelection();if(nativeSelection?.anchorNode&&this.root.contains(nativeSelection.anchorNode))nativeSelection.removeAllRanges();this.pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});event.target.setPointerCapture(event.pointerId);
       if(this.pointers.size===2){this.preview=null;if(this.gesture?.before&&this.gesture?.o)Object.assign(this.gesture.o,this.gesture.before);const a=[...this.pointers.values()];this.gesture={kind:'pinch',distance:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),zoom:this.zoom,cx:(a[0].x+a[1].x)/2,cy:(a[0].y+a[1].y)/2};this.requestPaint();return;}
       const p=this.point(event);this.gesture={kind:'tap',start:p,clientX:event.clientX,clientY:event.clientY,id:event.pointerId,pen:event.pointerType==='pen',moved:false};
       if(pan||this.tool==='pan'){Object.assign(this.gesture,{kind:'pan',scrollX:this.board.scrollLeft,scrollY:this.board.scrollTop});return;}

@@ -660,3 +660,65 @@
 .an-editor .an-toolbar .an-modes>.an-button[aria-pressed=true] {background:#e7eff7;color:var(--an-blue);border-color:#c1d3e4;box-shadow:inset 0 0 0 1px #fff;}
 .an-editor .an-toolbar.an-text-toolbar .an-context>.an-field:nth-child(n+3) {border-left:0;padding-left:0;}
 @media(max-width:900px){.an-editor .an-toolbar .an-tools-row {padding:6px;}.an-editor .an-toolbar .an-modes>.an-button {padding:0 10px;gap:6px;font-size:12px;}}
+/* Native selection belongs to text fields, never to the drawing surface. */
+.an-editor {-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+.an-editor :is(input,textarea,[contenteditable=true]) {-webkit-user-select:text;user-select:text;-webkit-touch-callout:default;}
+.an-editor :is(canvas,.an-sheet,.an-sheet-space,.an-selection,.an-handle) {-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-user-drag:none;}
+.an-editor .an-board {touch-action:none;}
+/* One obvious sidebar toggle, available next to the main tools. */
+.an-editor .an-tools-row>.an-pages-toggle {display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:44px;min-height:44px;height:44px;padding:0 12px;margin-right:4px;border:1px solid #dbe3ea;border-radius:11px;background:#fff;color:var(--an-blue);flex-shrink:0;}
+.an-editor .an-tools-row>.an-pages-toggle[aria-expanded=true] {background:#e7eff7;border-color:#abc6dd;}
+.an-editor .an-tools-row>.an-pages-toggle svg {width:21px;height:21px;}
+.an-editor .an-editor-body {grid-template-columns:156px minmax(0,1fr);}
+.an-editor.an-pages-collapsed .an-editor-body {grid-template-columns:minmax(0,1fr);}
+.an-editor.an-pages-collapsed .an-pages {display:none;}
+.an-editor .an-pages {padding:12px 10px;background:#f8fafc;border-right:1px solid #dbe3ea;}
+.an-editor .an-pages-head {display:flex;align-items:center;justify-content:space-between;gap:6px;margin:0 0 10px;}
+.an-pages-title {display:flex;align-items:center;gap:7px;font-size:13px;font-weight:650;}
+.an-pages-count {display:inline-grid;place-items:center;min-width:22px;height:22px;border-radius:7px;background:#e7eff7;color:#315f91;font-size:11px;}
+.an-editor .an-pages-head .an-button {width:32px;min-width:32px;height:36px;min-height:36px;padding:7px;border:0;background:transparent;}
+.an-editor .an-page-add {width:100%;min-height:40px;margin:0 0 14px;padding:8px;gap:5px;border:1px solid #c1d3e4;border-radius:10px;background:#fff;color:#315f91;font-size:11px;}
+.an-editor .an-page-thumb {padding:8px;gap:8px;margin-bottom:12px;border:1px solid #dbe3ea;border-radius:12px;background:#fff;box-shadow:0 2px 6px #203b5206;}
+.an-editor .an-page-thumb[aria-current=true] {background:#e7eff7;border-color:#648fba;box-shadow:0 0 0 2px #315f9112;}
+.an-editor .an-page-thumb canvas {width:100%;max-height:154px;filter:drop-shadow(0 2px 4px #203b5218);pointer-events:none;}
+.an-editor .an-page-thumb>span {font-size:11px;font-weight:600;}
+/* Tablet: an icon rail followed by a single drawing strip, like the reference. */
+@media(min-width:601px) and (max-width:1100px){
+ .an-editor .an-toolbar,.an-editor .an-toolbar.an-text-toolbar {padding:5px 8px;gap:4px;}
+ .an-editor .an-toolbar .an-tools-row {padding:4px 8px;gap:8px;border-radius:12px;min-height:54px;}
+ .an-editor .an-toolbar .an-modes {flex:1;justify-content:flex-start;gap:6px;padding:0;}
+ .an-editor .an-toolbar .an-modes>.an-button {position:relative;flex:0 0 44px;width:44px;min-width:44px;height:44px;padding:10px;border-radius:10px;background:transparent;}
+ .an-editor .an-toolbar .an-modes>.an-button svg {width:23px;height:23px;}
+ .an-editor .an-toolbar .an-modes>.an-button>span,.an-editor .an-tools-row>.an-pages-toggle>span {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);}
+ .an-editor .an-tools-row>.an-pages-toggle {width:44px;padding:10px;margin-right:8px;}
+ .an-editor .an-toolbar .an-context[data-mode=pencil],.an-editor .an-toolbar .an-context[data-mode=shape] {display:flex;align-items:center;flex-wrap:nowrap;min-height:60px;height:60px;gap:7px;padding:6px 8px;border-radius:12px;overflow:visible;}
+ .an-editor .an-toolbar .an-context:is([data-mode=pencil],[data-mode=shape])>.an-choice-field {flex:0 0 auto;max-width:none;gap:0;padding:0 6px 0 0;}
+ .an-editor .an-toolbar .an-context:is([data-mode=pencil],[data-mode=shape]) .an-choice-heading,.an-editor .an-toolbar .an-context:is([data-mode=pencil],[data-mode=shape]) .an-field-heading {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);}
+ .an-editor .an-toolbar .an-context:is([data-mode=pencil],[data-mode=shape]) .an-choice-buttons {flex-wrap:nowrap;gap:2px;padding:2px;border:0;background:transparent;}
+ .an-editor .an-toolbar .an-context:is([data-mode=pencil],[data-mode=shape]) .an-choice-button {position:relative;width:36px;min-width:36px;height:44px;min-height:44px;padding:8px;}
+ .an-editor .an-toolbar .an-context:is([data-mode=pencil],[data-mode=shape]) .an-choice-button>span {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);}
+ .an-editor .an-toolbar .an-context:is([data-mode=pencil],[data-mode=shape]) .an-choice-button svg {width:21px;height:21px;}
+ .an-editor .an-toolbar .an-context:is([data-mode=pencil],[data-mode=shape]) .an-width-field {width:116px;padding:0 6px 0 0!important;flex:0 0 116px;}
+ .an-editor .an-toolbar .an-context .an-width-control>.an-button {min-width:26px;width:26px;flex-basis:26px;padding:5px;}
+ .an-editor .an-width-value input[type=number] {width:28px;max-width:28px;}
+ .an-editor .an-toolbar .an-context:is([data-mode=pencil],[data-mode=shape]) .an-color-field {display:flex;flex-wrap:nowrap;gap:7px;padding:0 6px 0 0;}
+ .an-editor .an-toolbar .an-context:is([data-mode=pencil],[data-mode=shape]) .an-color-swatches {gap:6px;}
+ .an-editor .an-toolbar .an-context:is([data-mode=pencil],[data-mode=shape]) .an-color-swatch {width:24px;min-width:24px;height:24px;min-height:24px;flex-basis:24px;}
+ .an-editor .an-toolbar .an-context:is([data-mode=pencil],[data-mode=shape]) .an-context-history {order:-1;margin:0!important;padding:0 6px 0 0;border:0;border-right:1px solid #e4eaf0;gap:0;}
+ .an-editor .an-toolbar .an-context:is([data-mode=pencil],[data-mode=shape]) .an-context-history .an-button {width:32px;min-width:32px;padding:7px;}
+ .an-editor .an-toolbar .an-context:is([data-mode=pencil],[data-mode=shape]) .an-clear-drawing {position:relative;min-width:36px;width:36px;padding:8px;margin:0;}
+ .an-editor .an-toolbar .an-context .an-clear-drawing>span {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);}
+ .an-editor .an-editor-body {grid-template-columns:136px minmax(0,1fr);}
+ .an-editor.an-pages-collapsed .an-editor-body {grid-template-columns:minmax(0,1fr);}
+ .an-editor .an-pages {padding:10px 8px;}
+ .an-editor .an-toolbar.an-text-toolbar .an-context[data-mode=text] {gap:8px;padding:8px 10px;min-height:0;}
+}
+@media(max-width:600px){
+ .an-editor .an-editor-body {grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) 108px;}
+ .an-editor .an-pages {grid-column:1;grid-row:2;display:flex;gap:8px;padding:8px;border-right:0;border-top:1px solid #dbe3ea;}
+ .an-editor .an-pages-head {flex:0 0 90px;flex-direction:column;margin:0;}
+ .an-editor .an-page-add {flex:0 0 60px;width:60px;white-space:normal;margin:0;}
+ .an-editor .an-page-thumb {flex:0 0 64px;margin:0;padding:4px;gap:3px;}
+ .an-editor .an-page-thumb canvas {height:54px;}
+ .an-editor.an-pages-collapsed .an-editor-body {grid-template-rows:minmax(0,1fr);}
+}
