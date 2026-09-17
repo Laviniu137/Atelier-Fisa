@@ -42,6 +42,16 @@
   }
   const confirmAction = (title, action) => dialog(title,el('p','','Această acțiune poate fi anulată în editor cu Undo.'),action,'Șterge');
 
+  const TOOL_SETTINGS_KEY='atelier-note-tool-settings-v1';
+  const TOOL_WIDTHS={pencil:3,line:3,dashed:3,highlighter:20,eraser:24,rect:3,ellipse:3,arrow:3};
+  const widthLimit=key=>key==='eraser'?80:['rect','ellipse','arrow'].includes(key)?24:40;
+  function loadToolSettings(){
+    const settings={widths:{...TOOL_WIDTHS},textSize:22};
+    try{const saved=JSON.parse(localStorage.getItem(TOOL_SETTINGS_KEY));
+      for(const key of Object.keys(TOOL_WIDTHS)){const value=saved?.widths?.[key];if(typeof value==='number'&&Number.isFinite(value))settings.widths[key]=clamp(Math.round(value),1,widthLimit(key));}
+      if(typeof saved?.textSize==='number'&&Number.isFinite(saved.textSize))settings.textSize=clamp(saved.textSize,8,144);
+    }catch{}return settings;
+  }
   class NotesStore {
     async open() {
       this.db = await new Promise((resolve,reject)=>{ const r=indexedDB.open('atelier-a4-notes',1); r.onupgradeneeded=()=>{r.result.createObjectStore('notes',{keyPath:'id'}); r.result.createObjectStore('meta');}; r.onsuccess=()=>resolve(r.result); r.onerror=()=>reject(r.error); });
@@ -212,7 +222,7 @@
       }
       if((o?.type==='text'&&!o.locked)||e.tool==='text') {
         if(!textFormatGroup){const objectGroup=group('an-text-zone an-text-object-group'),state=group('an-text-state-group');state.append(el('span','an-context-title','Text nou'));objectGroup.append(state);textFormatGroup=group('an-text-zone an-text-format-group');textAppearanceGroup=group('an-text-zone an-text-appearance-group');this.context.append(objectGroup,textFormatGroup,textAppearanceGroup);}
-        const style=o?.type==='text'?o:e.textStyle,target=textFormatGroup,update=patch=>{if(o?.type==='text')e.changeObject(patch);else{Object.assign(e.textStyle,patch);this.renderContext();}};
+        const style=o?.type==='text'?o:e.textStyle,target=textFormatGroup,update=patch=>{if(Number.isFinite(patch.fontSize)){e.toolSettings.textSize=patch.fontSize;e.textStyle.fontSize=patch.fontSize;e.saveToolSettings();}if(o?.type==='text')e.changeObject(patch);else{Object.assign(e.textStyle,patch);this.renderContext();}};
         const fonts=[['Arial','Arial'],['Georgia','Georgia'],['Verdana','Verdana'],['Courier New','Monospace']];
         addPopover('Font',style.font,null,()=>{const content=el('div','an-font-popover'),search=input('','search');search.placeholder='Caută un font';search.setAttribute('aria-label','Caută un font');const options=el('div','an-popover-options');for(const [value,label] of fonts){const option=popoverOption(label,()=>update({font:value}),'',`an-font-option${value===style.font?' is-selected':''}`);option.style.fontFamily=value;options.append(option);}search.addEventListener('input',()=>{const query=search.value.trim().toLocaleLowerCase('ro-RO');for(const option of options.children)option.hidden=!option.textContent.toLocaleLowerCase('ro-RO').includes(query);});content.append(search,options);return content;},target).style.fontFamily=style.font;
         addPopover('Mărime',`${style.fontSize}px`,null,()=>{const content=el('div','an-size-popover'),stepper=el('div','an-size-stepper'),manual=input(style.fontSize,'number');manual.min=8;manual.max=144;manual.setAttribute('aria-label','Valoare mărime');const set=value=>update({fontSize:clamp(Number(value)||22,8,144)});stepper.append(button('Micșorează',()=>set(style.fontSize-1),'minus','an-stepper-button'),manual,button('Mărește',()=>set(style.fontSize+1),'plus','an-stepper-button'));manual.addEventListener('change',()=>set(manual.value));const presets=el('div','an-size-presets');for(const value of [12,14,16,18,24,32])presets.append(popoverOption(`${value}`,()=>set(value),'',`an-size-preset${value===style.fontSize?' is-selected':''}`));content.append(stepper,presets);return content;},target);
@@ -244,7 +254,7 @@
           const more=button('Proprietăți obiect',()=>this.togglePopover(more,'Proprietăți obiect',()=>secondary),'more','an-icon');more.setAttribute('aria-expanded','false');this.objectActions.prepend(more);
         }
         objectGroup?.remove();
-        if(textFormatGroup){const controls=[...textFormatGroup.children];this.context.append(...controls);textFormatGroup.remove();}
+        if(textFormatGroup){const controls=[...textFormatGroup.children];controls.forEach((control,index)=>control.dataset.textControl=['font','size','style','alignment','list','preset'][index]);this.context.append(...controls);textFormatGroup.remove();}
         if(textAppearanceGroup){this.context.append(...textAppearanceGroup.children);textAppearanceGroup.remove();}
         this.contextToggle.hidden=true;
       }
@@ -254,7 +264,7 @@
 
   class NoteEditor {
     constructor(manager,note) {
-      this.manager=manager;this.note=copy(note);this.pageIndex=clamp(note.activePage||0,0,note.pages.length-1);this.selected=null;this.tool='select';this.drawKind='pencil';this.drawColor='#25384b';this.drawWidth=3;this.highlighterWidth=20;this.eraserWidth=24;this.shapeKind='rect';this.textStyle=TextObject.create(0,0);this.past=[];this.future=[];this.images=new Map();this.pointers=new Map();this.zoom=1;this.saveChain=Promise.resolve();this.dirty=false;this.revision=0;this.suppressClickUntil=0;this.pagesCollapsed=false;this.focusMode=false;
+      this.manager=manager;this.note=copy(note);this.pageIndex=clamp(note.activePage||0,0,note.pages.length-1);this.selected=null;this.tool='select';this.drawKind='pencil';this.drawColor='#25384b';this.toolSettings=loadToolSettings();this.shapeKind='rect';this.textStyle=TextObject.create(0,0);this.textStyle.fontSize=this.toolSettings.textSize;this.past=[];this.future=[];this.images=new Map();this.pointers=new Map();this.zoom=1;this.saveChain=Promise.resolve();this.dirty=false;this.revision=0;this.suppressClickUntil=0;this.pagesCollapsed=false;this.focusMode=false;
       this.root=el('section','an-editor');this.root.setAttribute('aria-label','Editor de notițe A4');this.root.id='atelierNoteEditor';
       const header=el('header','an-editor-header');const titleBlock=el('div','an-document-name');this.title=el('strong','',this.note.title);this.saveStatus=el('span','an-save-status','Salvat pe acest dispozitiv');this.saveStatus.setAttribute('role','status');titleBlock.append(this.title,this.saveStatus);
       this.pagesToggle=button('Pagini',()=>this.togglePages(),'sidebar','an-pages-toggle');this.pagesToggle.setAttribute('aria-expanded','true');this.pagesToggle.setAttribute('aria-controls','an-note-pages');this.pagesToggle.title='Ascunde paginile';this.focusToggle=button('Mod focus',()=>this.toggleFocus(),'focus','an-icon an-focus-toggle');this.focusToggle.setAttribute('aria-pressed','false');header.append(button('Notițe',()=>this.close(),'back'),titleBlock,this.pagesToggle,button('Detalii',()=>manager.details(this.note,updated=>{this.edit(()=>Object.assign(this.note,updated));this.title.textContent=this.note.title;}),'edit'),this.focusToggle,button('Export',()=>this.exportMenu(),'export'));
@@ -280,6 +290,15 @@
       this.resize=new ResizeObserver(()=>{if(!this.textEditor&&this.autoFit)this.fit();});this.resize.observe(this.board);
       this.refresh();requestAnimationFrame(()=>this.fit());this.canvas.focus({preventScroll:true});
     }
+    get activeWidthKey(){return this.tool==='shape'?this.shapeKind:(Object.hasOwn(TOOL_WIDTHS,this.drawKind)?this.drawKind:'pencil');}
+    get drawWidth(){return this.toolSettings.widths[this.activeWidthKey];}
+    set drawWidth(value){this.setToolWidth(this.activeWidthKey,value);}
+    get highlighterWidth(){return this.toolSettings.widths.highlighter;}
+    set highlighterWidth(value){this.setToolWidth('highlighter',value);}
+    get eraserWidth(){return this.toolSettings.widths.eraser;}
+    set eraserWidth(value){this.setToolWidth('eraser',value);}
+    setToolWidth(key,value){if(!Number.isFinite(value))return;this.toolSettings.widths[key]=clamp(Math.round(value),1,widthLimit(key));this.saveToolSettings();}
+    saveToolSettings(){try{localStorage.setItem(TOOL_SETTINGS_KEY,JSON.stringify(this.toolSettings));}catch{this.status('Preferințele instrumentelor nu pot fi păstrate după închidere în acest browser.',true);}}
     get page(){return this.note.pages[this.pageIndex];}
     get object(){return this.page.objects.find(o=>o.id===this.selected);}
     togglePages(){this.pagesCollapsed=!this.pagesCollapsed;this.root.classList.toggle('an-pages-collapsed',this.pagesCollapsed);this.pagesToggle.setAttribute('aria-expanded',String(!this.pagesCollapsed));this.pagesToggle.title=this.pagesCollapsed?'Arată paginile':'Ascunde paginile';requestAnimationFrame(()=>this.fit());}

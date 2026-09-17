@@ -1,4 +1,4 @@
-# Notițe A4 — 1.19.5
+# Notițe A4 — 1.19.6
 
 ## Publicare
 
@@ -57,3 +57,5 @@ salvare/reîncărcare, PDF A4 mixt, PNG, ZIP, print, import și căutare.
 
 Gesturile sunt testate prin simulare de browser; tastatura iPadOS, Apple Pencil
 fizic și tipărirea pe hardware necesită verificare pe dispozitiv.
+
+Preferințele instrumentelor sunt salvate local în `atelier-note-tool-settings-v1`: grosime separată pentru creion, linie, linie punctată, evidențiator, gumă și fiecare formă, plus mărimea implicită a textului. Sunt comune notițelor de pe același browser/dispozitiv și nu modifică obiectele deja desenate.
