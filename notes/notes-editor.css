@@ -1018,3 +1018,12 @@
 }
 .an-editor .an-toolbar.an-text-toolbar .an-context[data-mode=text]>.an-field{justify-content:stretch;}
 .an-editor .an-toolbar.an-text-toolbar .an-context[data-mode=text]>:is([data-text-control=font],[data-text-control=size],[data-text-control=preset])>.an-popover-trigger{width:100%;max-width:none;}
+
+/* Keep the text boundary visible while placing and editing, at every zoom. */
+.an-editor .an-text-placement{position:absolute;pointer-events:none;z-index:4;border:calc(1px / var(--an-zoom,1)) dashed #315f91;background:#315f9108;border-radius:3px;}
+.an-editor .an-text-editor[contenteditable]{box-shadow:0 0 0 calc(1px / var(--an-zoom,1)) #7298bd!important;overflow:visible;}
+.an-editor .an-text-editor[data-empty=true]::before{content:attr(data-placeholder);position:absolute;left:var(--an-text-inset,6px);color:#8b9bab;font-weight:400;pointer-events:none;}
+.an-editor .an-text-list-markers{position:absolute;z-index:4;pointer-events:none;transform-origin:center;}
+.an-text-list-markers>span{position:absolute;display:block;text-align:right;white-space:nowrap;}
+.an-editor .an-text-help{flex:1;min-width:0;color:var(--an-muted);font-size:11px;text-align:center;}
+@media(max-width:700px){.an-editor .an-text-help{display:none;}}
