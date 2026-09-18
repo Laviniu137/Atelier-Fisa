@@ -11,9 +11,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Fișă atelier">
-  <link rel="manifest" href="manifest.webmanifest?v=1.21.6">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.21.6">
-  <link rel="apple-touch-icon" href="icon-180.png?v=1.21.6">
+  <link rel="manifest" href="manifest.webmanifest?v=1.21.8">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.21.8">
+  <link rel="apple-touch-icon" href="icon-180.png?v=1.21.8">
   <title>Notițe pe imagini</title>
   <style>
     :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #29261f; background: #edeae4; --app-safe-top: env(safe-area-inset-top, 0px); --app-safe-right: env(safe-area-inset-right, 0px); --app-safe-bottom: env(safe-area-inset-bottom, 0px); --app-safe-left: env(safe-area-inset-left, 0px); }
@@ -386,6 +386,18 @@
       border: 0;
       margin: 4px 6px;
       background: linear-gradient(to right, rgba(160, 142, 117, 0), rgba(160, 142, 117, .52), rgba(160, 142, 117, 0));
+    }
+    .project-status-submenu {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+    .project-status-submenu[hidden] { display: none !important; }
+    .project-status-submenu .project-status-back {
+      margin-bottom: 4px;
+      border-bottom: 1px solid rgba(176, 158, 132, .32);
+      border-radius: 8px 8px 4px 4px;
+      color: #637386;
     }
     .project-empty {
       border: 1px dashed #cebfa8;
@@ -3351,7 +3363,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   #projectManagerView .project-card-name { overflow-wrap: anywhere; }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 </style>
-<link rel="stylesheet" href="notes/notes-editor.css?v=1.21.6">
+<link rel="stylesheet" href="notes/notes-editor.css?v=1.21.8">
 <style>
 /* Favorite affordances and tighter project card framing. */
 #projectManagerView .project-card {min-height:0;grid-template-rows:176px auto;}
@@ -4144,7 +4156,7 @@ body:not(.fullscreen-mode) #editorView .quick-color-history .quick-color-history
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.21.6';
+      const APP_VERSION = '1.21.8';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -6357,9 +6369,26 @@ body:not(.fullscreen-mode) #editorView .quick-color-history .quick-color-history
             { status: 'in-progress', action: 'set-in-progress', label: 'Marchează ca în lucru', icon: '●' },
             { status: 'finalized', action: 'set-finalized', label: 'Marchează ca finalizat', icon: '✓' }
           ].filter((item) => item.status !== status);
+          const statusPanel = document.createElement('div');
+          statusPanel.className = 'project-status-submenu';
+          statusPanel.hidden = true;
+          const openStatusMenu = () => {
+            Array.from(menuItems.children).filter((child) => child !== statusPanel).forEach((child) => {
+              child.dataset.beforeStatusHidden = String(child.hidden);
+              child.hidden = true;
+            });
+            statusPanel.hidden = false;
+          };
+          const closeStatusMenu = () => {
+            statusPanel.hidden = true;
+            Array.from(menuItems.children).filter((child) => child !== statusPanel).forEach((child) => {
+              child.hidden = child.dataset.beforeStatusHidden === 'true';
+              delete child.dataset.beforeStatusHidden;
+            });
+          };
           const menuActions = [
             { action: 'rename', label: 'Redenumește', icon: '✏️' },
-            ...statusActions,
+            { action: 'choose-status', label: 'Schimbă statusul', icon: '●' },
             { action: 'add-note', label: 'Adaugă notiță', icon: '📝' },
             { action: 'export-project', label: 'Exportă proiect', icon: '📦' },
             { action: 'toggle-more', label: 'Mai multe opțiuni', icon: '⋯' },
@@ -6397,6 +6426,10 @@ body:not(.fullscreen-mode) #editorView .quick-color-history .quick-color-history
             itemButton.appendChild(label);
             itemButton.addEventListener('click', async (event) => {
               event.preventDefault();
+              if (item.action === 'choose-status') {
+                openStatusMenu();
+                return;
+              }
               if (item.action === 'toggle-more') {
                 const expanded = itemButton.getAttribute('aria-expanded') === 'true';
                 menuItems.querySelectorAll('[data-secondary-action]').forEach((button) => {
@@ -6411,6 +6444,21 @@ body:not(.fullscreen-mode) #editorView .quick-color-history .quick-color-history
             });
             menuItems.appendChild(itemButton);
           });
+          const statusBack = document.createElement('button');
+          statusBack.type = 'button';
+          statusBack.className = 'project-status-back';
+          statusBack.innerHTML = '<span class="project-menu-item-icon">←</span><span class="project-menu-item-label">Înapoi la opțiuni</span>';
+          statusBack.addEventListener('click', (event) => { event.preventDefault(); closeStatusMenu(); });
+          statusPanel.appendChild(statusBack);
+          statusActions.forEach((item) => {
+            const statusButton = document.createElement('button');
+            statusButton.type = 'button';
+            statusButton.innerHTML = `<span class="project-menu-item-icon">${item.icon}</span><span class="project-menu-item-label">${item.label}</span>`;
+            statusButton.addEventListener('click', async (event) => { event.preventDefault(); menu.open = false; await handleProjectCardAction(record, item.action); });
+            statusPanel.appendChild(statusButton);
+          });
+          menuItems.appendChild(statusPanel);
+          menu.addEventListener('toggle', () => { if (!menu.open && !statusPanel.hidden) closeStatusMenu(); });
           menu.appendChild(menuItems);
 
           top.appendChild(titleColumn);
@@ -11140,6 +11188,6 @@ body:not(.fullscreen-mode) #editorView .quick-color-history .quick-color-history
   </script>
 
 <script src="notes/pdf-lib.min.js"></script>
-<script src="notes/notes-editor.js?v=1.21.6"></script>
+<script src="notes/notes-editor.js?v=1.21.8"></script>
 </body>
 </html>
