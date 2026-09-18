@@ -12,7 +12,7 @@
   const el = (tag, cls, text) => { const node = document.createElement(tag); if (cls) node.className = cls; if (text !== undefined) node.textContent = text; return node; };
   const icons = {
     select:'M4 3v17l5-5 4 7 3-2-4-7h8Z', text:'M4 5h16M12 5v15M8 20h8', pencil:'m4 20 4-1L20 7l-4-4L4 15Z M13 6l5 5',
-    marker:'m5 14 9-11 6 5-9 11Z M5 14l6 5-6 2-3-3Z', shape:'M4 4h16v16H4Z', image:'M3 3h18v18H3Z M3 17l6-6 4 4 3-3 5 5 M15 7h.01',
+    marker:'m5 14 9-11 6 5-9 11Z M5 14l6 5-6 2-3-3Z', shape:'M4 4h16v16H4Z', image:'M3 3h18v18H3Z M3 17l6-6 4 4 3-3 5 5 M15 7h.01', crop:'M8 3v13a2 2 0 0 0 2 2h11 M3 8h13a2 2 0 0 1 2 2v11',
     undo:'M9 5 4 10l5 5 M4 10h10a6 6 0 0 1 6 6', redo:'m15 5 5 5-5 5 M20 10H10a6 6 0 0 0-6 6',
     plus:'M12 4v16M4 12h16', back:'m12 4-8 8 8 8M4 12h16', trash:'M4 7h16M9 7V3h6v4M6 7l1 14h10l1-14M10 11v6M14 11v6',
     copy:'M8 8h13v13H8ZM3 16V3h13', pen:'m5 19 3-7L17 3l4 4-9 9Z M5 19l4-4', eraser:'m4 15 8-10a2 2 0 0 1 3-.3l5 4.2a2 2 0 0 1 .3 2.8L14 19H7l-3-2.5a2 2 0 0 1 0-1.5Z M10 8l7 6 M7 19h14', more:'M5 12h.01M12 12h.01M19 12h.01', sidebar:'M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z M10 3v18M5 7h3M5 11h3M5 15h3', pages:'M5 3h14v18H5ZM8 7h8M8 11h8M8 15h5', focus:'M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5',
@@ -289,9 +289,12 @@
           actions.append(button('Duplică',()=>e.duplicate(),'copy','an-icon an-toolbar-icon-button'),button(o.locked?'Deblochează':'Blochează',()=>e.changeObject({locked:!o.locked},true),'lock','an-toolbar-icon-button'),arrangeTrigger,button('Șterge',()=>e.removeObject(),'trash','an-danger an-icon an-toolbar-icon-button'));
           objectGroup.append(state,actions);properties.append(transform);this.context.append(objectGroup,properties);textFormatGroup=group('an-text-zone an-text-format-group');textAppearanceGroup=group('an-text-zone an-text-appearance-group');this.context.append(textFormatGroup,textAppearanceGroup);
         }else{
-          if(o.type==='image'&&!o.locked){this.context.append(button('Decupează',()=>e.cropImage(o)),button('Înlocuiește',()=>e.chooseImage(o.id),'image'));}
-          const opacity=addRange('Opacitate',Math.round(o.opacity*100),5,100,value=>e.changeObject({opacity:value/100}),'%','change');opacity.disabled=!!o.locked;
-          this.context.append(button('Duplică',()=>e.duplicate(),'copy','an-icon'),button(o.locked?'Deblochează':'Blochează',()=>e.changeObject({locked:!o.locked},true),'lock'),button('Șterge',()=>e.removeObject(),'trash','an-danger an-icon'));
+          const primary=group('an-object-primary-actions'),adjustments=group('an-object-adjustments'),secondary=group('an-object-secondary-actions');
+          if(o.type==='image'&&!o.locked){primary.append(button('Decupează',()=>e.cropImage(o),'crop','an-object-primary-button'),button('Înlocuiește',()=>e.chooseImage(o.id),'image','an-object-primary-button'));}
+          const opacity=addRange('Opacitate',Math.round(o.opacity*100),5,100,value=>e.changeObject({opacity:value/100}),'%','change',adjustments);opacity.disabled=!!o.locked;
+          secondary.append(button('Duplică',()=>e.duplicate(),'copy','an-icon an-toolbar-icon-button'),button(o.locked?'Deblochează':'Blochează',()=>e.changeObject({locked:!o.locked},true),'lock','an-icon an-toolbar-icon-button'),button('Șterge',()=>e.removeObject(),'trash','an-danger an-icon an-toolbar-icon-button'));
+          if(primary.children.length)this.context.append(primary);
+          this.context.append(adjustments,secondary);
         }
       }
       if((o?.type==='text'&&!o.locked)||e.tool==='text') {
