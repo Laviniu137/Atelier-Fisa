@@ -11,9 +11,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Fișă atelier">
-  <link rel="manifest" href="manifest.webmanifest?v=1.21.8">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.21.8">
-  <link rel="apple-touch-icon" href="icon-180.png?v=1.21.8">
+  <link rel="manifest" href="manifest.webmanifest?v=1.21.9">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.21.9">
+  <link rel="apple-touch-icon" href="icon-180.png?v=1.21.9">
   <title>Notițe pe imagini</title>
   <style>
     :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #29261f; background: #edeae4; --app-safe-top: env(safe-area-inset-top, 0px); --app-safe-right: env(safe-area-inset-right, 0px); --app-safe-bottom: env(safe-area-inset-bottom, 0px); --app-safe-left: env(safe-area-inset-left, 0px); }
@@ -3363,7 +3363,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   #projectManagerView .project-card-name { overflow-wrap: anywhere; }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 </style>
-<link rel="stylesheet" href="notes/notes-editor.css?v=1.21.8">
+<link rel="stylesheet" href="notes/notes-editor.css?v=1.21.9">
 <style>
 /* Favorite affordances and tighter project card framing. */
 #projectManagerView .project-card {min-height:0;grid-template-rows:176px auto;}
@@ -3395,12 +3395,6 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
 #workspaceNotes .an-note-card-menu[open] summary {background:var(--ds-surface-blue,#e7eff7);color:var(--ds-blue-dark,#315f91);border-color:var(--ds-line-strong,#abc6dd);}
 @media(max-width:700px){#workspaceNotes .workspace-notes-heading{grid-template-columns:1fr;gap:10px;}#workspaceNotes .workspace-notes-heading .ui-action{justify-self:start;}#workspaceNotes .an-note-grid{grid-template-columns:repeat(auto-fill,minmax(min(255px,100%),1fr));gap:14px;}}
 @media(max-width:900px){#workspaceNotes .an-note-grid{grid-template-columns:minmax(0,1fr);}}
-/* Keep drawing colours compact and expose recent custom colours in every drawing toolbar. */
-.quick-color-history {display:inline-flex;align-items:center;gap:5px;margin-left:4px;padding-left:7px;border-left:1px solid rgba(125,145,164,.35);}
-.quick-color-history .quick-color-history-button {width:23px;height:23px;min-width:23px;min-height:23px;}
-body:not(.fullscreen-mode) #editorView .quick-color-history {gap:3px;margin-left:3px;padding-left:5px;}
-body:not(.fullscreen-mode) #editorView .quick-color-history .quick-color-history-button {width:22px;height:22px;min-width:22px;min-height:22px;border-width:7px;}
-@media(max-width:900px){.quick-color-history{gap:3px;padding-left:5px;margin-left:2px;}.quick-color-history .quick-color-history-button{width:21px;height:21px;min-width:21px;min-height:21px;}}
 </style>
 <style>
 /* Cards share dimensions and reserve real layout space for actions. */
@@ -3438,7 +3432,8 @@ body:not(.fullscreen-mode) #editorView .quick-color-history .quick-color-history
 /* Consistent thickness sliders in the project and handwriting editors. */
 #fullscreenBrushSize,#pencilEditorSize{appearance:none;height:6px;min-height:6px;border:0;border-radius:99px;background:#dbe5ee;accent-color:#315f91;cursor:pointer;}
 #fullscreenBrushSize::-webkit-slider-thumb,#pencilEditorSize::-webkit-slider-thumb{appearance:none;width:20px;height:20px;border-radius:50%;background:#315f91;border:3px solid white;box-shadow:0 1px 5px #203b5230;}
-#fullscreenBrushSizeValue,#pencilEditorSizeValue{border:1px solid #d9e3ed;border-radius:9px;padding:6px 9px;background:#f5f8fb;font-size:12px;font-weight:650;white-space:nowrap;}
+#fullscreenBrushSizeValue,#pencilEditorSizeValue{border:1px solid #d9e3ed;border-radius:9px;padding:6px 9px;background:#f5f8fb;color:#25384b;font-size:12px;font-weight:750;white-space:nowrap;font-variant-numeric:tabular-nums;}
+body.fullscreen-mode #fullscreenBrushSizeValue{color:#25384b;background:#f5f8fb;border-color:#d9e3ed;}
 
 </style>
 </head>
@@ -4068,19 +4063,6 @@ body:not(.fullscreen-mode) #editorView .quick-color-history .quick-color-history
       let lastPenSize = 3;
       let lastEraserSize = 8;
       let isErasing = false;
-      const COLOR_HISTORY_KEY = 'atelier-note-color-history-v1';
-      const loadBrushColorHistory = () => { try { const saved = JSON.parse(localStorage.getItem(COLOR_HISTORY_KEY)); return Array.isArray(saved) ? saved.filter(color => typeof color === 'string' && /^#[0-9a-f]{6}$/i.test(color)).slice(0, 8) : []; } catch { return []; } };
-      const rememberBrushColor = color => { if (!/^#[0-9a-f]{6}$/i.test(String(color))) return; const normalized = String(color).toLowerCase(); const next = [normalized, ...loadBrushColorHistory().filter(item => item !== normalized)].slice(0, 8); try { localStorage.setItem(COLOR_HISTORY_KEY, JSON.stringify(next)); } catch {} };
-      const renderQuickColorHistory = () => {
-        const quickColors = document.querySelector('.quick-colors');
-        if (!quickColors) return;
-        quickColors.querySelector('.quick-color-history')?.remove();
-        const history = loadBrushColorHistory().filter(color => !Array.from(quickColors.querySelectorAll('.quick-color-button')).some(button => button.dataset.color?.toLowerCase() === color)).slice(0, 4);
-        if (!history.length) return;
-        const historyWrap = document.createElement('span'); historyWrap.className = 'quick-color-history'; historyWrap.setAttribute('aria-label', 'Culori folosite recent');
-        history.forEach(color => { const historyButton = document.createElement('button'); historyButton.type = 'button'; historyButton.className = 'quick-color-button quick-color-history-button'; historyButton.dataset.color = color; historyButton.style.setProperty('--swatch', color); historyButton.title = `Culoare recentă ${color}`; historyButton.setAttribute('aria-label', `Culoare recentă ${color}`); historyButton.addEventListener('click', () => { brushColor = color; rememberBrushColor(color); applyDrawingToolState({ tool: 'draw', drawMode: activeDrawMode, erasing: false }); brushSize = lastPenSize; applyCurrentBrushSettings(); syncBrushControls(); scheduleSave(); }); historyWrap.append(historyButton); });
-        quickColors.append(historyWrap);
-      };
       let redoStack = [];
       let zoomLevel = 1;
       let editorViewFrame = null;
@@ -4156,7 +4138,7 @@ body:not(.fullscreen-mode) #editorView .quick-color-history .quick-color-history
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.21.8';
+      const APP_VERSION = '1.21.9';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -7776,7 +7758,6 @@ body:not(.fullscreen-mode) #editorView .quick-color-history .quick-color-history
       }
 
       function syncBrushControls() {
-        renderQuickColorHistory();
         if (fullscreenColorPicker) {
           fullscreenColorPicker.value = brushColor;
         }
@@ -10501,7 +10482,6 @@ body:not(.fullscreen-mode) #editorView .quick-color-history .quick-color-history
       window.addEventListener('pointerdown', handleFloatingToolbarOutsidePointerDown);
       fullscreenColorPicker.addEventListener('input', (event) => {
         brushColor = event.target.value;
-        rememberBrushColor(brushColor);
         isErasing = false;
         brushSize = lastPenSize;
         applyCurrentBrushSettings();
@@ -10588,7 +10568,6 @@ body:not(.fullscreen-mode) #editorView .quick-color-history .quick-color-history
           scheduleSave();
         });
       });
-      renderQuickColorHistory();
       // One focus lifecycle for every dialog, including nested handwriting prompts.
       const dialogStack = [];
       const dialogLayers = [...document.querySelectorAll('[role="dialog"]')].map(dialog => ({ dialog, layer: dialog.parentElement, open: false }));
@@ -11188,6 +11167,6 @@ body:not(.fullscreen-mode) #editorView .quick-color-history .quick-color-history
   </script>
 
 <script src="notes/pdf-lib.min.js"></script>
-<script src="notes/notes-editor.js?v=1.21.8"></script>
+<script src="notes/notes-editor.js?v=1.21.9"></script>
 </body>
 </html>
