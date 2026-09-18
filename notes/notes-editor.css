@@ -1057,6 +1057,17 @@
 .an-editor .an-toolbar .an-context:is([data-mode=image],[data-mode=drawing],[data-mode=shape])>.an-button{
   box-sizing:border-box;min-width:40px;min-height:40px;height:40px;padding:8px 11px;white-space:nowrap;
 }
+
+/* Rotation is shown as the action itself, without a decorative bubble. */
+.an-editor .an-selection{z-index:4;}
+.an-editor .an-selection .an-rotate,.an-editor .an-selection.is-text .an-rotate{
+  top:calc(-30px / var(--an-zoom,1));width:calc(24px / var(--an-zoom,1));height:calc(24px / var(--an-zoom,1));
+  padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;
+}
+.an-editor .an-selection .an-rotate:hover:not(:disabled){background:transparent;filter:drop-shadow(0 2px 3px #17375338);}
+.an-editor .an-selection .an-rotate::before{top:92%;height:calc(8px / var(--an-zoom,1));}
+.an-editor .an-selection .an-rotate::after{background-size:100% 100%;}
+.an-editor .an-selection.is-editing{border-color:#487cac;}
 .an-editor .an-toolbar .an-context:is([data-mode=drawing],[data-mode=shape])>.an-button:not(.an-danger){
   width:40px;padding:8px;
 }
@@ -1069,3 +1080,35 @@
 @media(max-width:700px){
   .an-editor .an-toolbar .an-context:is([data-mode=image],[data-mode=drawing],[data-mode=shape]){overflow-x:auto;flex-wrap:nowrap;scrollbar-width:thin;}
 }
+
+/* Text style is the primary creation control; alignment and lists stay behind one button each. */
+.an-editor .an-toolbar.an-text-toolbar .an-context[data-mode=text]>[data-text-control=preset]{width:148px;}
+.an-editor .an-toolbar.an-text-toolbar [data-text-control=preset]>.an-popover-trigger.an-primary-text-style{
+  background:linear-gradient(180deg,#3d73a8,#315f91);border-color:#2d5884;color:#fff;
+  box-shadow:0 4px 10px #315f9126;font-weight:750;
+}
+.an-editor .an-toolbar.an-text-toolbar [data-text-control=preset]>.an-popover-trigger.an-primary-text-style:hover:not(:disabled),
+.an-editor .an-toolbar.an-text-toolbar [data-text-control=preset]>.an-popover-trigger.an-primary-text-style[aria-expanded=true]{
+  background:#294f79;border-color:#24496f;color:#fff;
+}
+.an-editor .an-toolbar.an-text-toolbar [data-text-control=preset]>.an-popover-trigger.an-primary-text-style::after{opacity:.9;}
+.an-editor .an-toolbar.an-text-toolbar [data-text-control=preset]>span{color:#315f91;font-weight:750;}
+.an-editor .an-toolbar.an-text-toolbar .an-context[data-mode=text]>:is([data-text-control=alignment],[data-text-control=list]){width:44px;}
+.an-editor .an-toolbar.an-text-toolbar :is([data-text-control=alignment],[data-text-control=list])>.an-popover-trigger{width:44px;min-width:44px;padding:8px;}
+@media(max-width:1100px){.an-editor .an-toolbar.an-text-toolbar .an-context[data-mode=text]>[data-text-control=preset]{width:136px;}}
+
+/* Notes use the same menu language, spacing and colours as project cards. */
+#workspaceNotes .an-note-card-menu-items{
+  box-sizing:border-box;width:270px;max-width:calc(100vw - 40px);min-width:220px;padding:7px;gap:4px;
+  border:1px solid rgba(176,158,132,.35);border-radius:14px;background:rgba(255,253,249,.97);
+  box-shadow:0 18px 28px rgba(39,29,16,.2);backdrop-filter:blur(9px);
+}
+#workspaceNotes .an-note-card-menu-items .an-button{
+  display:grid;grid-template-columns:22px minmax(0,1fr);align-items:center;justify-content:start;
+  min-height:42px;padding:8px 10px;gap:8px;border:1px solid transparent;border-radius:10px;
+  background:transparent;color:#4a3f31;font-size:13px;font-weight:630;line-height:1.25;text-align:left;
+}
+#workspaceNotes .an-note-card-menu-items .an-button:hover:not(:disabled){border-color:#d8cebf;background:#f7f1e8;}
+#workspaceNotes .an-note-card-menu-items .an-button.an-danger{color:#9f2130;}
+#workspaceNotes .an-note-card-menu-items .an-button.an-danger:hover:not(:disabled){border-color:#f0c3ca;background:#feecef;color:#891a28;}
+#workspaceNotes .an-note-menu-icon{display:grid;place-items:center;width:22px;min-width:22px;font-size:15px;line-height:1;}
