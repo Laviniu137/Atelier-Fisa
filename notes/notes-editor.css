@@ -1298,3 +1298,52 @@
 .an-editor .an-toolbar-popover .an-size-studio .an-size-preset.is-selected{
   border-color:#315f91;background:#e7f0f8;color:#244f79;box-shadow:inset 0 0 0 1px #315f91;
 }
+
+/* Keep drawing and shape controls beside their mode buttons. */
+.an-editor .an-toolbar:not(.an-text-toolbar) .an-context:is([data-mode=pencil],[data-mode=shape],[data-mode=image],[data-mode=drawing]){
+  justify-content:safe flex-start;
+}
+
+/* Touch browsers can keep :hover after a tap; the active mode must stay dark. */
+.an-editor .an-toolbar .an-modes>.an-button[aria-pressed=true]:is(:hover,:active,:focus){
+  background:#315f91;border-color:#315f91;color:#fff;box-shadow:0 4px 10px #315f9126;
+}
+.an-editor .an-toolbar .an-modes>.an-button{-webkit-tap-highlight-color:transparent;}
+
+/* Page zoom belongs beside Details and Export, with the current scale visible. */
+.an-editor .an-header-zoom{
+  display:flex;align-items:center;flex:0 0 auto;gap:3px;padding:3px;
+  border:1px solid #d7e3ec;border-radius:11px;background:#f4f8fb;
+}
+.an-editor .an-header-zoom>.an-button{
+  display:grid;place-items:center;width:34px;min-width:34px;height:34px;min-height:34px;
+  padding:7px;border:0;border-radius:8px;background:transparent;box-shadow:none;color:#315f91;
+}
+.an-editor .an-header-zoom>.an-button:hover:not(:disabled){background:#e3eef7;}
+.an-editor .an-header-zoom>.an-button svg{width:18px;height:18px;}
+.an-editor .an-header-zoom-value{
+  min-width:46px;color:#315f91;font-size:12px;font-weight:750;
+  font-variant-numeric:tabular-nums;text-align:center;
+}
+@media(max-width:700px){
+  .an-editor .an-editor-header{flex-wrap:wrap;gap:6px;padding:7px 9px;}
+  .an-editor .an-editor-header>.an-button{width:36px;min-width:36px;height:36px;min-height:36px;padding:8px;}
+  .an-editor .an-editor-header>.an-button>span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);}
+  .an-editor .an-editor-header::after{content:'';order:9;flex-basis:100%;height:0;}
+  .an-editor .an-header-zoom{order:10;margin-left:auto;}
+}
+
+/* A dedicated touch target moves text without stealing taps meant for editing. */
+.an-editor .an-selection .an-text-move-handle{
+  position:absolute;left:calc(-48px / var(--an-zoom,1));top:50%;z-index:5;
+  display:grid;place-items:center;width:calc(42px / var(--an-zoom,1));min-width:0;
+  height:calc(42px / var(--an-zoom,1));min-height:0;padding:calc(8px / var(--an-zoom,1));
+  border:calc(1px / var(--an-zoom,1)) solid #aec8df;border-radius:calc(11px / var(--an-zoom,1));
+  background:#fff;color:#315f91;box-shadow:0 calc(2px / var(--an-zoom,1)) calc(8px / var(--an-zoom,1)) #203b5226;
+  transform:translateY(-50%);pointer-events:auto;touch-action:none;cursor:grab;
+}
+.an-editor .an-selection .an-text-move-handle:active{cursor:grabbing;background:#e7f0f8;}
+.an-editor .an-selection .an-text-move-handle svg{
+  width:calc(19px / var(--an-zoom,1));height:calc(19px / var(--an-zoom,1));flex:none;
+}
+.an-editor .an-selection.is-near-left .an-text-move-handle{left:auto;right:calc(-48px / var(--an-zoom,1));}
