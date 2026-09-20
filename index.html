@@ -11,9 +11,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Fișă atelier">
-  <link rel="manifest" href="manifest.webmanifest?v=1.22.1">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.22.1">
-  <link rel="apple-touch-icon" href="icon-180.png?v=1.22.1">
+  <link rel="manifest" href="manifest.webmanifest?v=1.22.3">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.22.3">
+  <link rel="apple-touch-icon" href="icon-180.png?v=1.22.3">
   <title>Notițe pe imagini</title>
   <style>
     :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #29261f; background: #edeae4; --app-safe-top: env(safe-area-inset-top, 0px); --app-safe-right: env(safe-area-inset-right, 0px); --app-safe-bottom: env(safe-area-inset-bottom, 0px); --app-safe-left: env(safe-area-inset-left, 0px); }
@@ -3363,7 +3363,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   #projectManagerView .project-card-name { overflow-wrap: anywhere; }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 </style>
-<link rel="stylesheet" href="notes/notes-editor.css?v=1.22.1">
+<link rel="stylesheet" href="notes/notes-editor.css?v=1.22.3">
 <style>
 /* Favorite affordances and tighter project card framing. */
 #projectManagerView .project-card {min-height:0;grid-template-rows:176px auto;}
@@ -3394,6 +3394,10 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
 #workspaceNotes .an-note-card-menu summary {background:var(--ds-surface-soft,#f0f4f8);color:var(--ds-muted,#6b7f93);border-color:var(--ds-line,#d9e3ed);border-radius:var(--ds-radius-sm,10px);}
 #workspaceNotes .an-note-card-menu[open] summary {background:var(--ds-surface-blue,#e7eff7);color:var(--ds-blue-dark,#315f91);border-color:var(--ds-line-strong,#abc6dd);}
 @media(max-width:700px){#workspaceNotes .workspace-notes-heading{grid-template-columns:1fr;gap:10px;}#workspaceNotes .workspace-notes-heading .ui-action{justify-self:start;}#workspaceNotes .an-note-grid{grid-template-columns:repeat(auto-fill,minmax(min(255px,100%),1fr));gap:14px;}}
+#workspaceNotes .workspace-notes-heading .workspace-notes-actions{display:flex;align-items:center;justify-self:end;gap:10px;flex-wrap:wrap;}
+#workspaceNotes .workspace-notes-actions .ui-action{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:48px;padding:10px 16px;white-space:nowrap;}
+#workspaceNotes .workspace-notes-actions .ui-action svg{width:18px;height:18px;flex:none;}
+@media(max-width:700px){#workspaceNotes .workspace-notes-heading .workspace-notes-actions{justify-self:start;width:100%;gap:8px;}#workspaceNotes .workspace-notes-actions .ui-action{flex:1 1 150px;}}
 @media(max-width:900px){#workspaceNotes .an-note-grid{grid-template-columns:minmax(0,1fr);}}
 </style>
 <style>
@@ -3444,6 +3448,80 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
  body:not(.fullscreen-mode) #editorView #drawModeBtn.active:hover,
  body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var(--ds-blue-dark,#264b73);border-color:var(--ds-blue-dark,#264b73);}
 }
+/* Workspace manager: compact, functional headers and card actions. */
+#projectManagerView{grid-template-rows:minmax(0,1fr);}
+#projectManagerView .workspace-sidebar{grid-row:1;}
+#projectManagerView>.project-manager-content,#projectManagerView>#workspaceNotes{grid-row:1;padding-top:18px;}
+#projectManagerView .workspace-sidebar-footer{display:flex;flex-direction:column;justify-content:flex-end;gap:10px;min-height:148px;padding:20px 14px;margin-top:auto;font:inherit;}
+#projectManagerView .workspace-sidebar-footer::before{margin-bottom:auto;}
+#projectManagerView .workspace-footer-heading{color:#e8eef6;font-size:12px;font-weight:700;letter-spacing:.02em;}
+#projectManagerView #pmCloudAccount{display:flex;align-items:center;justify-content:flex-start;width:100%;min-height:42px;padding:10px 12px;border:1px solid #5b718a;border-radius:10px;background:#263b51;color:#e8eef6;text-align:left;font:600 11px/1.4 system-ui,sans-serif;white-space:normal;}
+#projectManagerView #pmCloudAccount:hover:not(:disabled){background:#31506d;color:#fff;border-color:#83a1c1;}
+#projectManagerView .project-manager-heading,#projectManagerView #workspaceNotes .workspace-notes-heading{display:grid;grid-template-columns:minmax(190px,.65fr) minmax(220px,1fr) auto;grid-template-rows:auto auto;align-items:center;gap:20px 18px;margin:0 0 24px;}
+#projectManagerView .manager-heading-copy{grid-column:1;grid-row:1;min-width:0;}
+#projectManagerView .manager-heading-copy .project-manager-subtitle{margin-top:8px;}
+#projectManagerView .manager-search{grid-column:2;grid-row:1;display:flex;align-items:center;gap:10px;min-width:0;min-height:46px;padding:0 14px;border:1px solid var(--ds-line,#d9e3ed);border-radius:11px;background:var(--ds-surface,#fff);color:#43617e;}
+#projectManagerView .manager-search:focus-within{border-color:#729ac0;box-shadow:0 0 0 3px #315f9120;}
+#projectManagerView .manager-search svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;flex:none;}
+#projectManagerView .manager-search input{width:100%;min-width:0;height:44px;padding:0;border:0;outline:0;background:transparent;color:var(--ds-ink,#25384b);font:inherit;font-size:13px;}
+#projectManagerView .manager-search input:focus{outline:0;}
+#projectManagerView .project-manager-heading>.project-section-actions,#projectManagerView #workspaceNotes .workspace-notes-actions{grid-column:3;grid-row:1;justify-self:end;margin:0;display:flex;align-items:center;gap:10px;flex-wrap:nowrap;}
+#projectManagerView .project-status-filters,#projectManagerView .manager-notes-filters{grid-column:1/3;grid-row:2;display:flex;align-items:center;flex-wrap:wrap;gap:7px;width:auto;max-width:100%;margin:0;padding:0;border:0;background:transparent;}
+#projectManagerView .project-status-filter,#projectManagerView .manager-notes-filters button{display:inline-flex;align-items:center;gap:7px;min-height:42px;padding:8px 12px;border:1px solid var(--ds-line,#d9e3ed);border-radius:10px;background:var(--ds-surface,#fff);color:#526579;font:600 12px/1.2 system-ui,sans-serif;cursor:pointer;box-shadow:none;white-space:nowrap;}
+#projectManagerView .project-status-filter[aria-pressed=true],#projectManagerView .manager-notes-filters button[aria-pressed=true]{background:#315f91;border-color:#315f91;color:#fff;box-shadow:0 4px 10px #315f9122;}
+#projectManagerView .manager-filter-count{display:inline-grid;place-items:center;min-width:21px;height:21px;padding:0 5px;border-radius:7px;background:#edf3f8;color:#315578;font-size:11px;font-weight:750;font-variant-numeric:tabular-nums;}
+#projectManagerView [aria-pressed=true]>.manager-filter-count{background:#fff3;color:#fff;}
+#projectManagerView .manager-view-controls{grid-column:3;grid-row:2;display:flex;align-items:center;justify-self:end;gap:10px;min-width:0;}
+#projectManagerView .manager-sort-label{display:flex;align-items:center;gap:5px;min-height:42px;padding:0 10px;border:1px solid var(--ds-line,#d9e3ed);border-radius:10px;background:var(--ds-surface,#fff);color:#657487;font-size:11px;white-space:nowrap;}
+#projectManagerView .manager-sort-label select{max-width:145px;min-height:36px;border:0;background:transparent;color:#344b63;font:600 11px system-ui,sans-serif;cursor:pointer;}
+#projectManagerView .manager-layout-switch{display:flex;padding:3px;border:1px solid var(--ds-line,#d9e3ed);border-radius:10px;background:var(--ds-surface,#fff);}
+#projectManagerView .manager-layout-switch button{min-width:36px;min-height:34px;border:0;border-radius:7px;background:transparent;color:#60758b;font-size:18px;cursor:pointer;}
+#projectManagerView .manager-layout-switch button[aria-pressed=true]{background:#315f91;color:#fff;}
+#projectManagerView .project-card-body{gap:10px;}
+#projectManagerView .project-card-top{display:flex;flex-direction:column;gap:6px;}
+#projectManagerView .project-card-title-column{display:block;}
+#projectManagerView .project-card-actions{display:flex;align-items:center;justify-content:flex-start;gap:8px;width:100%;}
+#projectManagerView .project-card-actions .project-status{margin:0 auto 0 0;min-width:0;min-height:26px;white-space:nowrap;}
+#projectManagerView .project-card-favorite,#projectManagerView .project-card-menu summary{width:38px;min-width:38px;height:38px;min-height:38px;}
+#projectManagerView .project-grid.manager-list-view,#workspaceNotes .an-note-grid.manager-list-view{grid-template-columns:minmax(0,1fr);}
+#projectManagerView .project-grid.manager-list-view .project-card{display:grid;grid-template-columns:160px minmax(0,1fr);grid-template-rows:auto;min-height:148px;}
+#projectManagerView .project-grid.manager-list-view .project-card-thumb-wrap{min-height:148px;border-radius:17px 0 0 17px;border-bottom:0;border-right:1px solid var(--ds-line,#d9e3ed);}
+#projectManagerView .project-grid.manager-list-view .project-card-body{justify-content:center;}
+#workspaceNotes .an-note-grid.manager-list-view .an-note-card{display:grid;grid-template-columns:160px minmax(0,1fr);grid-template-rows:auto auto auto auto;min-height:148px;}
+#workspaceNotes .an-note-grid.manager-list-view .an-note-open{grid-row:1/5;height:100%;min-height:148px;border-radius:17px 0 0 17px;}
+#workspaceNotes .an-note-grid.manager-list-view .an-note-open canvas{height:100%;min-height:148px;}
+#workspaceNotes .an-note-grid.manager-list-view .an-note-card-heading{grid-column:2;}
+#workspaceNotes .an-note-grid.manager-list-view .an-note-date,#workspaceNotes .an-note-grid.manager-list-view .an-note-project,#workspaceNotes .an-note-grid.manager-list-view .an-note-card-stats{grid-column:2;}
+@media(max-width:1350px){
+ #projectManagerView .project-manager-heading,#projectManagerView #workspaceNotes .workspace-notes-heading{grid-template-columns:minmax(180px,1fr) auto;}
+ #projectManagerView .manager-search{grid-column:1;grid-row:2;}
+ #projectManagerView .project-manager-heading>.project-section-actions,#projectManagerView #workspaceNotes .workspace-notes-actions{grid-column:2;grid-row:1;}
+ #projectManagerView .project-status-filters,#projectManagerView .manager-notes-filters{grid-column:1/3;grid-row:3;}
+ #projectManagerView .manager-view-controls{grid-column:2;grid-row:2;}
+}
+@media(max-width:780px){
+ #projectManagerView .project-manager-heading,#projectManagerView #workspaceNotes .workspace-notes-heading{grid-template-columns:minmax(0,1fr);gap:14px;}
+ #projectManagerView .manager-heading-copy,#projectManagerView .manager-search,#projectManagerView .project-manager-heading>.project-section-actions,#projectManagerView #workspaceNotes .workspace-notes-actions,#projectManagerView .project-status-filters,#projectManagerView .manager-notes-filters,#projectManagerView .manager-view-controls{grid-column:1;justify-self:stretch;}
+ #projectManagerView .manager-heading-copy{grid-row:1;}
+ #projectManagerView .manager-search{grid-row:2;}
+ #projectManagerView .project-manager-heading>.project-section-actions,#projectManagerView #workspaceNotes .workspace-notes-actions{grid-row:3;justify-content:flex-start;}
+ #projectManagerView .project-status-filters,#projectManagerView .manager-notes-filters{grid-row:4;}
+ #projectManagerView .manager-view-controls{grid-row:5;justify-content:space-between;}
+ #projectManagerView>.project-manager-content,#projectManagerView>#workspaceNotes{grid-row:auto;padding-top:0;}
+}
+@media(max-width:700px){
+ #projectManagerView{grid-template-rows:auto auto;}
+ #projectManagerView .workspace-sidebar{grid-row:1;}
+ #projectManagerView>.project-manager-content,#projectManagerView>#workspaceNotes{grid-row:2;}
+ #projectManagerView .workspace-sidebar-footer{display:flex;min-height:0;margin-top:18px;padding:12px;}
+ #projectManagerView .workspace-sidebar-footer::before{margin-bottom:4px;}
+}
+@media(max-width:480px){
+ #projectManagerView .project-card-actions .project-status{font-size:10px;}
+ #projectManagerView .project-grid.manager-list-view .project-card,#workspaceNotes .an-note-grid.manager-list-view .an-note-card{grid-template-columns:110px minmax(0,1fr);}
+ #projectManagerView .manager-sort-label{font-size:0;}
+ #projectManagerView .manager-sort-label select{font-size:11px;}
+}
 
 </style>
 </head>
@@ -3456,35 +3534,27 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
         <button type="button" id="workspaceProjectsNav" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V5h6l2 2h10v13H3Z"/></svg>Proiecte</button>
         <button type="button" id="workspaceNotesNav"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6Z"/><path d="M9 10h6M9 14h6M9 18h4"/></svg>Notițe</button>
       </nav>
-      <div class="workspace-sidebar-footer">Transformăm<br>ideile în mobilier unic.<br><span aria-hidden="true">—</span></div>
+      <div class="workspace-sidebar-footer">
+        <span class="workspace-footer-heading">Spațiul tău de lucru</span>
+        <button type="button" id="pmCloudAccount" class="workspace-sync-button"><span>☁️ Cont & sincronizare</span></button>
+      </div>
     </aside>
-
-    <section class="project-manager-header" aria-label="Cont și sincronizare">
-      <span class="studio-header-label">Spațiul tău de lucru</span>
-      <div class="project-manager-brand">
-        <div class="brand-block" aria-label="La-Tâmplar Mobilă la comandă">
-          <h1 class="brand-title">La-Tâmplar</h1>
-          <p class="brand-subtitle">Mobilă la comandă</p>
-        </div>
-      </div>
-      <div class="project-manager-actions">
-        <button type="button" id="pmCloudAccount"><span>☁️ Cont & sincronizare</span></button>
-      </div>
-    </section>
     <section class="project-manager-content">
       <div class="project-manager-heading">
-        <h2 id="projectManagerTitle" class="project-manager-page-title">Proiecte</h2>
-        <p class="project-manager-subtitle">Toate proiectele salvate local.</p>
+        <div class="manager-heading-copy"><h2 id="projectManagerTitle" class="project-manager-page-title">Proiecte</h2><p class="project-manager-subtitle">Toate proiectele salvate local.</p></div>
+        <label class="manager-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.5 4.5"/></svg><input id="projectSearch" type="search" placeholder="Caută proiecte, note, etichete..." aria-label="Caută proiecte"></label>
         <div class="project-manager-actions project-section-actions" aria-label="Acțiuni proiecte">
         <button class="ui-action ui-action-secondary" type="button" id="pmImportProject"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg><span>Importă proiect</span></button>
         <button class="ui-action ui-action-primary" type="button" id="pmNewProject"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Proiect nou</span></button>
         </div>
         <div id="projectStatusFilters" class="project-status-filters" role="group" aria-label="Filtrează proiectele după stare">
-          <button type="button" class="project-status-filter" data-project-status-filter="all" aria-pressed="true">Toate</button>
-          <button type="button" class="project-status-filter" data-project-status-filter="to-measure" aria-pressed="false">De măsurat</button>
-          <button type="button" class="project-status-filter" data-project-status-filter="in-progress" aria-pressed="false">În lucru</button>
-          <button type="button" class="project-status-filter" data-project-status-filter="finalized" aria-pressed="false">Finalizat</button>
+          <button type="button" class="project-status-filter" data-project-status-filter="all" aria-pressed="true">Toate <span class="manager-filter-count" data-count="all">0</span></button>
+          <button type="button" class="project-status-filter" data-project-status-filter="to-measure" aria-pressed="false">De măsurat <span class="manager-filter-count" data-count="to-measure">0</span></button>
+          <button type="button" class="project-status-filter" data-project-status-filter="in-progress" aria-pressed="false">În lucru <span class="manager-filter-count" data-count="in-progress">0</span></button>
+          <button type="button" class="project-status-filter" data-project-status-filter="finalized" aria-pressed="false">Finalizat <span class="manager-filter-count" data-count="finalized">0</span></button>
+          <button type="button" class="project-status-filter" data-project-status-filter="favorites" aria-pressed="false">★ Favorite <span class="manager-filter-count" data-count="favorites">0</span></button>
         </div>
+        <div class="manager-view-controls"><label class="manager-sort-label">Sortează după: <select id="projectSort" aria-label="Sortează proiectele"><option value="updated">Ultima modificare</option><option value="name">Nume</option><option value="created">Data creării</option></select></label><div class="manager-layout-switch" role="group" aria-label="Afișare proiecte"><button type="button" data-project-layout="grid" aria-label="Grilă" aria-pressed="true">▦</button><button type="button" data-project-layout="list" aria-label="Listă" aria-pressed="false">☷</button></div></div>
         <div class="project-manager-divider" aria-hidden="true"></div>
       </div>
       <div id="projectCards" class="project-grid" aria-live="polite"></div>
@@ -3495,7 +3565,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
     </section>
 
     <section id="workspaceNotes" hidden aria-labelledby="workspaceNotesTitle">
-      <div class="workspace-notes-heading"><div><h2 id="workspaceNotesTitle" class="project-manager-page-title" tabindex="-1">Notițe</h2><p class="project-manager-subtitle">Documente A4 cu text, schițe și imagini. Salvate pe acest dispozitiv.</p></div><button class="ui-action ui-action-primary" type="button" id="workspaceAddNote">＋ Notiță nouă</button></div>
+      <div class="workspace-notes-heading"><div class="manager-heading-copy"><h2 id="workspaceNotesTitle" class="project-manager-page-title" tabindex="-1">Notițe</h2><p class="project-manager-subtitle">Documente A4 cu text, schițe și imagini. Salvate pe acest dispozitiv.</p></div><label class="manager-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.5 4.5"/></svg><input id="workspaceNotesSearch" type="search" placeholder="Caută în notițe..." aria-label="Caută notițe"></label><div class="project-manager-actions project-section-actions workspace-notes-actions" aria-label="Acțiuni notițe"><button class="ui-action ui-action-secondary" type="button" id="workspaceImportNote"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg><span>Importă copie</span></button><button class="ui-action ui-action-primary" type="button" id="workspaceAddNote"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Notiță nouă</span></button></div><div class="manager-notes-filters" role="group" aria-label="Filtrează notițele"><button type="button" data-notes-filter="all" aria-pressed="true">Toate <span class="manager-filter-count" data-notes-count="all">0</span></button><button type="button" data-notes-filter="favorites" aria-pressed="false">★ Favorite <span class="manager-filter-count" data-notes-count="favorites">0</span></button></div><div class="manager-view-controls"><label class="manager-sort-label">Sortează după: <select id="notesSort" aria-label="Sortează notițele"><option value="updated">Ultima modificare</option><option value="name">Nume</option><option value="created">Data creării</option></select></label><div class="manager-layout-switch" role="group" aria-label="Afișare notițe"><button type="button" data-notes-layout="grid" aria-label="Grilă" aria-pressed="true">▦</button><button type="button" data-notes-layout="list" aria-label="Listă" aria-pressed="false">☷</button></div></div></div>
       <p id="workspaceNotesStatus" role="status" aria-live="polite"></p>
       <div id="workspaceNotesList"></div>
     </section>
@@ -3897,6 +3967,9 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
       const projectCards = document.getElementById('projectCards');
       const projectEmptyState = document.getElementById('projectEmptyState');
       const projectStatusFilters = Array.from(document.querySelectorAll('[data-project-status-filter]'));
+      const projectSearch = document.getElementById('projectSearch');
+      const projectSort = document.getElementById('projectSort');
+      const projectLayoutButtons = Array.from(document.querySelectorAll('[data-project-layout]'));
       const editorProjectNameLabel = document.getElementById('editorProjectName');
       const editorProjectMetaLabel = document.getElementById('editorProjectMeta');
       const newProjectButton = document.getElementById('pmNewProject');
@@ -4042,6 +4115,8 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
       let currentProjectName = 'Proiect nou';
       let currentProjectStatus = 'in-progress';
       let selectedProjectStatusFilter = 'all';
+      let selectedProjectLayout = 'grid';
+      let projectRenderToken = 0;
       let currentProjectUpdatedAt = null;
       let activeProjectId = null;
       let pendingProjectNameAction = null;
@@ -4148,7 +4223,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.22.1';
+      const APP_VERSION = '1.22.3';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -6279,28 +6354,42 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
       function getProjectStatusFilterLabel(status) {
         if (status === 'to-measure') return 'De măsurat';
         if (status === 'finalized') return 'Finalizat';
+        if (status === 'favorites') return 'Favorite';
         return 'În lucru';
       }
 
       async function setProjectStatusFilter(status) {
-        selectedProjectStatusFilter = ['all', 'to-measure', 'in-progress', 'finalized'].includes(status) ? status : 'all';
+        selectedProjectStatusFilter = ['all', 'to-measure', 'in-progress', 'finalized', 'favorites'].includes(status) ? status : 'all';
         updateProjectStatusFilterButtons();
         await renderProjectCards();
       }
 
       async function renderProjectCards() {
+        const token = ++projectRenderToken;
         const records = await readAllProjectRecords();
+        if (token !== projectRenderToken) return;
+        const counts = { all: records.length, 'to-measure': 0, 'in-progress': 0, finalized: 0, favorites: 0 };
+        records.forEach((record) => { counts[normalizeProjectStatus(record?.status || record?.payload?.projectStatus)]++; if (record.favorite) counts.favorites++; });
+        projectStatusFilters.forEach((button) => { const count = button.querySelector('.manager-filter-count'); if (count) count.textContent = counts[button.dataset.projectStatusFilter]; });
+        const sortMode = projectSort.value;
         const sortedRecords = records.slice().sort((first, second) => {
-          return Number(Boolean(second.favorite)) - Number(Boolean(first.favorite)) || Date.parse(second?.updatedAt || '') - Date.parse(first?.updatedAt || '');
+          if (sortMode === 'name') return (first.name || '').localeCompare(second.name || '', 'ro');
+          if (sortMode === 'created') return (Date.parse(second?.createdAt || '') || 0) - (Date.parse(first?.createdAt || '') || 0);
+          return (Date.parse(second?.updatedAt || '') || 0) - (Date.parse(first?.updatedAt || '') || 0);
         });
-        const filteredRecords = selectedProjectStatusFilter === 'all'
-          ? sortedRecords
-          : sortedRecords.filter((record) => normalizeProjectStatus(record?.status || record?.payload?.projectStatus) === selectedProjectStatusFilter);
+        const query = projectSearch.value.trim().toLocaleLowerCase('ro-RO');
+        const filteredRecords = sortedRecords.filter((record) => {
+          if (selectedProjectStatusFilter === 'favorites' && !record.favorite) return false;
+          if (!['all', 'favorites'].includes(selectedProjectStatusFilter) && normalizeProjectStatus(record?.status || record?.payload?.projectStatus) !== selectedProjectStatusFilter) return false;
+          if (!query) return true;
+          const searchable = [record.name, record.description, record.payload?.projectName, ...(Array.isArray(record.payload?.images) ? record.payload.images.map((image) => [image.name, image.notes, image.note].filter((value) => typeof value === 'string').join(' ')) : [])].join(' ').toLocaleLowerCase('ro-RO');
+          return searchable.includes(query);
+        });
 
         projectCards.innerHTML = '';
         projectEmptyState.hidden = filteredRecords.length > 0;
         if (!filteredRecords.length) {
-          projectEmptyState.textContent = selectedProjectStatusFilter === 'all'
+          projectEmptyState.textContent = query ? 'Nu există rezultate pentru această căutare.' : selectedProjectStatusFilter === 'all'
             ? 'Nu există proiecte încă. Creează un proiect nou sau importă un fișier existent.'
             : `Nu există proiecte marcate „${getProjectStatusFilterLabel(selectedProjectStatusFilter)}”.`;
           return;
@@ -6360,7 +6449,6 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
           const titleRow = document.createElement('div');
           titleRow.className = 'project-card-title-row';
           titleRow.appendChild(openButton);
-          titleRow.appendChild(favorite);
           titleColumn.appendChild(titleRow);
 
           const updated = document.createElement('div');
@@ -6372,7 +6460,6 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
           const statusBadge = document.createElement('span');
           statusBadge.className = 'project-status' + (status === 'finalized' ? ' is-finalized' : (status === 'to-measure' ? ' is-to-measure' : ' is-in-progress'));
           statusBadge.textContent = status === 'finalized' ? '✓ Finalizat' : (status === 'to-measure' ? '📏 De măsurat' : '● În lucru');
-          titleColumn.appendChild(statusBadge);
 
           const menu = document.createElement('details');
           menu.className = 'project-card-menu';
@@ -6484,7 +6571,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
           menu.appendChild(menuItems);
 
           top.appendChild(titleColumn);
-          const cardActions = document.createElement('div');cardActions.className='project-card-actions';cardActions.append(favorite,menu);top.appendChild(cardActions);
+          const cardActions = document.createElement('div');cardActions.className='project-card-actions';cardActions.append(statusBadge,favorite,menu);top.appendChild(cardActions);
 
           const stats = document.createElement('div');
           stats.className = 'project-card-stats';
@@ -10816,6 +10903,13 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
           setProjectStatusFilter(button.dataset.projectStatusFilter);
         });
       });
+      projectSearch.addEventListener('input', () => { renderProjectCards(); });
+      projectSort.addEventListener('change', () => { renderProjectCards(); });
+      projectLayoutButtons.forEach((button) => button.addEventListener('click', () => {
+        selectedProjectLayout = button.dataset.projectLayout;
+        projectCards.classList.toggle('manager-list-view', selectedProjectLayout === 'list');
+        projectLayoutButtons.forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+      }));
       newProjectButton.addEventListener('click', () => {
         openSaveProjectDialog({
           title: 'Proiect nou',
@@ -11214,6 +11308,6 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
   </script>
 
 <script src="notes/pdf-lib.min.js"></script>
-<script src="notes/notes-editor.js?v=1.22.1"></script>
+<script src="notes/notes-editor.js?v=1.22.3"></script>
 </body>
 </html>
