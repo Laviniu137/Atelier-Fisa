@@ -11,9 +11,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Fișă atelier">
-  <link rel="manifest" href="manifest.webmanifest?v=1.22.9">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.22.9">
-  <link rel="apple-touch-icon" href="icon-180.png?v=1.22.9">
+  <link rel="manifest" href="manifest.webmanifest?v=1.22.10">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.22.10">
+  <link rel="apple-touch-icon" href="icon-180.png?v=1.22.10">
   <title>Notițe pe imagini</title>
   <style>
     :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #29261f; background: #edeae4; --app-safe-top: env(safe-area-inset-top, 0px); --app-safe-right: env(safe-area-inset-right, 0px); --app-safe-bottom: env(safe-area-inset-bottom, 0px); --app-safe-left: env(safe-area-inset-left, 0px); }
@@ -3363,7 +3363,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   #projectManagerView .project-card-name { overflow-wrap: anywhere; }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 </style>
-<link rel="stylesheet" href="notes/notes-editor.css?v=1.22.9">
+<link rel="stylesheet" href="notes/notes-editor.css?v=1.22.10">
 <style>
 /* Favorite affordances and tighter project card framing. */
 #projectManagerView .project-card {min-height:0;grid-template-rows:176px auto;}
@@ -3630,6 +3630,52 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
       #projectManagerView .manager-sort-label select { min-height:42px; }
     }
   </style>
+  <style id="release-1-22-10-premium-export">
+    /* Status filters: a clear, persistent colour for every state. */
+    #projectManagerView .project-status-filter::before{
+      width:8px;height:8px;flex:0 0 8px;border-radius:50%;opacity:1;background:#6e8eae;
+      box-shadow:0 0 0 3px rgba(110,142,174,.10);
+    }
+    #projectManagerView .project-status-filter[data-project-status-filter="to-measure"]::before{background:#d0a34b;box-shadow:0 0 0 3px rgba(208,163,75,.12);}
+    #projectManagerView .project-status-filter[data-project-status-filter="in-progress"]::before{background:#dc7a42;box-shadow:0 0 0 3px rgba(220,122,66,.12);}
+    #projectManagerView .project-status-filter[data-project-status-filter="finalized"]::before{background:#55a879;box-shadow:0 0 0 3px rgba(85,168,121,.12);}
+    #projectManagerView .project-status-filter[data-project-status-filter="favorites"]::before,
+    #projectManagerView .manager-notes-filters button[data-notes-filter="favorites"]::before{
+      content:'★';display:inline-grid;place-items:center;width:auto;height:auto;flex:0 0 auto;border-radius:0;
+      background:transparent;color:#efb321;font-size:15px;line-height:1;opacity:1;box-shadow:none;
+      text-shadow:0 1px 2px rgba(162,111,0,.18);
+    }
+    #projectManagerView .project-status-filter[data-project-status-filter="all"][aria-pressed="true"]::before{background:#fff;box-shadow:none;}
+
+    /* Premium, quieter account dialog with infrequent actions tucked away. */
+    .cloud-account-dialog{width:min(600px,calc(100vw - 28px));max-width:600px;padding:0!important;overflow:hidden;border-radius:24px!important;background:#fbfcfe!important;}
+    .cloud-account-heading{margin:0!important;padding:24px 26px 20px;border-bottom:1px solid #e3eaf0;background:linear-gradient(145deg,#fff,#f4f8fb);}
+    .cloud-account-icon{width:48px;height:48px;flex-basis:48px;border-radius:15px;box-shadow:0 7px 18px rgba(49,95,145,.12);}
+    .cloud-account-heading h2{font-size:1.42rem!important;}
+    .cloud-account-heading p{margin-top:5px!important;}
+    .cloud-account-status{margin:20px 26px 8px!important;padding:16px 16px 16px 48px!important;border-radius:13px!important;background:#eef6fb!important;}
+    .cloud-account-status::before{content:'↻';left:16px;width:22px;height:22px;border-radius:50%;background:#dcebf7;color:#315f91;}
+    .cloud-account-dialog:has(#cloudLogin[hidden]) .cloud-account-status::before{content:'✓';background:#dcefe4;color:#31805a;}
+    .cloud-account-dialog>label,.cloud-account-dialog>input{margin-left:26px!important;margin-right:26px!important;width:calc(100% - 52px)!important;}
+    .cloud-account-actions{position:relative;display:grid!important;grid-template-columns:1fr auto!important;gap:10px!important;margin:0!important;padding:18px 26px!important;}
+    .cloud-account-actions:has(#cloudSyncNow){grid-template-columns:1fr!important;padding-bottom:8px!important;}
+    .cloud-account-actions:has(#cloudLogout){align-items:center;padding-top:12px!important;border-top:1px solid #e4eaf0;background:#f6f8fa;}
+    .cloud-account-actions button{min-height:46px!important;border-radius:11px!important;box-shadow:none!important;}
+    #cloudSyncNow{width:100%;background:linear-gradient(135deg,#386fa7,#285787)!important;box-shadow:0 7px 16px rgba(40,87,135,.18)!important;}
+    #cloudLogout{justify-self:start;min-width:0!important;padding-inline:12px!important;border-color:transparent!important;background:transparent!important;color:#a23a46!important;}
+    #cloudLogout:hover{border-color:#efc8ce!important;background:#fff3f5!important;}
+    #closeCloudAccount{justify-self:end;min-width:112px!important;background:#fff!important;border-color:#d4dee7!important;}
+    .cloud-account-advanced{margin:6px 26px 18px;border:1px solid #dce5ed;border-radius:12px;background:#fff;overflow:hidden;}
+    .cloud-account-advanced:has(#cloudUploadDevice[hidden]){display:none;}
+    .cloud-account-advanced summary{display:flex;align-items:center;justify-content:space-between;min-height:44px;padding:10px 14px;color:#617589;font-size:12px;font-weight:700;cursor:pointer;list-style:none;}
+    .cloud-account-advanced summary::-webkit-details-marker{display:none;}
+    .cloud-account-advanced summary::after{content:'›';font-size:19px;line-height:1;rotate:90deg;transition:rotate .16s ease;}
+    .cloud-account-advanced[open] summary::after{rotate:-90deg;}
+    #cloudUploadDevice{width:calc(100% - 20px);margin:0 10px 10px;min-height:44px!important;background:#f5f8fa!important;}
+    @media(max-width:680px){
+      .cloud-account-heading{padding:20px}.cloud-account-status{margin:16px 20px 6px!important}.cloud-account-actions{padding:15px 20px!important}.cloud-account-advanced{margin:6px 20px 16px}.cloud-account-actions:has(#cloudLogout){grid-template-columns:1fr!important}.cloud-account-actions:has(#cloudLogout) button{width:100%;justify-self:stretch!important}.cloud-account-dialog>label,.cloud-account-dialog>input{margin-left:20px!important;margin-right:20px!important;width:calc(100% - 40px)!important;}
+    }
+  </style>
 </head>
 <body>
   <div id="saveToast" class="save-toast" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -3658,7 +3704,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
           <button type="button" class="project-status-filter" data-project-status-filter="to-measure" aria-pressed="false">De măsurat <span class="manager-filter-count" data-count="to-measure">0</span></button>
           <button type="button" class="project-status-filter" data-project-status-filter="in-progress" aria-pressed="false">În lucru <span class="manager-filter-count" data-count="in-progress">0</span></button>
           <button type="button" class="project-status-filter" data-project-status-filter="finalized" aria-pressed="false">Finalizat <span class="manager-filter-count" data-count="finalized">0</span></button>
-          <button type="button" class="project-status-filter" data-project-status-filter="favorites" aria-pressed="false">★ Favorite <span class="manager-filter-count" data-count="favorites">0</span></button>
+          <button type="button" class="project-status-filter" data-project-status-filter="favorites" aria-pressed="false">Favorite <span class="manager-filter-count" data-count="favorites">0</span></button>
         </div>
         <div class="manager-view-controls"><label class="manager-sort-label">Sortează după: <select id="projectSort" aria-label="Sortează proiectele"><option value="updated">Ultima modificare</option><option value="name">Nume</option><option value="created">Data creării</option></select></label><div class="manager-layout-switch" role="group" aria-label="Afișare proiecte"><button type="button" data-project-layout="grid" aria-label="Grilă" aria-pressed="true">▦</button><button type="button" data-project-layout="list" aria-label="Listă" aria-pressed="false">☷</button></div></div>
         <div class="project-manager-divider" aria-hidden="true"></div>
@@ -3671,7 +3717,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
     </section>
 
     <section id="workspaceNotes" hidden aria-labelledby="workspaceNotesTitle">
-      <div class="workspace-notes-heading"><div class="manager-heading-copy"><h2 id="workspaceNotesTitle" class="project-manager-page-title" tabindex="-1">Notițe</h2><p class="project-manager-subtitle">Documente A4 cu text, schițe și imagini. Salvate pe acest dispozitiv.</p></div><label class="manager-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.5 4.5"/></svg><input id="workspaceNotesSearch" type="search" placeholder="Caută în notițe..." aria-label="Caută notițe"></label><div class="project-manager-actions project-section-actions workspace-notes-actions" aria-label="Acțiuni notițe"><button class="ui-action ui-action-secondary" type="button" id="workspaceImportNote"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg><span>Importă copie</span></button><button class="ui-action ui-action-primary" type="button" id="workspaceAddNote"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Notiță nouă</span></button></div><div class="manager-notes-filters" role="group" aria-label="Filtrează notițele"><button type="button" data-notes-filter="all" aria-pressed="true">Toate <span class="manager-filter-count" data-notes-count="all">0</span></button><button type="button" data-notes-filter="favorites" aria-pressed="false">★ Favorite <span class="manager-filter-count" data-notes-count="favorites">0</span></button></div><div class="manager-view-controls"><label class="manager-sort-label">Sortează după: <select id="notesSort" aria-label="Sortează notițele"><option value="updated">Ultima modificare</option><option value="name">Nume</option><option value="created">Data creării</option></select></label><div class="manager-layout-switch" role="group" aria-label="Afișare notițe"><button type="button" data-notes-layout="grid" aria-label="Grilă" aria-pressed="true">▦</button><button type="button" data-notes-layout="list" aria-label="Listă" aria-pressed="false">☷</button></div></div></div>
+      <div class="workspace-notes-heading"><div class="manager-heading-copy"><h2 id="workspaceNotesTitle" class="project-manager-page-title" tabindex="-1">Notițe</h2><p class="project-manager-subtitle">Documente A4 cu text, schițe și imagini. Salvate pe acest dispozitiv.</p></div><label class="manager-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.5 4.5"/></svg><input id="workspaceNotesSearch" type="search" placeholder="Caută în notițe..." aria-label="Caută notițe"></label><div class="project-manager-actions project-section-actions workspace-notes-actions" aria-label="Acțiuni notițe"><button class="ui-action ui-action-secondary" type="button" id="workspaceImportNote"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg><span>Importă copie</span></button><button class="ui-action ui-action-primary" type="button" id="workspaceAddNote"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Notiță nouă</span></button></div><div class="manager-notes-filters" role="group" aria-label="Filtrează notițele"><button type="button" data-notes-filter="all" aria-pressed="true">Toate <span class="manager-filter-count" data-notes-count="all">0</span></button><button type="button" data-notes-filter="favorites" aria-pressed="false">Favorite <span class="manager-filter-count" data-notes-count="favorites">0</span></button></div><div class="manager-view-controls"><label class="manager-sort-label">Sortează după: <select id="notesSort" aria-label="Sortează notițele"><option value="updated">Ultima modificare</option><option value="name">Nume</option><option value="created">Data creării</option></select></label><div class="manager-layout-switch" role="group" aria-label="Afișare notițe"><button type="button" data-notes-layout="grid" aria-label="Grilă" aria-pressed="true">▦</button><button type="button" data-notes-layout="list" aria-label="Listă" aria-pressed="false">☷</button></div></div></div>
       <p id="workspaceNotesStatus" role="status" aria-live="polite"></p>
       <div id="workspaceNotesList"></div>
     </section>
@@ -3687,8 +3733,8 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
       <div class="save-dialog-actions cloud-account-actions">
         <button class="ui-action ui-action-primary" type="button" id="cloudLogin">Intră în cont</button>
         <button class="ui-action ui-action-primary" type="button" id="cloudSyncNow">Sincronizează acum</button>
-        <button type="button" id="cloudUploadDevice" hidden>Trimite proiectele de pe acest dispozitiv</button>
       </div>
+      <details class="cloud-account-advanced"><summary>Opțiuni avansate</summary><button type="button" id="cloudUploadDevice" hidden>Încarcă datele acestui dispozitiv</button></details>
       <div class="save-dialog-actions cloud-account-actions">
         <button type="button" id="cloudLogout">Ieși din cont</button>
         <button class="ui-action ui-action-secondary" type="button" id="closeCloudAccount">Închide</button>
@@ -4342,7 +4388,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.22.9';
+      const APP_VERSION = '1.22.10';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -11494,6 +11540,6 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
   </script>
 
 <script src="notes/pdf-lib.min.js"></script>
-<script src="notes/notes-editor.js?v=1.22.9"></script>
+<script src="notes/notes-editor.js?v=1.22.10"></script>
 </body>
 </html>
