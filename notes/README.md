@@ -1,4 +1,11 @@
-# Notițe A4 — 1.22.8
+# Notițe A4 — 1.22.9
+
+## 1.22.9 — Audit vizual și texte unitare
+
+- Proiectele și notițele folosesc aceleași culori, chenare, date, statistici și dimensiuni pentru acțiunile cardurilor.
+- Numărul de notițe are forma corectă la singular, iar starea locală folosește aceeași formulare în toată aplicația.
+- Comenzile rămase în engleză au fost traduse, inclusiv istoricul, exportul și tipărirea.
+- Starea activă din meniul lateral și zonele de apăsare au fost întărite pentru PC și tabletă.
 
 ## 1.22.8 — Grosimi și sincronizare reorganizate
 
