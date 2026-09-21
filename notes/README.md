@@ -1,4 +1,11 @@
-# Notițe A4 — 1.22.7
+# Notițe A4 — 1.22.8
+
+## 1.22.8 — Grosimi și sincronizare reorganizate
+
+- Grosimea formelor și a desenului din proiecte folosește selectoare cu opțiuni rapide și previzualizare.
+- Acțiunea de ștergere din modul Desen este denumită clar „Șterge desenele”.
+- Asocierea unei notițe existente nu mai are câmp de căutare, iar mesajul explică exact mutarea între proiecte.
+- Fereastra Cont și sincronizare are ierarhie, spațiere și butoane optimizate pentru PC și tabletă.
 
 ## 1.22.7 — Rotire text centrată
 
