@@ -11,9 +11,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Fișă atelier">
-  <link rel="manifest" href="manifest.webmanifest?v=1.22.8">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.22.8">
-  <link rel="apple-touch-icon" href="icon-180.png?v=1.22.8">
+  <link rel="manifest" href="manifest.webmanifest?v=1.22.9">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.22.9">
+  <link rel="apple-touch-icon" href="icon-180.png?v=1.22.9">
   <title>Notițe pe imagini</title>
   <style>
     :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #29261f; background: #edeae4; --app-safe-top: env(safe-area-inset-top, 0px); --app-safe-right: env(safe-area-inset-right, 0px); --app-safe-bottom: env(safe-area-inset-bottom, 0px); --app-safe-left: env(safe-area-inset-left, 0px); }
@@ -3363,7 +3363,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   #projectManagerView .project-card-name { overflow-wrap: anywhere; }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 </style>
-<link rel="stylesheet" href="notes/notes-editor.css?v=1.22.8">
+<link rel="stylesheet" href="notes/notes-editor.css?v=1.22.9">
 <style>
 /* Favorite affordances and tighter project card framing. */
 #projectManagerView .project-card {min-height:0;grid-template-rows:176px auto;}
@@ -3603,6 +3603,33 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
     body.fullscreen-mode .drawing-size-trigger:hover:not(:disabled),body.fullscreen-mode .drawing-size-trigger[aria-expanded=true]{border-color:#79c6f0;background:rgba(65,129,184,.38);}
     @media(max-width:680px){.cloud-account-dialog{padding:20px!important}.cloud-account-actions{grid-template-columns:1fr!important}.cloud-account-actions button{width:100%}.drawing-size-panel{position:fixed;left:50vw;top:50dvh;translate:-50% -50%;width:min(300px,calc(100vw - 28px))}.drawing-size-panel::before{display:none}}
   </style>
+  <style id="release-1-22-9-audit">
+    /* One visual language for Projects and Notes on desktop and tablet. */
+    #projectManagerView .workspace-nav button[aria-current="page"],
+    #projectManagerView .workspace-nav button[aria-current="page"]:hover {
+      border-color:#eef3f8!important;background:#eef3f8!important;color:#1f3145!important;
+      box-shadow:0 4px 12px rgba(9,16,25,.10)!important;opacity:1!important;
+    }
+    #projectManagerView .project-card,
+    #workspaceNotes .an-note-card { border-color:var(--ds-line,#d6dfe8); }
+    #workspaceNotes .an-note-card-title { color:var(--ds-ink,#27394c);font-weight:650; }
+    #workspaceNotes .an-note-date { color:var(--ds-muted,#526579); }
+    #projectManagerView .project-card-favorite,
+    #projectManagerView .project-card-menu summary,
+    #workspaceNotes .an-note-card-heading .an-favorite-button,
+    #workspaceNotes .an-note-card-menu summary {
+      box-sizing:border-box;width:40px;min-width:40px;height:40px;min-height:40px;
+    }
+    #workspaceNotes .an-note-card-stats>span {
+      min-height:26px;border-radius:10px;background:#f6f8fa;color:var(--ds-ink,#27394c);font-weight:500;
+    }
+    #projectManagerView .manager-sort-label select { min-height:40px; }
+    body.fullscreen-mode .edit-group #fullscreenUndoBtn,
+    body.fullscreen-mode .edit-group #fullscreenRedoBtn { min-width:46px; }
+    @media(max-width:980px){
+      #projectManagerView .manager-sort-label select { min-height:42px; }
+    }
+  </style>
 </head>
 <body>
   <div id="saveToast" class="save-toast" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -3615,7 +3642,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
       </nav>
       <div class="workspace-sidebar-footer">
         <span class="workspace-footer-heading">Spațiul tău de lucru</span>
-        <button type="button" id="pmCloudAccount" class="workspace-sync-button"><span>☁️ Cont & sincronizare</span></button>
+        <button type="button" id="pmCloudAccount" class="workspace-sync-button"><span>☁️ Cont și sincronizare</span></button>
       </div>
     </aside>
     <section class="project-manager-content">
@@ -3865,10 +3892,10 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
                   <button type="button" id="fullscreenEraserBtn" class="drawing-tool-button" data-tool-label="Radieră" aria-label="Radieră" title="Radieră">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 15 8-10a2 2 0 0 1 3-.3l5 4.2a2 2 0 0 1 .3 2.8L14 19H7l-3-2.5A2 2 0 0 1 4 15Z"></path><path d="m10 8 7 6M7 19h14"></path></svg>
                   </button>
-                  <button type="button" id="fullscreenUndoBtn" class="drawing-tool-button" data-tool-label="Undo" aria-label="Anulează ultima linie" title="Undo">
+                  <button type="button" id="fullscreenUndoBtn" class="drawing-tool-button" data-tool-label="Anul." aria-label="Anulează ultima linie" title="Anulează ultima linie">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10a6 6 0 0 1 6 6v1"></path></svg>
                   </button>
-                  <button type="button" id="fullscreenRedoBtn" class="drawing-tool-button" data-tool-label="Redo" aria-label="Refă ultima linie" title="Redo">
+                  <button type="button" id="fullscreenRedoBtn" class="drawing-tool-button" data-tool-label="Refă" aria-label="Refă ultima linie" title="Refă ultima linie">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5"></path><path d="M20 9H10a6 6 0 0 0-6 6v1"></path></svg>
                   </button>
                 </div>
@@ -4024,10 +4051,10 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
       <input id="pencilEditorSize" class="pencil-editor-size" type="range" min="1" max="14" step="1" value="3" aria-label="Grosime creion">
       <span id="pencilEditorSizeValue" class="pencil-editor-size-value">3</span>
       <span class="pencil-editor-divider" aria-hidden="true"></span>
-      <button type="button" id="pencilEditorUndo" class="pencil-editor-tool" aria-label="Undo" title="Undo">
+      <button type="button" id="pencilEditorUndo" class="pencil-editor-tool" aria-label="Anulează ultima linie" title="Anulează ultima linie">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10a6 6 0 0 1 6 6v1"></path></svg>
       </button>
-      <button type="button" id="pencilEditorRedo" class="pencil-editor-tool" aria-label="Redo" title="Redo">
+      <button type="button" id="pencilEditorRedo" class="pencil-editor-tool" aria-label="Refă ultima linie" title="Refă ultima linie">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5"></path><path d="M20 9H10a6 6 0 0 0-6 6v1"></path></svg>
       </button>
       <button type="button" id="pencilEditorClear" class="pencil-editor-tool" aria-label="Șterge tot" title="Șterge tot">
@@ -4315,7 +4342,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.22.8';
+      const APP_VERSION = '1.22.9';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -6365,7 +6392,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
 
       function formatProjectDate(dateLike) {
         const timestamp = Date.parse(String(dateLike || ''));
-        if (!timestamp) return 'Fara data';
+        if (!timestamp) return 'Fără dată';
         return new Intl.DateTimeFormat('ro-RO', {
           day: '2-digit',
           month: '2-digit',
@@ -6543,7 +6570,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
           const openButton = document.createElement('button');
           openButton.type = 'button';
           openButton.className = 'project-card-open';
-          openButton.textContent = record.name || 'Proiect fara nume';
+          openButton.textContent = record.name || 'Proiect fără nume';
           openButton.addEventListener('click', () => {
             openProjectById(record.id);
           });
@@ -6575,7 +6602,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
             card.classList.toggle('is-menu-open', menu.open);
           });
           const summary = document.createElement('summary');
-          summary.setAttribute('aria-label', 'Actiuni proiect');
+          summary.setAttribute('aria-label', 'Acțiuni proiect');
           summary.textContent = '⋯';
           menu.appendChild(summary);
 
@@ -11467,6 +11494,6 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
   </script>
 
 <script src="notes/pdf-lib.min.js"></script>
-<script src="notes/notes-editor.js?v=1.22.8"></script>
+<script src="notes/notes-editor.js?v=1.22.9"></script>
 </body>
 </html>
