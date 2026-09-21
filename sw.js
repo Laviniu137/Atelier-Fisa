@@ -1,21 +1,27 @@
-const CACHE_NAME = 'fisa-atelier-v248';
+const CACHE_NAME = 'fisa-atelier-v250';
 const APP_FILES = [
   './',
   './index.html',
-  './sw.js',
-  './notes/notes-editor.css?v=1.22.3',
-  './notes/notes-editor.js?v=1.22.3',
+  './sw.js?v=1.22.5',
+  './notes/notes-editor.css?v=1.22.5',
+  './notes/notes-editor.js?v=1.22.5',
   './notes/pdf-lib.min.js',
   './manifest.webmanifest',
-  './icon-180.png?v=1.22.3',
-  './icon-192.png?v=1.22.3',
-  './icon-512.png?v=1.22.3'
+  './icon-180.png?v=1.22.5',
+  './icon-192.png?v=1.22.5',
+  './icon-512.png?v=1.22.5'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
-    await cache.addAll(APP_FILES);
+    await Promise.all(APP_FILES.map(async (file) => {
+      try {
+        const response = await fetch(file, { cache: 'reload' });
+        if (response.ok) await cache.put(file, response);
+      } catch {}
+    }));
+    await self.skipWaiting();
   })());
 });
 
@@ -36,35 +42,22 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
 
-  if (event.request.mode === 'navigate') {
-    event.respondWith((async () => {
-      const cache = await caches.open(CACHE_NAME);
-      try {
-        const response = await fetch(event.request);
-        if (response.ok) cache.put('./index.html', response.clone());
-        return response;
-      } catch {
-        const cachedShell = await cache.match('./index.html');
-        return cachedShell || new Response('<h1>Offline</h1>', {
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    try {
+      const response = await fetch(event.request, { cache: 'no-store' });
+      if (response.ok) await cache.put(event.request, response.clone());
+      return response;
+    } catch {
+      const cached = await cache.match(event.request);
+      if (cached) return cached;
+      if (event.request.mode === 'navigate') {
+        return (await cache.match('./index.html')) || new Response('<h1>Offline</h1>', {
           headers: { 'Content-Type': 'text/html; charset=utf-8' },
           status: 503
         });
       }
-    })());
-    return;
-  }
-
-  event.respondWith((async () => {
-    const cache = await caches.open(CACHE_NAME);
-    const cached = await cache.match(event.request);
-    const networkFetch = fetch(event.request).then((response) => {
-      if (response.ok) cache.put(event.request, response.clone());
-      return response;
-    });
-    if (cached) {
-      event.waitUntil(networkFetch.catch(() => {}));
-      return cached;
+      return Response.error();
     }
-    try { return await networkFetch; } catch { return Response.error(); }
   })());
 });

@@ -11,9 +11,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Fișă atelier">
-  <link rel="manifest" href="manifest.webmanifest?v=1.22.3">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.22.3">
-  <link rel="apple-touch-icon" href="icon-180.png?v=1.22.3">
+  <link rel="manifest" href="manifest.webmanifest?v=1.22.5">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.22.5">
+  <link rel="apple-touch-icon" href="icon-180.png?v=1.22.5">
   <title>Notițe pe imagini</title>
   <style>
     :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #29261f; background: #edeae4; --app-safe-top: env(safe-area-inset-top, 0px); --app-safe-right: env(safe-area-inset-right, 0px); --app-safe-bottom: env(safe-area-inset-bottom, 0px); --app-safe-left: env(safe-area-inset-left, 0px); }
@@ -3363,7 +3363,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   #projectManagerView .project-card-name { overflow-wrap: anywhere; }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 </style>
-<link rel="stylesheet" href="notes/notes-editor.css?v=1.22.3">
+<link rel="stylesheet" href="notes/notes-editor.css?v=1.22.5">
 <style>
 /* Favorite affordances and tighter project card framing. */
 #projectManagerView .project-card {min-height:0;grid-template-rows:176px auto;}
@@ -3457,6 +3457,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
 #projectManagerView .workspace-footer-heading{color:#e8eef6;font-size:12px;font-weight:700;letter-spacing:.02em;}
 #projectManagerView #pmCloudAccount{display:flex;align-items:center;justify-content:flex-start;width:100%;min-height:42px;padding:10px 12px;border:1px solid #5b718a;border-radius:10px;background:#263b51;color:#e8eef6;text-align:left;font:600 11px/1.4 system-ui,sans-serif;white-space:normal;}
 #projectManagerView #pmCloudAccount:hover:not(:disabled){background:#31506d;color:#fff;border-color:#83a1c1;}
+#projectManagerView .workspace-nav button{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 #projectManagerView .project-manager-heading,#projectManagerView #workspaceNotes .workspace-notes-heading{display:grid;grid-template-columns:minmax(190px,.65fr) minmax(220px,1fr) auto;grid-template-rows:auto auto;align-items:center;gap:20px 18px;margin:0 0 24px;}
 #projectManagerView .manager-heading-copy{grid-column:1;grid-row:1;min-width:0;}
 #projectManagerView .manager-heading-copy .project-manager-subtitle{margin-top:8px;}
@@ -3477,21 +3478,31 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
 #projectManagerView .manager-layout-switch{display:flex;padding:3px;border:1px solid var(--ds-line,#d9e3ed);border-radius:10px;background:var(--ds-surface,#fff);}
 #projectManagerView .manager-layout-switch button{min-width:36px;min-height:34px;border:0;border-radius:7px;background:transparent;color:#60758b;font-size:18px;cursor:pointer;}
 #projectManagerView .manager-layout-switch button[aria-pressed=true]{background:#315f91;color:#fff;}
+#projectManagerView .project-status-filter,#projectManagerView .manager-notes-filters button,#projectManagerView .manager-layout-switch button,#projectManagerView .manager-sort-label select{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 #projectManagerView .project-card-body{gap:10px;}
 #projectManagerView .project-card-top{display:flex;flex-direction:column;gap:6px;}
 #projectManagerView .project-card-title-column{display:block;}
 #projectManagerView .project-card-actions{display:flex;align-items:center;justify-content:flex-start;gap:8px;width:100%;}
 #projectManagerView .project-card-actions .project-status{margin:0 auto 0 0;min-width:0;min-height:26px;white-space:nowrap;}
 #projectManagerView .project-card-favorite,#projectManagerView .project-card-menu summary{width:38px;min-width:38px;height:38px;min-height:38px;}
+#projectManagerView .project-card-note-link{display:inline-flex;align-items:center;align-self:flex-start;max-width:100%;min-height:24px;margin-top:7px;padding:4px 9px;border:1px solid #b9cce5;border-radius:999px;background:#e3ebf6;color:#395b88;font-size:10px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#projectManagerView .project-card-note-link::before{content:'Notiță';margin-right:6px;color:#53779e;font-size:9px;font-weight:750;text-transform:uppercase;letter-spacing:.045em;}
 #projectManagerView .project-grid.manager-list-view,#workspaceNotes .an-note-grid.manager-list-view{grid-template-columns:minmax(0,1fr);}
-#projectManagerView .project-grid.manager-list-view .project-card{display:grid;grid-template-columns:160px minmax(0,1fr);grid-template-rows:auto;min-height:148px;}
-#projectManagerView .project-grid.manager-list-view .project-card-thumb-wrap{min-height:148px;border-radius:17px 0 0 17px;border-bottom:0;border-right:1px solid var(--ds-line,#d9e3ed);}
-#projectManagerView .project-grid.manager-list-view .project-card-body{justify-content:center;}
-#workspaceNotes .an-note-grid.manager-list-view .an-note-card{display:grid;grid-template-columns:160px minmax(0,1fr);grid-template-rows:auto auto auto auto;min-height:148px;}
-#workspaceNotes .an-note-grid.manager-list-view .an-note-open{grid-row:1/5;height:100%;min-height:148px;border-radius:17px 0 0 17px;}
-#workspaceNotes .an-note-grid.manager-list-view .an-note-open canvas{height:100%;min-height:148px;}
-#workspaceNotes .an-note-grid.manager-list-view .an-note-card-heading{grid-column:2;}
-#workspaceNotes .an-note-grid.manager-list-view .an-note-date,#workspaceNotes .an-note-grid.manager-list-view .an-note-project,#workspaceNotes .an-note-grid.manager-list-view .an-note-card-stats{grid-column:2;}
+#projectManagerView .project-grid.manager-list-view .project-card{display:grid;grid-template-columns:150px minmax(0,1fr);grid-template-rows:136px;min-height:136px;}
+#projectManagerView .project-grid.manager-list-view .project-card-thumb-wrap{min-height:136px;border-radius:17px 0 0 17px;border-bottom:0;border-right:1px solid var(--ds-line,#d9e3ed);}
+#projectManagerView .project-grid.manager-list-view .project-card-body{display:grid;grid-template-columns:minmax(240px,1fr) minmax(210px,.65fr);align-items:center;gap:18px;padding:13px 15px;overflow:visible;}
+#projectManagerView .project-grid.manager-list-view .project-card-top{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;min-width:0;}
+#projectManagerView .project-grid.manager-list-view .project-card-actions{width:auto;justify-content:flex-end;}
+#projectManagerView .project-grid.manager-list-view .project-card-actions .project-status{margin-right:4px;}
+#projectManagerView .project-grid.manager-list-view .project-card-stats{align-self:stretch;display:grid;place-items:center;grid-template-columns:1fr 1fr;margin:0;padding:0 0 0 18px;border-top:0;border-left:1px solid var(--ds-line,#d9e3ed);}
+#projectManagerView .project-grid.manager-list-view .project-stat{width:100%;}
+#workspaceNotes .an-note-grid.manager-list-view .an-note-card{display:grid;grid-template-columns:150px minmax(0,1fr) minmax(210px,.55fr);grid-template-rows:auto auto auto;min-height:136px;}
+#workspaceNotes .an-note-grid.manager-list-view .an-note-open{grid-column:1;grid-row:1/4;height:136px;min-height:136px;border-radius:17px 0 0 17px;}
+#workspaceNotes .an-note-grid.manager-list-view .an-note-open canvas{height:136px;min-height:136px;}
+#workspaceNotes .an-note-grid.manager-list-view .an-note-card-heading{grid-column:2;grid-row:1;margin:13px 14px 0;align-self:start;}
+#workspaceNotes .an-note-grid.manager-list-view .an-note-date{grid-column:2;grid-row:2;margin:3px 14px;align-self:center;}
+#workspaceNotes .an-note-grid.manager-list-view .an-note-project{grid-column:2;grid-row:3;margin:0 14px 13px;align-self:end;}
+#workspaceNotes .an-note-grid.manager-list-view .an-note-card-stats{grid-column:3;grid-row:1/4;align-self:stretch;display:grid;align-content:center;margin:13px 14px 13px 0;padding:0 0 0 14px;border-top:0;border-left:1px solid var(--ds-line,#d9e3ed);}
 @media(max-width:1350px){
  #projectManagerView .project-manager-heading,#projectManagerView #workspaceNotes .workspace-notes-heading{grid-template-columns:minmax(180px,1fr) auto;}
  #projectManagerView .manager-search{grid-column:1;grid-row:2;}
@@ -3516,11 +3527,25 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
  #projectManagerView .workspace-sidebar-footer{display:flex;min-height:0;margin-top:18px;padding:12px;}
  #projectManagerView .workspace-sidebar-footer::before{margin-bottom:4px;}
 }
+@media(max-width:1100px){
+ #projectManagerView .project-grid.manager-list-view .project-card{grid-template-columns:124px minmax(0,1fr);grid-template-rows:minmax(152px,auto);}
+ #projectManagerView .project-grid.manager-list-view .project-card-thumb-wrap{min-height:152px;}
+ #projectManagerView .project-grid.manager-list-view .project-card-body{grid-template-columns:minmax(0,1fr);gap:10px;}
+ #projectManagerView .project-grid.manager-list-view .project-card-stats{min-height:34px;padding:8px 0 0;border-left:0;border-top:1px solid var(--ds-line,#d9e3ed);}
+ #workspaceNotes .an-note-grid.manager-list-view .an-note-card{grid-template-columns:124px minmax(0,1fr);grid-template-rows:auto auto auto auto;min-height:152px;}
+ #workspaceNotes .an-note-grid.manager-list-view .an-note-open{grid-row:1/5;height:100%;min-height:152px;}
+ #workspaceNotes .an-note-grid.manager-list-view .an-note-open canvas{height:100%;min-height:152px;}
+ #workspaceNotes .an-note-grid.manager-list-view .an-note-card-stats{grid-column:2;grid-row:4;min-height:34px;margin:7px 14px 12px;padding:8px 0 0;border-left:0;border-top:1px solid var(--ds-line,#d9e3ed);}
+}
 @media(max-width:480px){
  #projectManagerView .project-card-actions .project-status{font-size:10px;}
- #projectManagerView .project-grid.manager-list-view .project-card,#workspaceNotes .an-note-grid.manager-list-view .an-note-card{grid-template-columns:110px minmax(0,1fr);}
+ #projectManagerView .project-grid.manager-list-view .project-card,#workspaceNotes .an-note-grid.manager-list-view .an-note-card{grid-template-columns:104px minmax(0,1fr);}
  #projectManagerView .manager-sort-label{font-size:0;}
  #projectManagerView .manager-sort-label select{font-size:11px;}
+}
+@media(hover:none){
+ #projectManagerView .workspace-nav button:hover:not([aria-current=page]){background:transparent;color:#c4cbd3;}
+ #projectManagerView .workspace-nav button[aria-current=page],#projectManagerView .workspace-nav button[aria-current=page]:hover{background:#eef3f8;border-color:#eef3f8;color:#1f3145;box-shadow:0 4px 12px #0910191a;}
 }
 
 </style>
@@ -4223,7 +4248,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.22.3';
+      const APP_VERSION = '1.22.5';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -6367,7 +6392,15 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
       async function renderProjectCards() {
         const token = ++projectRenderToken;
         const records = await readAllProjectRecords();
+        const a4Notes = window.atelierNotes?.manager?.store?.db ? await window.atelierNotes.manager.store.all() : [];
         if (token !== projectRenderToken) return;
+        const notesByProject = new Map();
+        a4Notes.forEach((note) => {
+          if (!note?.projectId) return;
+          const linked = notesByProject.get(note.projectId) || [];
+          linked.push(note);
+          notesByProject.set(note.projectId, linked);
+        });
         const counts = { all: records.length, 'to-measure': 0, 'in-progress': 0, finalized: 0, favorites: 0 };
         records.forEach((record) => { counts[normalizeProjectStatus(record?.status || record?.payload?.projectStatus)]++; if (record.favorite) counts.favorites++; });
         projectStatusFilters.forEach((button) => { const count = button.querySelector('.manager-filter-count'); if (count) count.textContent = counts[button.dataset.projectStatusFilter]; });
@@ -6397,6 +6430,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
 
         const fragment = document.createDocumentFragment();
         filteredRecords.forEach((record) => {
+          const linkedNotes = (notesByProject.get(record.id) || []).sort((first, second) => (first.title || '').localeCompare(second.title || '', 'ro'));
           const card = document.createElement('article');
           card.className = 'project-card';
           card.dataset.projectId = record.id;
@@ -6455,6 +6489,13 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
           updated.className = 'project-card-date';
           updated.textContent = `Ultima modificare: ${formatProjectDate(record.updatedAt)}`;
           titleColumn.appendChild(updated);
+          if (linkedNotes.length) {
+            const noteRelation = document.createElement('span');
+            noteRelation.className = 'project-card-note-link';
+            noteRelation.textContent = linkedNotes.length === 1 ? linkedNotes[0].title : `${linkedNotes.length} notițe asociate`;
+            noteRelation.title = linkedNotes.map((note) => note.title).join(', ');
+            titleColumn.appendChild(noteRelation);
+          }
 
           const status = normalizeProjectStatus(record.status || record.payload?.projectStatus);
           const statusBadge = document.createElement('span');
@@ -6499,6 +6540,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
             { action: 'rename', label: 'Redenumește', icon: '✏️' },
             { action: 'choose-status', label: 'Schimbă statusul', icon: '●' },
             { action: 'add-note', label: 'Adaugă notiță', icon: '📝' },
+            ...linkedNotes.map((note) => ({ action: 'open-linked-note', label: `Deschide notița: ${note.title}`, icon: '↗', noteId: note.id })),
             { action: 'export-project', label: 'Exportă proiect', icon: '📦' },
             { action: 'toggle-more', label: 'Mai multe opțiuni', icon: '⋯' },
             { action: 'duplicate', label: 'Duplică', icon: '📄', secondary: true },
@@ -6546,6 +6588,11 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
                 });
                 itemButton.setAttribute('aria-expanded', String(!expanded));
                 label.textContent = expanded ? 'Mai multe opțiuni' : 'Mai puține opțiuni';
+                return;
+              }
+              if (item.action === 'open-linked-note') {
+                menu.open = false;
+                await window.atelierNotes?.manager?.openById(item.noteId);
                 return;
               }
               menu.open = false;
@@ -6602,13 +6649,15 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
 
       async function openProjectById(projectId) {
         const record = await readProjectRecord(projectId);
-        if (!record || !record.payload) return;
+        if (!record || !record.payload) return false;
         await setActiveProjectId(record.id);
         currentProjectUpdatedAt = record.updatedAt || record?.payload?.updatedAt || null;
         setProjectName(record.name || record.payload.projectName || 'Proiect nou');
         showEditor();
         await applyProjectState({ ...record.payload, projectStatus: record.status || record.payload?.projectStatus });
+        return true;
       }
+      window.atelierOpenProjectById = openProjectById;
 
       async function createProjectAndOpen(name) {
         const projectName = normalizeProjectName(name || 'Proiect nou');
@@ -11227,20 +11276,23 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
       });
       setActiveTool('draw');
       updateImageTransform();
+      window.addEventListener('atelier-notes-ready', () => {
+        if (!projectManagerView.hidden) renderProjectCards();
+      });
+      window.addEventListener('atelier-notes-inactive', () => {
+        if (!projectManagerView.hidden) renderProjectCards();
+      });
       initializeProjectManagerStartup();
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js').then((registration) => {
+          navigator.serviceWorker.register(`./sw.js?v=${APP_VERSION}`, { updateViaCache: 'none' }).then((registration) => {
             let refreshingAfterUpdate = false;
             let pendingUpdateWorker = null;
 
             const activateUpdateSafely = async (worker) => {
               if (!worker || worker.state !== 'installed' || !navigator.serviceWorker.controller) return;
               pendingUpdateWorker = worker;
-              // Nu întrerupem lista sau editorul de notițe. Actualizarea rămâne pregătită
-              // și se activează după ce utilizatorul revine voluntar la Proiecte.
-              if (isNotesWorkspaceActive()) return;
-              // Actualizarea este automată, însă întâi salvăm proiectul în lucru.
+              // Actualizarea este automată, însă întâi salvăm proiectul și notița în lucru.
               if (projectDirty && activeProjectId) {
                 try {
                   await flushAutosave({ force: true });
@@ -11274,9 +11326,6 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
 
             navigator.serviceWorker.addEventListener('controllerchange', async () => {
               if (refreshingAfterUpdate) return;
-              // Un alt tab poate activa worker-ul. Păstrăm editorul curent deschis și
-              // folosim noua versiune la următoarea navigare naturală a paginii.
-              if (isNotesWorkspaceActive()) return;
               refreshingAfterUpdate = true;
               try { await window.atelierNotes?.flush(); } catch { refreshingAfterUpdate = false; return; }
               window.location.reload();
@@ -11308,6 +11357,6 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
   </script>
 
 <script src="notes/pdf-lib.min.js"></script>
-<script src="notes/notes-editor.js?v=1.22.3"></script>
+<script src="notes/notes-editor.js?v=1.22.5"></script>
 </body>
 </html>
