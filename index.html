@@ -11,9 +11,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Fișă atelier">
-  <link rel="manifest" href="manifest.webmanifest?v=1.22.7">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.22.7">
-  <link rel="apple-touch-icon" href="icon-180.png?v=1.22.7">
+  <link rel="manifest" href="manifest.webmanifest?v=1.22.8">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.22.8">
+  <link rel="apple-touch-icon" href="icon-180.png?v=1.22.8">
   <title>Notițe pe imagini</title>
   <style>
     :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #29261f; background: #edeae4; --app-safe-top: env(safe-area-inset-top, 0px); --app-safe-right: env(safe-area-inset-right, 0px); --app-safe-bottom: env(safe-area-inset-bottom, 0px); --app-safe-left: env(safe-area-inset-left, 0px); }
@@ -3363,7 +3363,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   #projectManagerView .project-card-name { overflow-wrap: anywhere; }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 </style>
-<link rel="stylesheet" href="notes/notes-editor.css?v=1.22.7">
+<link rel="stylesheet" href="notes/notes-editor.css?v=1.22.8">
 <style>
 /* Favorite affordances and tighter project card framing. */
 #projectManagerView .project-card {min-height:0;grid-template-rows:176px auto;}
@@ -3549,6 +3549,60 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
 }
 
 </style>
+  <style id="release-1-22-8-polish">
+    /* Account and synchronization dialog. */
+    .cloud-account-dialog{
+      width:min(540px,calc(100vw - 28px));max-width:540px;padding:26px!important;border:1px solid #d8e1ea!important;
+      border-radius:22px!important;background:linear-gradient(155deg,#fff 0%,#fbfcfd 68%,#f3f6f9 100%)!important;
+      box-shadow:0 28px 80px rgba(18,36,55,.24),0 3px 12px rgba(18,36,55,.10)!important;
+    }
+    .cloud-account-heading{display:flex;align-items:center;gap:14px;margin-bottom:18px;}
+    .cloud-account-heading>div{min-width:0;}
+    .cloud-account-heading h2{margin:0 0 3px!important;color:#20364d;font-size:1.35rem;line-height:1.2;}
+    .cloud-account-heading p{margin:0;color:#6b7c8d;font-size:.83rem;line-height:1.35;}
+    .cloud-account-icon{display:grid;place-items:center;flex:0 0 46px;width:46px;height:46px;border:1px solid #c7daeb;border-radius:14px;background:linear-gradient(145deg,#eaf4fc,#fff);color:#315f91;box-shadow:0 5px 14px rgba(49,95,145,.10);}
+    .cloud-account-icon svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+    .cloud-account-status{position:relative;margin:0 0 18px!important;padding:15px 16px 15px 44px!important;border:1px solid #d5e2ed!important;border-radius:14px!important;background:#f1f6fa!important;color:#4b6278!important;font-size:.87rem!important;line-height:1.55!important;}
+    .cloud-account-status::before{content:'↻';position:absolute;left:15px;top:50%;translate:0 -50%;display:grid;place-items:center;width:20px;height:20px;border-radius:7px;background:#dcebf7;color:#315f91;font-size:13px;font-weight:800;}
+    .cloud-account-actions{gap:10px!important;margin-top:10px!important;}
+    .cloud-account-actions button{min-height:50px!important;padding:11px 14px!important;border-radius:12px!important;font-size:.84rem!important;font-weight:750!important;line-height:1.25!important;box-shadow:0 3px 9px rgba(26,50,74,.08)!important;}
+    #cloudLogin:not([hidden]){grid-column:1/-1;}
+    #cloudLogout[hidden]+#closeCloudAccount{grid-column:1/-1;}
+    #cloudSyncNow{background:linear-gradient(135deg,#376fa7,#285786)!important;border-color:#2d5e8f!important;color:#fff!important;}
+    #cloudUploadDevice{border-color:#cbd8e4!important;background:#f7fafc!important;color:#2e4b67!important;}
+    #cloudLogout{border-color:#efc8ce!important;background:#fff7f8!important;color:#a12f3e!important;}
+    #closeCloudAccount{background:#eef1f4!important;border-color:#d6dde4!important;color:#46586a!important;}
+
+    /* Clickable project drawing thickness selector. */
+    .drawing-tool-group.size-group{position:relative;overflow:visible!important;}
+    .drawing-size-trigger{display:flex;align-items:center;gap:8px;min-width:126px;height:40px;padding:6px 9px;border:1px solid #ccd9e5;border-radius:11px;background:linear-gradient(180deg,#fff,#f3f7fa);color:#294963;box-shadow:0 2px 6px rgba(20,45,70,.09);}
+    .drawing-size-trigger:hover:not(:disabled),.drawing-size-trigger[aria-expanded=true]{border-color:#76a5cd;background:#eaf3fb;box-shadow:0 0 0 3px rgba(67,126,178,.12);}
+    .drawing-size-trigger-line{display:flex;align-items:center;flex:1 1 36px;height:18px;}
+    .drawing-size-trigger-line i{display:block;width:100%;height:var(--drawing-size,3px);max-height:10px;border-radius:999px;background:#315f91;}
+    .drawing-size-trigger strong{min-width:39px;color:#244d73;font-size:11px;font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums;}
+    .drawing-size-chevron{width:6px;height:6px;margin:-3px 2px 0 0;border-right:1.5px solid #68829a;border-bottom:1.5px solid #68829a;rotate:45deg;transition:rotate .16s ease;}
+    .drawing-size-trigger[aria-expanded=true] .drawing-size-chevron{rotate:225deg;margin-top:3px;}
+    .drawing-size-panel{position:absolute;z-index:1900;left:50%;top:calc(100% + 11px);translate:-50% 0;width:286px;padding:16px;border:1px solid #cedce8;border-radius:17px;background:linear-gradient(180deg,#fff,#f7fafc);color:#294963;box-shadow:0 18px 46px rgba(13,32,51,.24);}
+    .drawing-size-panel[hidden]{display:none!important;}
+    .drawing-size-panel::before{content:'';position:absolute;left:50%;top:-6px;width:11px;height:11px;translate:-50% 0;rotate:45deg;border-left:1px solid #cedce8;border-top:1px solid #cedce8;background:#fff;}
+    .drawing-size-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;color:#536c83;font-size:12px;font-weight:750;}
+    .drawing-size-panel-heading output{display:grid;place-items:center;min-width:47px;height:29px;padding:0 7px;border:1px solid #d4e1ec;border-radius:8px;background:#fff;color:#234d74;font-weight:800;}
+    .drawing-size-panel input[type=range]{appearance:none;width:100%!important;min-width:0!important;height:6px!important;min-height:6px!important;margin:8px 0 15px;border:0;border-radius:99px;background:#dbe5ee;accent-color:#315f91;cursor:pointer;}
+    .drawing-size-panel input[type=range]::-webkit-slider-thumb{appearance:none;width:20px;height:20px;border:3px solid #fff;border-radius:50%;background:#315f91;box-shadow:0 0 0 1px #9ebbd4,0 2px 6px rgba(23,55,83,.25);}
+    .drawing-size-panel-caption{display:block;margin-bottom:7px;color:#7a8b9b;font-size:10px;font-weight:750;letter-spacing:.06em;text-transform:uppercase;}
+    .drawing-size-presets{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+    .drawing-size-presets button{display:grid;place-items:center;gap:5px;min-width:0;min-height:52px;padding:6px 3px;border:1px solid #d9e4ed;border-radius:10px;background:#fff;color:#6a7f92;font-size:10px;font-weight:750;box-shadow:none;}
+    .drawing-size-presets button i{display:block;width:min(calc(var(--preset-size,3) * 1px + 5px),22px);height:min(calc(var(--preset-size,3) * 1px + 5px),22px);border-radius:50%;background:#315f91;}
+    .drawing-size-presets button[data-brush-size="3"]{--preset-size:3}.drawing-size-presets button[data-brush-size="5"]{--preset-size:5}.drawing-size-presets button[data-brush-size="8"]{--preset-size:8}.drawing-size-presets button[data-brush-size="12"]{--preset-size:12}.drawing-size-presets button[data-brush-size="20"]{--preset-size:17}
+    .drawing-size-presets button[aria-pressed=true]{border-color:#75a4cb;background:#e9f2fa;color:#285781;box-shadow:0 0 0 2px rgba(67,126,178,.10);}
+    .drawing-size-preview{display:flex;align-items:center;height:42px;margin-top:12px;padding:0 14px;border:1px solid #dae5ed;border-radius:10px;background:#edf3f7;overflow:hidden;}
+    .drawing-size-preview span{display:block;width:100%;height:3px;border-radius:999px;background:#315f91;}
+    body.fullscreen-mode .drawing-size-trigger{border-color:rgba(190,219,243,.24);background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.04));color:#edf7ff;box-shadow:inset 0 1px 0 rgba(255,255,255,.11),0 3px 8px rgba(0,0,0,.16);}
+    body.fullscreen-mode .drawing-size-trigger strong,body.fullscreen-mode .drawing-size-chevron{color:#edf7ff;}
+    body.fullscreen-mode .drawing-size-trigger-line i{background:#d7edff;}
+    body.fullscreen-mode .drawing-size-trigger:hover:not(:disabled),body.fullscreen-mode .drawing-size-trigger[aria-expanded=true]{border-color:#79c6f0;background:rgba(65,129,184,.38);}
+    @media(max-width:680px){.cloud-account-dialog{padding:20px!important}.cloud-account-actions{grid-template-columns:1fr!important}.cloud-account-actions button{width:100%}.drawing-size-panel{position:fixed;left:50vw;top:50dvh;translate:-50% -50%;width:min(300px,calc(100vw - 28px))}.drawing-size-panel::before{display:none}}
+  </style>
 </head>
 <body>
   <div id="saveToast" class="save-toast" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -3597,7 +3651,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
   </div>
   <div id="cloudAccountDialog" class="save-dialog-backdrop" hidden>
     <div class="save-dialog cloud-account-dialog" role="dialog" aria-modal="true" aria-labelledby="cloudAccountDialogTitle">
-      <h2 id="cloudAccountDialogTitle">Cont și sincronizare</h2>
+      <div class="cloud-account-heading"><span class="cloud-account-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 7h-3.2A6 6 0 0 0 5.4 9.2 4.5 4.5 0 0 0 6.5 18H18a4 4 0 0 0 2-7.5"></path><path d="m8 13 2.2 2.2L15.5 10"></path></svg></span><div><h2 id="cloudAccountDialogTitle">Cont și sincronizare</h2><p>Același spațiu de lucru pe toate dispozitivele tale.</p></div></div>
       <p id="cloudAccountStatus" class="cloud-account-status">Intră în cont pentru a-ți sincroniza proiectele între PC și tabletă.</p>
       <label for="cloudEmail">E-mail</label>
       <input id="cloudEmail" type="email" autocomplete="email" inputmode="email" placeholder="nume@email.ro">
@@ -3822,8 +3876,18 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
               <div class="drawing-tool-group size-group">
                 <span class="tool-label">Grosime</span>
                 <div class="drawing-tool-group-row">
-                  <input id="fullscreenBrushSize" type="range" min="3" max="20" step="1" value="3">
-                  <span id="fullscreenBrushSizeValue">4</span>
+                  <button type="button" id="fullscreenBrushSizeTrigger" class="drawing-size-trigger" aria-label="Alege grosimea desenului" aria-expanded="false">
+                    <span class="drawing-size-trigger-line" aria-hidden="true"><i></i></span><strong id="fullscreenBrushSizeValue">3 px</strong><span class="drawing-size-chevron" aria-hidden="true"></span>
+                  </button>
+                </div>
+                <div id="fullscreenBrushSizePanel" class="drawing-size-panel" hidden>
+                  <div class="drawing-size-panel-heading"><span>Grosimea liniei</span><output id="fullscreenBrushSizeOutput">3 px</output></div>
+                  <input id="fullscreenBrushSize" type="range" min="3" max="20" step="1" value="3" aria-label="Grosimea desenului">
+                  <span class="drawing-size-panel-caption">Alege rapid</span>
+                  <div class="drawing-size-presets" role="group" aria-label="Grosimi recomandate">
+                    <button type="button" data-brush-size="3"><i></i><span>3</span></button><button type="button" data-brush-size="5"><i></i><span>5</span></button><button type="button" data-brush-size="8"><i></i><span>8</span></button><button type="button" data-brush-size="12"><i></i><span>12</span></button><button type="button" data-brush-size="20"><i></i><span>20</span></button>
+                  </div>
+                  <div class="drawing-size-preview" aria-hidden="true"><span></span></div>
                 </div>
               </div>
               <div class="drawing-tool-group actions-group">
@@ -4072,6 +4136,9 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
       const fullscreenColorPickerControl = document.querySelector('.color-picker-control');
       const fullscreenBrushSize = document.getElementById('fullscreenBrushSize');
       const fullscreenBrushSizeValue = document.getElementById('fullscreenBrushSizeValue');
+      const fullscreenBrushSizeTrigger = document.getElementById('fullscreenBrushSizeTrigger');
+      const fullscreenBrushSizePanel = document.getElementById('fullscreenBrushSizePanel');
+      const fullscreenBrushSizeOutput = document.getElementById('fullscreenBrushSizeOutput');
       const fullscreenActiveToolDisplay = document.getElementById('fullscreenActiveToolDisplay');
       const fullscreenActiveToolName = document.getElementById('fullscreenActiveToolName');
       const fullscreenPencilBtn = document.getElementById('fullscreenPencilBtn');
@@ -4248,7 +4315,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.22.7';
+      const APP_VERSION = '1.22.8';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -7185,7 +7252,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
           fullscreenDrawingToolbar.hidden = true;
           fullscreenDrawingToolbar.classList.remove('is-open');
         }
-        for (const el of [fullscreenColorPicker, fullscreenBrushSize, fullscreenPencilBtn, fullscreenLineBtn, fullscreenDashedLineBtn, fullscreenDimensionBtn, fullscreenEraserBtn, fullscreenClearBtn]) el.disabled = !ready;
+        for (const el of [fullscreenColorPicker, fullscreenBrushSize, fullscreenBrushSizeTrigger, fullscreenPencilBtn, fullscreenLineBtn, fullscreenDashedLineBtn, fullscreenDimensionBtn, fullscreenEraserBtn, fullscreenClearBtn]) el.disabled = !ready;
         document.querySelectorAll('.quick-color-button').forEach(el => { el.disabled = !ready; });
         queueEditorView();
       }
@@ -7948,7 +8015,20 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
           fullscreenBrushSize.value = String(brushSize);
         }
         if (fullscreenBrushSizeValue) {
-          fullscreenBrushSizeValue.textContent = `${brushSize}`;
+          fullscreenBrushSizeValue.textContent = `${brushSize} px`;
+        }
+        if (fullscreenBrushSizeOutput) {
+          fullscreenBrushSizeOutput.textContent = `${brushSize} px`;
+        }
+        if (fullscreenBrushSizeTrigger) {
+          fullscreenBrushSizeTrigger.style.setProperty('--drawing-size', `${Math.min(brushSize, 10)}px`);
+          fullscreenBrushSizeTrigger.setAttribute('aria-label', `Grosimea desenului: ${brushSize} pixeli`);
+        }
+        if (fullscreenBrushSizePanel) {
+          fullscreenBrushSizePanel.querySelector('.drawing-size-preview span')?.style.setProperty('height', `${Math.min(brushSize, 20)}px`);
+          fullscreenBrushSizePanel.querySelectorAll('[data-brush-size]').forEach((button) => {
+            button.setAttribute('aria-pressed', String(Number(button.dataset.brushSize) === brushSize));
+          });
         }
         if (fullscreenPencilBtn) {
           const pencilActive = activeDrawMode === 'freehand' && !isErasing;
@@ -8613,12 +8693,30 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
         fullscreenDrawingToolbar.classList.toggle('is-open', floatingToolbarOpen);
         fullscreenDrawingToolbar.hidden = !fullscreenMode || !floatingToolbarOpen;
         fullscreenToolbarToggle.setAttribute('aria-expanded', floatingToolbarOpen ? 'true' : 'false');
+        if (!floatingToolbarOpen) closeDrawingSizePanel();
         if (floatingToolbarOpen) {
           requestAnimationFrame(() => {
             if (fullscreenDrawingToolbar && !fullscreenDrawingToolbar.hidden) {
               positionFloatingToolbar();
             }
           });
+        }
+      }
+
+      function closeDrawingSizePanel() {
+        if (!fullscreenBrushSizePanel || !fullscreenBrushSizeTrigger) return;
+        fullscreenBrushSizePanel.hidden = true;
+        fullscreenBrushSizeTrigger.setAttribute('aria-expanded', 'false');
+      }
+
+      function toggleDrawingSizePanel() {
+        if (!fullscreenBrushSizePanel || !fullscreenBrushSizeTrigger || fullscreenBrushSizeTrigger.disabled) return;
+        const willOpen = fullscreenBrushSizePanel.hidden;
+        fullscreenBrushSizePanel.hidden = !willOpen;
+        fullscreenBrushSizeTrigger.setAttribute('aria-expanded', String(willOpen));
+        if (willOpen) {
+          syncBrushControls();
+          requestAnimationFrame(() => fullscreenBrushSize.focus({ preventScroll: true }));
         }
       }
 
@@ -10671,6 +10769,18 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
         syncBrushControls();
         scheduleSave();
       });
+      fullscreenBrushSizeTrigger?.addEventListener('click', toggleDrawingSizePanel);
+      fullscreenBrushSizePanel?.querySelectorAll('[data-brush-size]').forEach((button) => {
+        button.addEventListener('click', () => {
+          fullscreenBrushSize.value = button.dataset.brushSize;
+          fullscreenBrushSize.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+      });
+      window.addEventListener('pointerdown', (event) => {
+        if (fullscreenBrushSizePanel?.hidden) return;
+        if (fullscreenBrushSizePanel.contains(event.target) || fullscreenBrushSizeTrigger?.contains(event.target)) return;
+        closeDrawingSizePanel();
+      });
       fullscreenBrushSize.addEventListener('input', (event) => {
         const nextSize = clamp(Number(event.target.value) || 3, isErasing ? 1 : 3, 20);
         if (isErasing) {
@@ -11357,6 +11467,6 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
   </script>
 
 <script src="notes/pdf-lib.min.js"></script>
-<script src="notes/notes-editor.js?v=1.22.7"></script>
+<script src="notes/notes-editor.js?v=1.22.8"></script>
 </body>
 </html>
