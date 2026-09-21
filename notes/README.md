@@ -1,4 +1,10 @@
-# Notițe A4 — 1.20.8
+# Notițe A4 — 1.22.7
+
+## 1.22.7 — Rotire text centrată
+
+- Cercul decorativ al mânerului de rotire a fost eliminat.
+- Simbolul cu două săgeți este centrat deasupra casetei de text pe PC și tabletă.
+- Zona de atingere și linia de legătură rămân disponibile fără să încarce vizual chenarul.
 
 ## Publicare
 
@@ -59,3 +65,114 @@ Gesturile sunt testate prin simulare de browser; tastatura iPadOS, Apple Pencil
 fizic și tipărirea pe hardware necesită verificare pe dispozitiv.
 
 Preferințele instrumentelor sunt salvate local în `atelier-note-tool-settings-v1`: grosime separată pentru creion, linie, linie punctată, evidențiator, gumă și fiecare formă, plus mărimea implicită a textului. Sunt comune notițelor de pe același browser/dispozitiv și nu modifică obiectele deja desenate.
+
+## Modul Text — 1.21.2
+
+- Editor contenteditable temporar, fără fundal permanent. Tap/click selectează; dublu tap/click editează.
+- Formatare pe fragmente prin `runs` (indici UTF-16 și stiluri). Textul simplu rămâne în `text`, compatibil cu notițele existente.
+- Spațiere, indent, paragraf, gradient, texturi, efecte și blend mode sunt proprietăți ale obiectului. Se păstrează în IndexedDB, copia editabilă și sincronizarea existentă.
+- Randare canvas comună pentru foaie, miniaturi, PNG, PDF și print; texturile încărcate se păstrează în document.
+- Teste locale în Edge: mouse, touch simulat, selecție parțială, Ctrl+B/I, drag, resize lateral, duplicate/lock/delete, undo/redo, autosave, reload, PNG/PDF și conținut print. Dimensiuni: 768×1024, 1024×768, 1440×1000.
+- iPad/Safari fizic și dialogul real al imprimantei nu au fost testate automat. Pipeta apare numai în browserele care oferă EyeDropper.
+
+## Paletă simplificată — 1.21.2
+
+Text, Desen și Forme folosesc aceeași paletă de culori simple: preseturi, recente, culori salvate și selector personalizat. Butoanele de culoare și „+” au aceeași dimensiune și aliniere. Taburile Gradient/Textură au fost eliminate din interfață; randarea proprietăților deja salvate rămâne compatibilă cu notițele existente.
+Verificări: 768×1024, 1024×768 și 1440×1000; dimensiuni egale, deschidere/închidere prin același buton, alegere culoare, istoric și selector personalizat.
+
+## Asociere și instrumente — 1.21.2
+
+- Meniul proiectului permite asocierea unei notițe existente; „Adaugă notiță” oferă creare sau asociere. Meniul notiței permite alegerea/schimbarea/eliminarea proiectului asociat. Se actualizează aceeași notiță și se păstrează conținutul.
+- Bara Text folosește aliniere și listă compacte pe tabletă și opțiuni inline pe desktop.
+- Butonul + afișează culoarea selectată, cu simbol adaptat pentru contrast. Culoarea personalizată are doar selectorul și Aplică; istoricul rămâne în Recente, sub preseturi.
+- Evidențiatorul are opacitate reglabilă 1–100%, memorată local și inclusă în fiecare trasare nouă.
+- Verificat: asocieri în ambele sensuri fără duplicare/pierdere de conținut; layout Text 768×1024, 1024×768, 1440×1000 fără overflow; culoare/aplicare/istoric; persistență opacitate și trasare cu valoarea aleasă.
+
+## 1.21.3
+
+- Spații uniforme și controale încadrate în bara Text, pe desktop și tabletă.
+- Crearea și asocierea notițelor sunt grupate în „Adaugă notiță” la proiecte.
+- Meniul notițelor se adaptează textului complet al acțiunilor.
+
+## 1.21.4 — Text pe foaie
+
+- Eliminat meniul de proprietăți avansate (spațiere și efecte) de lângă Undo/Redo.
+- Un clic cu instrumentul Text plasează o casetă la poziția indicată; tragerea stabilește lățimea.
+- Un clic pe un text existent cu instrumentul Text deschide editarea, fără duplicare.
+- Contur discret în timpul editării, cu zoom stabil și aliniere în interiorul casetei.
+- Liste cu puncte și numere vizibile inclusiv în editare; Enter adaugă rânduri, iar continuările se aliniază sub text.
+- Lipirea și rândurile noi păstrează selecția și formatarea.
+
+## 1.21.5 — Miniaturi și rotire
+
+- Dimensiunile scrise peste imaginile proiectelor apar și în miniaturile proiectelor și ale imaginilor.
+- Exportul imaginii include valorile dimensiunilor la pozițiile salvate.
+- Selecția obiectelor are mânere vizuale mai mici, cu zone de atingere păstrate pentru tabletă.
+- La rotire apare sub obiect un indicator cu grade, care rămâne drept pe ecran.
+- Rotirea se fixează la multipli de 15°, cu opriri mai clare la 0°, 45°, 90° și celelalte axe principale.
+
+## 1.21.6 — Inserare rapidă și bare compacte
+
+- Alegerea unui stil de text fără obiect selectat creează automat o casetă pe foaie, ca în Canva, și selectează textul demonstrativ pentru înlocuire imediată.
+- Stilurile Titlu, Heading și Subtitlu pornesc centrate și cu dimensiunea potrivită; Corp de text și Citat pornesc aliniate la stânga.
+- Mânerul de rotire folosește două săgeți circulare, iar unghiul numeric rămâne vizibil sub obiect în timpul rotirii.
+- Bara obiectului selectat păstrează opacitate, duplicare, blocare și ștergere; câmpul numeric de rotație și comenzile de ordine au fost eliminate.
+- Grosimea creionului, evidențiatorului, liniilor, formelor și gumei este afișată doar ca număr, fără „px”.
+- Interfața a fost verificată la 768×1024, 1024×768, 820×1180, 1180×820 și 1440×1000, fără depășirea ferestrei sau suprapunerea controalelor.
+
+## 1.21.7 — Mutare, scalare și unghiuri semnate
+
+- Un text existent poate fi tras direct chiar dacă instrumentul Text era activ; aplicația trece automat în selectare.
+- În editare, marginea casetei are o zonă mai ușor de prins cu mouse-ul sau degetul și afișează cursorul de mutare.
+- Tragerea mânerelor de redimensionare mărește sau micșorează proporțional fontul și caseta textului.
+- Mânerul superior afișează clar două săgeți circulare, fără bula decorativă.
+- Rotația este normalizată între −180° și 180°; cele două sensuri sunt afișate cu semnul corect.
+
+## 1.21.8 — Meniuri și text mai compacte
+
+- Statusul proiectului este grupat într-o singură acțiune „Schimbă statusul”, care deschide un meniu separat cu opțiunile disponibile și buton de întoarcere.
+- Meniul notiței folosește aceeași suprafață, spațiere, culori și evidențiere ca meniul proiectului.
+- „Stil text” apare primul în bara Text și este evidențiat ca acțiune principală pentru aplicarea sau inserarea unui stil.
+- Alinierea și listele afișează câte un singur buton; variantele se deschid doar la apăsare.
+- Meniurile și bara Text au fost verificate pe telefon, tabletă verticală și orizontală și desktop, fără suprapuneri sau ieșiri din fundal.
+
+## 1.21.9 — Corecție bară desen pe tabletă
+
+- Bara de desen a imaginilor afișează numai cele cinci culori principale; culorile recente suplimentare au fost eliminate.
+- Valoarea grosimii are contrast corect și rămâne vizibilă în caseta de lângă glisor.
+- Numărul se actualizează imediat la deplasarea glisorului și a fost verificat în ambele orientări ale tabletei.
+
+## 1.21.10 — Stare activă Desen pe tabletă
+
+- După comutarea din „Note” în „Desen”, butonul activ revine constant la albastrul principal cu text alb.
+- Starea tactilă rămasă de la ultima apăsare nu mai transformă butonul activ într-un albastru pal.
+- Comutatorul expune corect starea selectată și a fost verificat pe tabletă verticală și orizontală.
+
+## 1.21.11 — Bară de instrumente unificată
+
+- Instrumentele principale au aceeași înălțime, lățimi coerente și o singură stare activă albastră.
+- Pentru imaginile selectate, comenzile sunt grupate în editare, opacitate și acțiuni rapide; duplicarea, blocarea și ștergerea folosesc butoane pătrate compacte.
+- Modurile Desen și Forme folosesc aceleași suprafețe, raze, spațiere și înălțime redusă.
+- Pe tabletele înguste, comenzile principale devin pictograme și rămân într-un singur rând derulabil, fără suprapuneri.
+- Verificat pe 768×1024, 1024×768 și 1440×1000, inclusiv editare text, selecție imagine, desen și forme.
+
+## 1.21.12 — Cifre vizibile în imaginile exportate
+
+- Valorile dimensiunilor se scalează proporțional cu rezoluția fotografiei salvate.
+- Exporturile Full HD și de rezoluție mare păstrează cifrele lizibile deasupra liniilor.
+- Miniaturile păstrează dimensiunea compactă anterioară, fără text supradimensionat.
+
+## 1.21.13 — Comenzi aliniate și pagini cu nume
+
+- Instrumentele de desen și forme, culorile și istoricul sunt aliniate vertical pe PC și tabletă; comenzile rămân accesibile când spațiul este îngust.
+- Undo și Redo stau lângă celelalte comenzi ale unui obiect selectat; în rândul de sus apar numai când selecția este goală.
+- Paginile notițelor pot primi un nume personalizat, păstrat la salvare și folosit la exportul PNG.
+- Selectorul mărimii textului are previzualizare, glisor și opțiuni rapide; selecția textului folosește albastrul principal.
+- Redenumirea imaginilor proiectului salvează numele pe intrarea curentă chiar dacă lista a fost reconstruită între timp.
+
+## 1.21.14 — Comenzi în dreapta și zoom al paginii
+
+- Grupurile pentru Desen și Forme rămân aliniate vertical, dar sunt poziționate în dreapta barei.
+- În antet, lângă Detalii și Export, sunt disponibile micșorarea, încadrarea paginii în ecran și mărirea, cu procentul vizibil.
+- Textul se deschide pentru editare printr-o atingere pe tabletă și are un mâner separat, mare, pentru mutare fără selectarea accidentală a conținutului.
+- Modul Desen rămâne albastru închis după atingere și după comutarea din Text pe tabletă.

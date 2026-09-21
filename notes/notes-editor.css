@@ -1665,3 +1665,26 @@
   .an-editor .an-toolbar .an-context .an-context-history .an-button,
   .an-editor .an-toolbar .an-object-actions .an-context-history .an-button{width:36px!important;min-width:36px!important;height:36px!important;min-height:36px!important;padding:8px!important;}
 }
+
+/* Text rotation: only the centred arrows remain visible above the frame. */
+.an-editor .an-selection.is-text .an-rotate{
+  left:50%!important;top:calc(-31px / var(--an-zoom,1))!important;
+  width:calc(24px / var(--an-zoom,1))!important;height:calc(24px / var(--an-zoom,1))!important;
+  min-width:0!important;min-height:0!important;padding:0!important;
+  translate:-50% 0!important;border:0!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;filter:none!important;overflow:visible;
+}
+.an-editor .an-selection.is-text .an-rotate:hover:not(:disabled),
+.an-editor .an-selection.is-text .an-rotate:active:not(:disabled){
+  background:transparent!important;box-shadow:none!important;filter:drop-shadow(0 1px 2px #17375330)!important;
+}
+.an-editor .an-selection.is-text .an-rotate::before{
+  left:50%!important;top:calc(100% - (1px / var(--an-zoom,1)))!important;
+  width:calc(1px / var(--an-zoom,1))!important;height:calc(8px / var(--an-zoom,1))!important;
+  translate:-50% 0!important;background:#7fa5c4!important;
+}
+.an-editor .an-selection.is-text .an-rotate::after{
+  position:absolute!important;inset:0!important;display:block!important;
+  width:100%!important;height:100%!important;
+  background-position:center!important;background-size:100% 100%!important;background-repeat:no-repeat!important;
+}
