@@ -11,9 +11,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Fișă atelier">
-  <link rel="manifest" href="manifest.webmanifest?v=1.22.10">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.22.10">
-  <link rel="apple-touch-icon" href="icon-180.png?v=1.22.10">
+  <link rel="manifest" href="manifest.webmanifest?v=1.22.11">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.22.11">
+  <link rel="apple-touch-icon" href="icon-180.png?v=1.22.11">
   <title>Notițe pe imagini</title>
   <style>
     :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #29261f; background: #edeae4; --app-safe-top: env(safe-area-inset-top, 0px); --app-safe-right: env(safe-area-inset-right, 0px); --app-safe-bottom: env(safe-area-inset-bottom, 0px); --app-safe-left: env(safe-area-inset-left, 0px); }
@@ -3291,10 +3291,39 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
       min-height: 300px;
       max-height: 680px;
     }
-    body:not(.fullscreen-mode) #editorView .image-gallery { flex-wrap: nowrap; }
-    body:not(.fullscreen-mode) #editorView .thumbnail-strip { flex: 1 1 auto; width: auto; max-width: none; }
-    body:not(.fullscreen-mode) #editorView .gallery-add-actions { margin-left: auto; }
+    body:not(.fullscreen-mode) #editorView .image-gallery { flex-wrap: wrap; align-items: stretch; gap: 10px; }
+    body:not(.fullscreen-mode) #editorView .thumbnail-strip {
+      order: 1; flex: 1 1 100%; width: 100%; max-width: 100%; gap: 10px; padding: 6px 4px 12px;
+      overflow-x: auto; scroll-snap-type: x proximity; scroll-padding-inline: 4px; touch-action: pan-x;
+      overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch;
+    }
+    body:not(.fullscreen-mode) #editorView .image-thumb-wrap {
+      width: 108px; flex: 0 0 108px; padding: 5px; border-radius: 14px; scroll-snap-align: start;
+    }
+    body:not(.fullscreen-mode) #editorView .image-thumb,
+    body:not(.fullscreen-mode) #editorView .image-thumb:hover:not(.is-active),
+    body:not(.fullscreen-mode) #editorView .image-thumb.is-active {
+      height: 70px; min-height: 70px; flex-basis: 70px;
+    }
+    body:not(.fullscreen-mode) #editorView .image-thumb-caption { min-height: 30px; padding: 6px 3px 1px; }
+    body:not(.fullscreen-mode) #editorView .image-thumb-title,
+    body:not(.fullscreen-mode) #editorView .image-thumb-wrap:has(.is-active) .image-thumb-title { font-size: 10px; line-height: 16px; }
+    body:not(.fullscreen-mode) #editorView .gallery-add-actions {
+      order: 2; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); width: 100%;
+      margin-left: 0; padding-left: 0; border-left: 0;
+    }
+    body:not(.fullscreen-mode) #editorView .gallery-add-actions :is(#thumbnailAddBlankSheet,#thumbnailAddImage) {
+      box-sizing: border-box; width: 100%; min-width: 0;
+    }
   }
+
+  body:not(.fullscreen-mode) #editorView .image-thumb-index {
+    position: absolute; z-index: 4; top: 7px; left: 7px; display: grid; place-items: center;
+    min-width: 24px; height: 22px; padding: 0 6px; border: 1px solid rgba(255,255,255,.8); border-radius: 8px;
+    background: rgba(31,49,69,.86); color: #fff; box-shadow: 0 3px 8px rgba(31,49,69,.2);
+    font-size: 10px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; pointer-events: none;
+  }
+  body:not(.fullscreen-mode) #editorView .image-thumb.is-active .image-thumb-index { background: var(--ds-blue); }
 
   /* A selected note reads as a compact premium card instead of a loose input. */
   body:not(.fullscreen-mode) #editorView .note-list { gap: 10px; margin-bottom: 14px; }
@@ -3363,7 +3392,7 @@ body:not(.fullscreen-mode) #editorView .image-thumb-title { padding: 3px 9px; bo
   #projectManagerView .project-card-name { overflow-wrap: anywhere; }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 </style>
-<link rel="stylesheet" href="notes-editor-1.22.10.css?v=1.22.10">
+<link rel="stylesheet" href="notes-editor-1.22.11.css?v=1.22.11">
 <style>
 /* Favorite affordances and tighter project card framing. */
 #projectManagerView .project-card {min-height:0;grid-template-rows:176px auto;}
@@ -3674,6 +3703,17 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
     #cloudUploadDevice{width:calc(100% - 20px);margin:0 10px 10px;min-height:44px!important;background:#f5f8fa!important;}
     @media(max-width:680px){
       .cloud-account-heading{padding:20px}.cloud-account-status{margin:16px 20px 6px!important}.cloud-account-actions{padding:15px 20px!important}.cloud-account-advanced{margin:6px 20px 16px}.cloud-account-actions:has(#cloudLogout){grid-template-columns:1fr!important}.cloud-account-actions:has(#cloudLogout) button{width:100%;justify-self:stretch!important}.cloud-account-dialog>label,.cloud-account-dialog>input{margin-left:20px!important;margin-right:20px!important;width:calc(100% - 40px)!important;}
+    }
+  </style>
+  <style id="release-1-22-11-tablet-safe-area">
+    @media (pointer:coarse) and (min-width:601px) {
+      #projectManagerView {
+        padding-top:max(28px,calc(env(safe-area-inset-top,0px) + 12px));
+      }
+      #projectManagerView .workspace-sidebar {
+        top:max(20px,calc(env(safe-area-inset-top,0px) + 8px));
+        min-height:calc(100dvh - max(40px,calc(env(safe-area-inset-top,0px) + 28px)));
+      }
     }
   </style>
 </head>
@@ -4388,7 +4428,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.22.10';
+      const APP_VERSION = '1.22.11';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -7484,9 +7524,25 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
         drawThumbnailStrokes(previewCanvas, projectImages[activeImageIndex], activeImageIndex);
       }
 
+      function ensureActiveThumbnailVisible() {
+        if (!thumbnailStrip) return;
+        const activeThumbnail = thumbnailStrip.querySelector('.image-thumb.is-active');
+        const activeWrap = activeThumbnail?.closest('.image-thumb-wrap');
+        if (!activeWrap) return;
+        const stripRect = thumbnailStrip.getBoundingClientRect();
+        const itemRect = activeWrap.getBoundingClientRect();
+        const itemLeft = itemRect.left - stripRect.left + thumbnailStrip.scrollLeft;
+        const itemRight = itemRect.right - stripRect.left + thumbnailStrip.scrollLeft;
+        const visibleLeft = thumbnailStrip.scrollLeft;
+        const visibleRight = visibleLeft + thumbnailStrip.clientWidth;
+        if (itemLeft < visibleLeft) thumbnailStrip.scrollTo({ left: Math.max(0, itemLeft - 4), behavior: 'auto' });
+        else if (itemRight > visibleRight) thumbnailStrip.scrollTo({ left: itemRight - thumbnailStrip.clientWidth + 4, behavior: 'auto' });
+      }
+
       function renderImageThumbnails() {
         if (!thumbnailStrip) return;
         sanitizeProjectImagesCollection();
+        const previousScrollLeft = thumbnailStrip.scrollLeft;
         thumbnailStrip.innerHTML = '';
         if (!projectImages.length) {
           syncActiveImageTitleDisplay();
@@ -7504,7 +7560,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
            button.className = `image-thumb${index === activeImageIndex ? ' is-active' : ''}`;
            button.dataset.imageIndex = String(index);
            button.title = displayTitle;
-          button.setAttribute('aria-label', displayTitle);
+          button.setAttribute('aria-label', `${displayTitle}, ${index + 1} din ${projectImages.length}`);
           button.addEventListener('click', () => {
             if (index === activeImageIndex) return;
             activateImageAt(index, { persist: true });
@@ -7517,6 +7573,12 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
             preview.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22 viewBox=%220 0 80 80%22%3E%3Crect width=%2280%22 height=%2280%22 fill=%22%23efe7dc%22/%3E%3Cpath d=%22M20 50l12-12 10 10 18-22 12 20v14H20z%22 fill=%22%23d3c5b5%22/%3E%3C/svg%3E';
            }
            button.appendChild(preview);
+
+           const positionBadge = document.createElement('span');
+           positionBadge.className = 'image-thumb-index';
+           positionBadge.textContent = String(index + 1);
+           positionBadge.setAttribute('aria-hidden', 'true');
+           button.appendChild(positionBadge);
 
            const drawingPreview = document.createElement('canvas');
            drawingPreview.className = 'image-thumb-drawing';
@@ -7537,6 +7599,11 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
           wrap.appendChild(button);
           wrap.appendChild(caption);
           thumbnailStrip.appendChild(wrap);
+        });
+
+        requestAnimationFrame(() => {
+          thumbnailStrip.scrollLeft = previousScrollLeft;
+          ensureActiveThumbnailVisible();
         });
 
         syncActiveImageTitleDisplay();
@@ -10819,6 +10886,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
       });
       photo.addEventListener('load', queueEditorView);
       if ('ResizeObserver' in window) new ResizeObserver(queueEditorView).observe(document.getElementById('canvasShell'));
+      if ('ResizeObserver' in window && thumbnailStrip) new ResizeObserver(() => requestAnimationFrame(ensureActiveThumbnailVisible)).observe(thumbnailStrip);
       fullscreenButton.addEventListener('click', () => setFullscreenMode(true));
       fullscreenCloseButton.addEventListener('click', () => setFullscreenMode(false));
       fullscreenPrevImageBtn?.addEventListener('click', () => fullscreenMode ? switchFullscreenImage(-1) : switchEditorImage(-1));
@@ -11540,6 +11608,6 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
   </script>
 
 <script src="notes/pdf-lib.min.js"></script>
-<script src="notes-editor-1.22.10.js?v=1.22.10"></script>
+<script src="notes-editor-1.22.11.js?v=1.22.11"></script>
 </body>
 </html>
