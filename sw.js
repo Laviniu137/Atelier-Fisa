@@ -1,10 +1,10 @@
-const CACHE_NAME = 'fisa-atelier-v259';
+const CACHE_NAME = 'fisa-atelier-v260';
 const APP_FILES = [
   './',
   './index.html',
   './sw.js?v=1.22.14',
-  './notes-editor-1.22.14.css?v=1.22.14',
-  './notes-editor-1.22.14.js?v=1.22.14',
+  './notes-editor-1.22.15.css?v=1.22.15',
+  './notes-editor-1.22.15.js?v=1.22.15',
   './pdfjs-6.3.289.min.mjs',
   './pdfjs-worker-6.3.289.min.mjs',
   './notes/pdf-lib.min.js',
