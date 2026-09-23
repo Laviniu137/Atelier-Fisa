@@ -11,9 +11,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Fișă atelier">
-  <link rel="manifest" href="manifest.webmanifest?v=1.22.16">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.22.16">
-  <link rel="apple-touch-icon" href="icon-180.png?v=1.22.16">
+  <link rel="manifest" href="manifest.webmanifest?v=1.22.17">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.22.17">
+  <link rel="apple-touch-icon" href="icon-180.png?v=1.22.17">
   <title>Notițe pe imagini</title>
   <style>
     :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #29261f; background: #edeae4; --app-safe-top: env(safe-area-inset-top, 0px); --app-safe-right: env(safe-area-inset-right, 0px); --app-safe-bottom: env(safe-area-inset-bottom, 0px); --app-safe-left: env(safe-area-inset-left, 0px); }
@@ -3767,9 +3767,10 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
       <div class="workspace-inventory-heading">
         <div class="manager-heading-copy"><h2 id="workspaceInventoryTitle" class="project-manager-page-title" tabindex="-1">Inventar</h2><p class="project-manager-subtitle">Păstrează la îndemână imaginile și dimensiunile obiectelor.</p></div>
         <label class="manager-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.5 4.5"/></svg><input id="workspaceInventorySearch" type="search" placeholder="Caută în inventar..." aria-label="Caută în inventar"></label>
-        <div class="project-manager-actions project-section-actions"><button class="ui-action ui-action-primary" type="button" id="workspaceInventoryAdd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Adaugă în inventar</span></button></div>
+        <div class="project-manager-actions project-section-actions"><button class="ui-action ui-action-primary" type="button" id="workspaceInventoryAdd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Adaugă material</span></button></div>
       </div>
       <p id="workspaceInventoryStatus" class="workspace-inventory-status" role="status" aria-live="polite">Salvat local pe acest dispozitiv.</p>
+      <div id="workspaceInventoryBreadcrumb" class="workspace-inventory-breadcrumb" hidden><button id="workspaceInventoryBack" type="button" aria-label="Înapoi la dosare"><span aria-hidden="true">←</span> Toate dosarele</button><span id="workspaceInventoryFolderTitle"></span></div>
       <div id="workspaceInventoryList" class="workspace-inventory-grid" aria-live="polite"></div>
     </section>
   </div>
@@ -4439,7 +4440,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.22.16';
+      const APP_VERSION = '1.22.17';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -11620,7 +11621,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
 
 <script src="notes/pdf-lib.min.js"></script>
 <script src="notes-editor-1.22.15.js?v=1.22.15"></script>
-<link rel="stylesheet" href="inventory-1.22.16.css?v=1.22.16">
-<script src="inventory-1.22.16.js?v=1.22.16"></script>
+<link rel="stylesheet" href="inventory-1.22.17.css?v=1.22.17">
+<script src="inventory-1.22.17.js?v=1.22.17"></script>
 </body>
 </html>
