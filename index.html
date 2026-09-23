@@ -11,9 +11,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Fișă atelier">
-  <link rel="manifest" href="manifest.webmanifest?v=1.22.21">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.22.21">
-  <link rel="apple-touch-icon" href="icon-180.png?v=1.22.21">
+  <link rel="manifest" href="manifest.webmanifest?v=1.22.22">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.22.22">
+  <link rel="apple-touch-icon" href="icon-180.png?v=1.22.22">
   <title>Notițe pe imagini</title>
   <style>
     :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #29261f; background: #edeae4; --app-safe-top: env(safe-area-inset-top, 0px); --app-safe-right: env(safe-area-inset-right, 0px); --app-safe-bottom: env(safe-area-inset-bottom, 0px); --app-safe-left: env(safe-area-inset-left, 0px); }
@@ -3768,7 +3768,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
       <div class="workspace-inventory-heading">
         <div class="manager-heading-copy"><h2 id="workspaceInventoryTitle" class="project-manager-page-title" tabindex="-1">Inventar</h2><p class="project-manager-subtitle">Păstrează la îndemână imaginile și dimensiunile obiectelor.</p></div>
         <label class="manager-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.5 4.5"/></svg><input id="workspaceInventorySearch" type="search" placeholder="Caută în inventar..." aria-label="Caută în inventar"></label>
-        <div class="project-manager-actions project-section-actions"><button class="ui-action ui-action-primary" type="button" id="workspaceInventoryAdd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Adaugă material</span></button></div>
+        <div class="project-manager-actions project-section-actions"><button class="ui-action ui-action-secondary" type="button" id="workspaceInventoryAddFolder"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H10l2 2h7.5A1.5 1.5 0 0 1 21 8.5v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z"/><path d="M12 10.5v6M9 13.5h6"/></svg><span>Dosar nou</span></button><button class="ui-action ui-action-primary" type="button" id="workspaceInventoryAdd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Adaugă material</span></button></div>
       </div>
       <p id="workspaceInventoryStatus" class="workspace-inventory-status" role="status" aria-live="polite">Salvat local pe acest dispozitiv.</p>
       <div id="workspaceInventoryBreadcrumb" class="workspace-inventory-breadcrumb" hidden><button id="workspaceInventoryBack" type="button" aria-label="Înapoi la dosare"><span aria-hidden="true">←</span> Toate dosarele</button><span id="workspaceInventoryFolderTitle"></span></div>
@@ -4441,7 +4441,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.22.21';
+      const APP_VERSION = '1.22.22';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -4844,11 +4844,64 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
         const items = (await Promise.all(changed.map(meta => firebaseLoadInventoryItem(meta)))).filter(Boolean);
         return { items, metas: inventory, tombstones: { ...(remote.inventoryTombstones || {}) } };
       }
+      async function firebaseUploadInventoryFolder(folder) {
+        if (!firebaseUser || !firebaseDb || !folder?.id) throw new Error('AUTH_REQUIRED');
+        const updatedAt = folder.updatedAt || new Date().toISOString();
+        const savedAt = firebaseInventoryUpdatedAt(updatedAt);
+        const parent = firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid);
+        const manifestRef = parent.collection('state').doc('manifest');
+        const published = await firebaseDb.runTransaction(async transaction => {
+          const snapshot = await transaction.get(manifestRef);
+          const latest = snapshot.exists ? snapshot.data() : { version: 1, inventoryFolders: {}, inventoryFolderTombstones: {} };
+          const inventoryFolders = { ...(latest.inventoryFolders || {}) };
+          const inventoryFolderTombstones = { ...(latest.inventoryFolderTombstones || {}) };
+          if (firebaseInventoryUpdatedAt(inventoryFolderTombstones[folder.id]) > savedAt || firebaseInventoryUpdatedAt(inventoryFolders[folder.id]?.updatedAt) > savedAt) return false;
+          delete inventoryFolderTombstones[folder.id];
+          inventoryFolders[folder.id] = { id: folder.id, name: String(folder.name || '').slice(0, 48), description: 'Dosar personalizat', icon: '▤', updatedAt };
+          firebaseManifest = { ...latest, version: 1, updatedAt: new Date().toISOString(), inventoryFolders, inventoryFolderTombstones };
+          transaction.set(manifestRef, firebaseManifest);
+          return true;
+        });
+        if (published) await firebaseBroadcastRealtimeSignal().catch(() => {});
+        return Boolean(published);
+      }
+      async function firebaseDeleteInventoryFolder(folderId, deletedAt = new Date().toISOString()) {
+        if (!firebaseUser || !firebaseDb || !folderId) throw new Error('AUTH_REQUIRED');
+        const parent = firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid);
+        const manifestRef = parent.collection('state').doc('manifest');
+        const deleted = await firebaseDb.runTransaction(async transaction => {
+          const snapshot = await transaction.get(manifestRef);
+          const latest = snapshot.exists ? snapshot.data() : { version: 1, inventoryFolders: {}, inventoryFolderTombstones: {} };
+          const inventoryFolders = { ...(latest.inventoryFolders || {}) };
+          const inventoryFolderTombstones = { ...(latest.inventoryFolderTombstones || {}) };
+          if (firebaseInventoryUpdatedAt(inventoryFolders[folderId]?.updatedAt) > firebaseInventoryUpdatedAt(deletedAt) || firebaseInventoryUpdatedAt(inventoryFolderTombstones[folderId]) > firebaseInventoryUpdatedAt(deletedAt)) return false;
+          delete inventoryFolders[folderId];
+          inventoryFolderTombstones[folderId] = deletedAt;
+          firebaseManifest = { ...latest, version: 1, updatedAt: new Date().toISOString(), inventoryFolders, inventoryFolderTombstones };
+          transaction.set(manifestRef, firebaseManifest);
+          return true;
+        });
+        if (deleted) await firebaseBroadcastRealtimeSignal().catch(() => {});
+        return Boolean(deleted);
+      }
+      async function firebasePullInventoryFolders(localVersions = {}) {
+        if (!firebaseUser || !firebaseDb) throw new Error('AUTH_REQUIRED');
+        const manifestRef = firebaseManifestRef || firebaseDb.collection(firebaseSyncCollection).doc(firebaseUser.uid).collection('state').doc('manifest');
+        firebaseManifestRef = manifestRef;
+        const snapshot = await manifestRef.get();
+        const remote = snapshot.exists ? snapshot.data() : { inventoryFolders: {}, inventoryFolderTombstones: {} };
+        const folders = remote.inventoryFolders || {};
+        const changed = Object.values(folders).filter(meta => String(localVersions[meta.id] || '') !== String(meta.updatedAt || ''));
+        return { folders: changed, metas: folders, tombstones: { ...(remote.inventoryFolderTombstones || {}) } };
+      }
       window.atelierInventoryCloud = {
         connected: () => Boolean(firebaseUser && firebaseDb),
         save: item => firebaseUploadInventoryItem(item),
         remove: (itemId, deletedAt) => firebaseDeleteInventoryItem(itemId, deletedAt),
-        pull: localVersions => firebasePullInventory(localVersions)
+        pull: localVersions => firebasePullInventory(localVersions),
+        saveFolder: folder => firebaseUploadInventoryFolder(folder),
+        removeFolder: (folderId, deletedAt) => firebaseDeleteInventoryFolder(folderId, deletedAt),
+        pullFolders: localVersions => firebasePullInventoryFolders(localVersions)
       };
 
       window.atelierNotesCloud = {
@@ -11711,7 +11764,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
 
 <script src="notes/pdf-lib.min.js"></script>
 <script src="notes-editor-1.22.15.js?v=1.22.15"></script>
-<link rel="stylesheet" href="inventory-1.22.20.css?v=1.22.20">
-<script src="inventory-1.22.20.js?v=1.22.20"></script>
+<link rel="stylesheet" href="inventory-1.22.22.css?v=1.22.22">
+<script src="inventory-1.22.22.js?v=1.22.22"></script>
 </body>
 </html>
