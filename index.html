@@ -11,9 +11,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Fișă atelier">
-  <link rel="manifest" href="manifest.webmanifest?v=1.22.14">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.22.14">
-  <link rel="apple-touch-icon" href="icon-180.png?v=1.22.14">
+  <link rel="manifest" href="manifest.webmanifest?v=1.22.16">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=1.22.16">
+  <link rel="apple-touch-icon" href="icon-180.png?v=1.22.16">
   <title>Notițe pe imagini</title>
   <style>
     :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #29261f; background: #edeae4; --app-safe-top: env(safe-area-inset-top, 0px); --app-safe-right: env(safe-area-inset-right, 0px); --app-safe-bottom: env(safe-area-inset-bottom, 0px); --app-safe-left: env(safe-area-inset-left, 0px); }
@@ -3725,6 +3725,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
       <nav class="workspace-nav" aria-label="Secțiuni">
         <button type="button" id="workspaceProjectsNav" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V5h6l2 2h10v13H3Z"/></svg>Proiecte</button>
         <button type="button" id="workspaceNotesNav"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6Z"/><path d="M9 10h6M9 14h6M9 18h4"/></svg>Notițe</button>
+        <button type="button" id="workspaceInventoryNav"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"/><path d="m4.5 7.8 7.5 4.3 7.5-4.3M12 12v8.5M8 5.3l8 4.6"/></svg>Inventar</button>
       </nav>
       <div class="workspace-sidebar-footer">
         <span class="workspace-footer-heading">Spațiul tău de lucru</span>
@@ -3760,6 +3761,16 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
       <div class="workspace-notes-heading"><div class="manager-heading-copy"><h2 id="workspaceNotesTitle" class="project-manager-page-title" tabindex="-1">Notițe</h2><p class="project-manager-subtitle">Documente A4 cu text, schițe și imagini. Salvate pe acest dispozitiv.</p></div><label class="manager-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.5 4.5"/></svg><input id="workspaceNotesSearch" type="search" placeholder="Caută în notițe..." aria-label="Caută notițe"></label><div class="project-manager-actions project-section-actions workspace-notes-actions" aria-label="Acțiuni notițe"><button class="ui-action ui-action-secondary" type="button" id="workspaceImportNote"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg><span>Importă copie</span></button><button class="ui-action ui-action-primary" type="button" id="workspaceAddNote"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Notiță nouă</span></button></div><div class="manager-notes-filters" role="group" aria-label="Filtrează notițele"><button type="button" data-notes-filter="all" aria-pressed="true">Toate <span class="manager-filter-count" data-notes-count="all">0</span></button><button type="button" data-notes-filter="favorites" aria-pressed="false">Favorite <span class="manager-filter-count" data-notes-count="favorites">0</span></button></div><div class="manager-view-controls"><label class="manager-sort-label">Sortează după: <select id="notesSort" aria-label="Sortează notițele"><option value="updated">Ultima modificare</option><option value="name">Nume</option><option value="created">Data creării</option></select></label><div class="manager-layout-switch" role="group" aria-label="Afișare notițe"><button type="button" data-notes-layout="grid" aria-label="Grilă" aria-pressed="true">▦</button><button type="button" data-notes-layout="list" aria-label="Listă" aria-pressed="false">☷</button></div></div></div>
       <p id="workspaceNotesStatus" role="status" aria-live="polite"></p>
       <div id="workspaceNotesList"></div>
+    </section>
+
+    <section id="workspaceInventory" class="workspace-inventory" hidden aria-labelledby="workspaceInventoryTitle">
+      <div class="workspace-inventory-heading">
+        <div class="manager-heading-copy"><h2 id="workspaceInventoryTitle" class="project-manager-page-title" tabindex="-1">Inventar</h2><p class="project-manager-subtitle">Păstrează la îndemână imaginile și dimensiunile obiectelor.</p></div>
+        <label class="manager-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.5 4.5"/></svg><input id="workspaceInventorySearch" type="search" placeholder="Caută în inventar..." aria-label="Caută în inventar"></label>
+        <div class="project-manager-actions project-section-actions"><button class="ui-action ui-action-primary" type="button" id="workspaceInventoryAdd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Adaugă în inventar</span></button></div>
+      </div>
+      <p id="workspaceInventoryStatus" class="workspace-inventory-status" role="status" aria-live="polite">Salvat local pe acest dispozitiv.</p>
+      <div id="workspaceInventoryList" class="workspace-inventory-grid" aria-live="polite"></div>
     </section>
   </div>
   <div id="cloudAccountDialog" class="save-dialog-backdrop" hidden>
@@ -4428,7 +4439,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
       const firebasePendingDeletesMetaKey = 'firebase-pending-deletes-v1';
       const firebasePendingRecordsMetaKey = 'firebase-pending-records-v1';
       const projectVersion = 2;
-      const APP_VERSION = '1.22.15';
+      const APP_VERSION = '1.22.16';
       const projectMigrationMetaKey = 'project-migration-v1';
       const floatingToolbarStorageKey = 'fisa-atelier-toolbar-position';
       const manualProjectExportedAtStorageKey = 'fisa-atelier-last-manual-export-at';
@@ -11609,5 +11620,7 @@ body:not(.fullscreen-mode) #editorView #notesModeBtn.active:hover{background:var
 
 <script src="notes/pdf-lib.min.js"></script>
 <script src="notes-editor-1.22.15.js?v=1.22.15"></script>
+<link rel="stylesheet" href="inventory-1.22.16.css?v=1.22.16">
+<script src="inventory-1.22.16.js?v=1.22.16"></script>
 </body>
 </html>
