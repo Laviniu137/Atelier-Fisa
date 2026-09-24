@@ -267,3 +267,8 @@
 #workspaceInventory[data-inventory-view="folders"] #workspaceInventoryList .inventory-folder-card-create .inventory-folder-copy{grid-column:2;grid-row:1}
 #workspaceInventory[data-inventory-view="folder"] #workspaceInventoryList{grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:18px}
 @media(max-width:760px){#workspaceInventory[data-inventory-view="folders"] #workspaceInventoryList,#workspaceInventory[data-inventory-view="folder"] #workspaceInventoryList{grid-template-columns:1fr;gap:14px}#workspaceInventory[data-inventory-view="folders"] #workspaceInventoryList .inventory-folder-card{min-height:142px;padding:18px;grid-template-columns:48px minmax(0,1fr) auto;gap:12px}#workspaceInventory[data-inventory-view="folders"] #workspaceInventoryList .inventory-folder-icon{width:48px;height:48px}}
+
+
+/* Keep the workspace navigation visible while long inventory pages scroll. */
+#projectManagerView>:first-child{position:sticky;top:12px;align-self:start;max-height:calc(100vh - 24px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+@media(max-width:600px){#projectManagerView>:first-child{top:0;max-height:100vh}}
