@@ -331,3 +331,43 @@
  #workspaceInventory[data-inventory-view="folder"] #workspaceInventoryList{gap:13px;margin-top:11px}
 }
 @media(prefers-reduced-motion:reduce){#workspaceInventory[data-inventory-view="folders"] .inventory-folder-card{transition:none}}
+
+
+/* Premium material-folder workspace: balanced toolbar, full-width search and refined filters. */
+#workspaceInventory[data-inventory-view="folder"] .inventory-search-panel{display:grid!important;gap:18px;margin:0 0 18px;padding:20px;border:1px solid #d8e2ec;border-radius:22px;background:linear-gradient(145deg,#fff 0%,#f6f9fc 58%,#f1f5f9 100%);box-shadow:0 14px 36px rgba(28,49,73,.08)}
+#workspaceInventory[data-inventory-view="folder"] .inventory-search-row{display:grid!important;grid-template-columns:max-content minmax(0,1fr);align-items:center;gap:18px;width:100%;min-width:0}
+#workspaceInventory[data-inventory-view="folder"] .workspace-inventory-breadcrumb{display:flex;align-items:center;gap:13px;width:max-content;min-width:0;margin:0;padding:0;border:0;background:transparent}
+#workspaceInventory[data-inventory-view="folder"] .workspace-inventory-breadcrumb>button{min-height:48px;padding:0 15px;border:1px solid #d8e2ec;border-radius:13px;background:#fff;color:#435b73;font-size:14px;font-weight:650;box-shadow:0 3px 10px rgba(28,49,73,.045);transition:background .18s,border-color .18s,transform .18s}
+#workspaceInventory[data-inventory-view="folder"] .workspace-inventory-breadcrumb>button:hover{transform:translateY(-1px);border-color:#b8cadb;background:#f9fbfd}
+#workspaceInventory[data-inventory-view="folder"] .workspace-inventory-breadcrumb>span{max-width:180px;padding-left:15px;border-left:1px solid #dbe4ed;color:#203a55;font-size:20px;font-weight:760;letter-spacing:-.025em}
+#workspaceInventory[data-inventory-view="folder"] .inventory-search-row>.manager-search{display:flex!important;position:relative!important;inset:auto!important;flex:1 1 0%!important;width:100%!important;max-width:none!important;min-width:0!important;margin:0!important}
+#workspaceInventory[data-inventory-view="folder"] .inventory-search-row>.manager-search input{display:block;width:100%!important;max-width:none!important;min-width:0!important;flex:1 1 auto!important;min-height:50px;padding:0 17px 0 48px;border:1px solid #d6e1ec;border-radius:14px;background:#fff;color:#24374b;font-size:14px;box-shadow:inset 0 1px 2px rgba(28,49,73,.025),0 3px 10px rgba(28,49,73,.035);transition:border-color .18s,box-shadow .18s}
+#workspaceInventory[data-inventory-view="folder"] .inventory-search-row>.manager-search input:focus{border-color:#7fa7ca;outline:0;box-shadow:0 0 0 4px rgba(66,125,175,.11),0 4px 12px rgba(28,49,73,.05)}
+#workspaceInventory[data-inventory-view="folder"] .inventory-dimension-filters{display:grid;grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr) minmax(230px,1.05fr);align-items:end;gap:12px;margin:0;padding:17px 0 0;border:0;border-top:1px solid #e2e9f0;border-radius:0;background:transparent;box-shadow:none}
+#workspaceInventory[data-inventory-view="folder"] .inventory-filter-field{display:grid;gap:7px;min-width:0;color:#708196;font-size:10px;font-weight:750;letter-spacing:.095em;text-transform:uppercase}
+#workspaceInventory[data-inventory-view="folder"] .inventory-filter-field input,#workspaceInventory[data-inventory-view="folder"] .inventory-filter-field select{width:100%;min-width:0;min-height:48px;padding:0 14px;border:1px solid #d6e1ec;border-radius:13px;background:#fff;color:#263c52;font-size:14px;font-weight:500;letter-spacing:normal;text-transform:none;box-shadow:0 3px 9px rgba(28,49,73,.035);transition:border-color .18s,box-shadow .18s}
+#workspaceInventory[data-inventory-view="folder"] .inventory-filter-field input:focus,#workspaceInventory[data-inventory-view="folder"] .inventory-filter-field select:focus{border-color:#7fa7ca;outline:0;box-shadow:0 0 0 4px rgba(66,125,175,.1)}
+#workspaceInventory[data-inventory-view="folder"] .inventory-filter-separator{align-self:end;margin:0 0 15px;color:#8da1b5;font-size:16px;font-weight:500;text-align:center}
+#workspaceInventory[data-inventory-view="folder"] #workspaceInventoryList{gap:18px;margin-top:16px}
+#workspaceInventory[data-inventory-view="folder"] .inventory-card{border-color:#dbe4ed;border-radius:20px;box-shadow:0 12px 30px rgba(28,49,73,.075)}
+#workspaceInventory[data-inventory-view="folder"] .inventory-card:hover{border-color:#bdcddd;box-shadow:0 17px 36px rgba(28,49,73,.11)}
+#workspaceInventory[data-inventory-view="folder"] .inventory-card-image{height:clamp(220px,26vw,300px);background:#eef2f6}
+#workspaceInventory[data-inventory-view="folder"] .inventory-card-content{padding:18px 20px 20px}
+@media(max-width:760px){
+#workspaceInventory[data-inventory-view="folder"] .inventory-search-panel{gap:14px;margin-bottom:14px;padding:14px;border-radius:18px}
+#workspaceInventory[data-inventory-view="folder"] .inventory-search-row{grid-template-columns:minmax(0,1fr);gap:13px}
+#workspaceInventory[data-inventory-view="folder"] .workspace-inventory-breadcrumb{width:100%;gap:11px}
+#workspaceInventory[data-inventory-view="folder"] .workspace-inventory-breadcrumb>span{max-width:calc(100vw - 190px);font-size:19px}
+#workspaceInventory[data-inventory-view="folder"] .inventory-search-row>.manager-search input{min-height:48px}
+#workspaceInventory[data-inventory-view="folder"] .inventory-dimension-filters{grid-template-columns:minmax(0,1fr) 20px minmax(0,1fr);gap:10px;padding-top:14px}
+#workspaceInventory[data-inventory-view="folder"] .inventory-filter-mode{grid-column:1/-1}
+#workspaceInventory[data-inventory-view="folder"] .inventory-filter-separator{margin-bottom:14px}
+#workspaceInventory[data-inventory-view="folder"] .inventory-card-image{height:clamp(190px,55vw,270px)}
+#workspaceInventory[data-inventory-view="folder"] .inventory-card-content{padding:15px 16px 17px}
+}
+@media(max-width:440px){
+#workspaceInventory[data-inventory-view="folder"] .inventory-search-panel{padding:12px}
+#workspaceInventory[data-inventory-view="folder"] .inventory-dimension-filters{grid-template-columns:minmax(0,1fr) 16px minmax(0,1fr);gap:8px}
+#workspaceInventory[data-inventory-view="folder"] .inventory-filter-field input,#workspaceInventory[data-inventory-view="folder"] .inventory-filter-field select{min-height:44px;padding-inline:11px;font-size:13px}
+}
+@media(prefers-reduced-motion:reduce){#workspaceInventory[data-inventory-view="folder"] .inventory-search-panel,#workspaceInventory[data-inventory-view="folder"] .inventory-card{transition:none}}
