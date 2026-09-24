@@ -10,6 +10,16 @@
 .workspace-inventory-heading .project-section-actions button{min-height:48px;white-space:nowrap}
 .workspace-inventory-status{min-height:20px;margin:0 0 14px;color:var(--ds-muted,#687b90);font-size:13px}
 .workspace-inventory-status.is-error{color:#a73737}
+#workspaceInventory[data-inventory-view="folders"] .inventory-search-panel .inventory-search-row,#workspaceInventory[data-inventory-view="folders"] #workspaceInventoryDimensionFilters,#workspaceInventory[data-inventory-view="folders"] #workspaceInventoryFolders,#workspaceInventory[data-inventory-view="folder"] #workspaceInventoryFolders{display:none!important}
+#workspaceInventory[data-inventory-view="folders"] .workspace-inventory-heading .project-section-actions{display:none!important}
+#workspaceInventoryList{grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:18px}
+#workspaceInventory[data-inventory-view="folders"] #workspaceInventoryList{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));margin-top:22px}
+.inventory-folder-card-create{grid-template-columns:58px minmax(0,1fr);text-align:left}
+.inventory-folder-card-create .inventory-folder-icon{grid-row:1/3;font-family:inherit}
+#workspaceInventory[data-inventory-view="folder"] .workspace-inventory-heading{margin-bottom:14px}
+#workspaceInventory[data-inventory-view="folder"] .inventory-search-panel{margin-bottom:18px}
+@media(max-width:760px){#workspaceInventory[data-inventory-view="folders"] #workspaceInventoryList,#workspaceInventoryList{grid-template-columns:1fr;gap:14px}.inventory-folder-card{min-height:142px;padding:18px;grid-template-columns:48px minmax(0,1fr) auto;gap:12px}.inventory-folder-icon{width:48px;height:48px}}
+
 .workspace-inventory-breadcrumb{display:flex;align-items:center;gap:14px;margin:0 0 17px;padding:12px 15px;border:1px solid var(--ds-line,#d8e2ec);border-radius:13px;background:var(--ds-surface,#fbfdff)}
 .workspace-inventory-breadcrumb[hidden]{display:none}
 .workspace-inventory-breadcrumb button{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:7px 11px;border:1px solid var(--ds-line,#d8e2ec);border-radius:9px;background:var(--ds-canvas,#f2f5f8);color:var(--ds-ink,#24374b);font-family:inherit;font-size:13px;font-weight:600;line-height:1.2;cursor:pointer}
