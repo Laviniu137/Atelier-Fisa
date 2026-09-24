@@ -253,3 +253,17 @@
 @media(max-width:760px){#projectManagerView .workspace-inventory-heading .project-section-actions{display:flex;grid-template-columns:none;width:auto;flex:0 0 auto}.workspace-inventory-heading .project-section-actions button{width:auto}.inventory-dimension-filters{grid-template-columns:minmax(110px,1fr) 14px minmax(110px,1fr) minmax(175px,1.1fr)}}
 @media(max-width:680px){#projectManagerView .workspace-inventory-heading{align-items:flex-start;gap:12px}.inventory-search-row{align-items:stretch;flex-direction:column}.workspace-inventory-breadcrumb{flex-wrap:wrap}.workspace-inventory-breadcrumb>span{max-width:calc(100vw - 200px)}#projectManagerView .inventory-search-row>.manager-search{min-width:0;width:100%}.inventory-dimension-filters{grid-template-columns:minmax(0,1fr) 14px minmax(0,1fr)}.inventory-filter-mode{grid-column:1/-1}}
 @media(max-width:440px){#projectManagerView .workspace-inventory-heading{flex-direction:column;align-items:stretch}.workspace-inventory-heading .project-section-actions,.workspace-inventory-heading .project-section-actions button{width:100%}.inventory-search-panel{padding:11px;border-radius:14px}.workspace-inventory-breadcrumb>span{max-width:calc(100vw - 160px)}}
+
+/* Folder-first inventory layout overrides legacy folder-card rules. */
+#workspaceInventory[data-inventory-view="folders"] .inventory-search-panel{display:none!important}
+#workspaceInventory[data-inventory-view="folders"] #workspaceInventoryList{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:18px;margin-top:22px}
+#workspaceInventory[data-inventory-view="folders"] #workspaceInventoryList .inventory-folder-card{grid-template-columns:58px minmax(0,1fr) auto;grid-template-rows:1fr auto;min-height:168px;padding:22px;gap:15px;text-align:left}
+#workspaceInventory[data-inventory-view="folders"] #workspaceInventoryList .inventory-folder-copy{grid-column:2;grid-row:1/3}
+#workspaceInventory[data-inventory-view="folders"] #workspaceInventoryList .inventory-folder-icon{display:grid;grid-column:1;grid-row:1/3;width:58px;height:58px;padding:0;box-sizing:border-box}
+#workspaceInventory[data-inventory-view="folders"] #workspaceInventoryList .inventory-folder-meta{grid-column:3;grid-row:1}
+#workspaceInventory[data-inventory-view="folders"] #workspaceInventoryList .inventory-folder-arrow{grid-column:3;grid-row:2}
+#workspaceInventory[data-inventory-view="folders"] #workspaceInventoryList .inventory-folder-card-create{grid-template-columns:58px minmax(0,1fr);grid-template-rows:1fr;min-height:168px}
+#workspaceInventory[data-inventory-view="folders"] #workspaceInventoryList .inventory-folder-card-create .inventory-folder-icon{grid-column:1;grid-row:1}
+#workspaceInventory[data-inventory-view="folders"] #workspaceInventoryList .inventory-folder-card-create .inventory-folder-copy{grid-column:2;grid-row:1}
+#workspaceInventory[data-inventory-view="folder"] #workspaceInventoryList{grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:18px}
+@media(max-width:760px){#workspaceInventory[data-inventory-view="folders"] #workspaceInventoryList,#workspaceInventory[data-inventory-view="folder"] #workspaceInventoryList{grid-template-columns:1fr;gap:14px}#workspaceInventory[data-inventory-view="folders"] #workspaceInventoryList .inventory-folder-card{min-height:142px;padding:18px;grid-template-columns:48px minmax(0,1fr) auto;gap:12px}#workspaceInventory[data-inventory-view="folders"] #workspaceInventoryList .inventory-folder-icon{width:48px;height:48px}}
