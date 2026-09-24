@@ -68,7 +68,7 @@
 @media(prefers-reduced-motion:reduce){.inventory-card,.inventory-folder-card{transition:none}}
 
 /* Unified inventory workspace: search, dimensions and folders share one filter surface. */
-#projectManagerView>#workspaceInventory{display:block;grid-column:1/-1;min-width:0}
+#projectManagerView>#workspaceInventory{display:block;grid-column:2;min-width:0}
 #projectManagerView .workspace-inventory-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:12px}
 #projectManagerView .workspace-inventory-heading .manager-heading-copy{min-width:0}
 #projectManagerView .workspace-inventory-heading .project-section-actions{flex:0 0 auto;justify-content:flex-end}
