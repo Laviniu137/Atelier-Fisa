@@ -1,6 +1,7 @@
 /* Folder-first inventory view used by the approved morning releases. */
 #workspaceInventory[data-inventory-view="folders"] .inventory-search-panel,
 #workspaceInventory[data-inventory-view="folders"] .workspace-inventory-heading .project-section-actions,
+#workspaceInventory[data-inventory-view="folders"] .inventory-folder-tabs,
 #workspaceInventory[data-inventory-view="folder"] #workspaceInventoryFolders{display:none!important}
 #workspaceInventory[data-inventory-view="folders"] #workspaceInventoryList{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:20px;margin-top:18px}
 #workspaceInventory[data-inventory-view="folder"] #workspaceInventoryList{grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:18px;margin-top:16px}
@@ -119,4 +120,3 @@
 #workspaceInventory[data-inventory-view="folder"] .inventory-filter-field input,#workspaceInventory[data-inventory-view="folder"] .inventory-filter-field select{min-height:44px;padding-inline:11px;font-size:13px}
 }
 @media(prefers-reduced-motion:reduce){#workspaceInventory[data-inventory-view="folder"] .inventory-search-panel,#workspaceInventory[data-inventory-view="folder"] .inventory-card{transition:none}}
-
