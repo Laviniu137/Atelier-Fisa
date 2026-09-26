@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fisa-atelier-v281';
+const CACHE_NAME = 'fisa-atelier-v282';
 const APP_FILES = [
   './',
   './index.html',
@@ -9,6 +9,7 @@ const APP_FILES = [
   './notes-editor-1.22.15.js?v=1.22.15',
   './inventory-1.23.0.css?v=1.23.0',
   './inventory-folder-first-1.23.0.css?v=1.23.0',
+  './inventory-premium-1.23.1.css?v=1.23.1',
   './inventory-1.23.0.js?v=1.23.0',
   './pdfjs-6.3.289.min.mjs',
   './pdfjs-worker-6.3.289.min.mjs',
@@ -68,4 +69,5 @@ self.addEventListener('fetch', (event) => {
     }
   })());
 });
+
 
