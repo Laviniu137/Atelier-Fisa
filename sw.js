@@ -1,21 +1,22 @@
-const CACHE_NAME = 'fisa-atelier-v280';
+const CACHE_NAME = 'fisa-atelier-v281';
 const APP_FILES = [
   './',
   './index.html',
-  './sw.js?v=1.22.27',
+  './sw.js?v=1.23.0',
   './notes-editor-1.22.15.css?v=1.22.15',
   './notes-editor-fix-1.22.16.css?v=1.22.16',
+  './notes-editor-fix-1.23.0.css?v=1.23.0',
   './notes-editor-1.22.15.js?v=1.22.15',
-  './inventory-1.22.27.css?v=1.22.27',
-  './inventory-folder-first-1.22.27.css?v=1.22.27',
-  './inventory-1.22.27.js?v=1.22.27',
+  './inventory-1.23.0.css?v=1.23.0',
+  './inventory-folder-first-1.23.0.css?v=1.23.0',
+  './inventory-1.23.0.js?v=1.23.0',
   './pdfjs-6.3.289.min.mjs',
   './pdfjs-worker-6.3.289.min.mjs',
   './notes/pdf-lib.min.js',
   './manifest.webmanifest',
-  './icon-180.png?v=1.22.27',
-  './icon-192.png?v=1.22.27',
-  './icon-512.png?v=1.22.27'
+  './icon-180.png?v=1.23.0',
+  './icon-192.png?v=1.23.0',
+  './icon-512.png?v=1.23.0'
 ];
 
 self.addEventListener('install', (event) => {
@@ -67,3 +68,4 @@ self.addEventListener('fetch', (event) => {
     }
   })());
 });
+
